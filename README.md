@@ -7,6 +7,9 @@ your albums as rendered specimen cases on shelves, a Möbius signal ring that pu
 (fetched online when your files have none), ten case skins and five colour schemes in light and dark. Windows,
 foobar2000 v2 with Columns UI and JSplitter.
 
+[![Bilibili 视频](https://img.shields.io/badge/Bilibili-Demo_Video_on_BILIBILI-fb7299?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1mYpK6WEPn)
+[![RhinE](https://i2.hdslb.com/bfs/archive/02ff5d803b96978126e29b571d7eebaf551ca2c1.jpg)](https://www.bilibili.com/video/BV1mYpK6WEPn)
+
 <img width="1932" height="1050" alt="archive-light" src="https://github.com/user-attachments/assets/b976cbf7-bd5b-4a20-bc41-62a6bdee1099" />
 
 ![Archive view](theme/screenshots/v1/archive.jpg)
