@@ -157,4 +157,4 @@ powershell -ExecutionPolicy Bypass -File uninstall.ps1 -Foobar "C:\Program Files
 
 - 路北路陈 (LuBeiLuChen) https://space.bilibili.com/40238601 | RhineLabUI project: https://github.com/LBEILC/RhineLabUI
 - Ronald没有魔杖 (Ronald Has No Wand) https://space.bilibili.com/171289190 | RhineLabUI-Music-Demo project: https://github.com/RonaldDeng/Rhine-Music-Demo
-- Original Arknights PV: "Arknights Special Footage [Rhine Lab: Visit]" bilibili.com/video/BV1rr4y1b7sz
+- Original Arknights PV: 《明日方舟》特别映像 [莱茵生命：访问]: bilibili.com/video/BV1rr4y1b7sz/
