@@ -7,9 +7,9 @@ your albums as rendered specimen cases on shelves, a Möbius signal ring that pu
 (fetched online when your files have none), ten case skins and five colour schemes in light and dark. Windows,
 foobar2000 v2 with Columns UI and JSplitter.
 
-![Archive view](theme/screenshots/v1/archive.jpg)
-
 <img width="1932" height="1050" alt="archive-light" src="https://github.com/user-attachments/assets/b976cbf7-bd5b-4a20-bc41-62a6bdee1099" />
+
+![Archive view](theme/screenshots/v1/archive.jpg)
 
 <img width="1932" height="1050" alt="inspect" src="https://github.com/user-attachments/assets/e117132d-6e33-4986-9fc5-911678d7b723" />
 
