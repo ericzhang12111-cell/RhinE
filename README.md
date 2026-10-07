@@ -9,6 +9,22 @@ foobar2000 v2 with Columns UI and JSplitter.
 
 ![Archive view](theme/screenshots/v1/archive.jpg)
 
+<img width="1932" height="1050" alt="archive-light" src="https://github.com/user-attachments/assets/b976cbf7-bd5b-4a20-bc41-62a6bdee1099" />
+
+<img width="1932" height="1050" alt="inspect" src="https://github.com/user-attachments/assets/e117132d-6e33-4986-9fc5-911678d7b723" />
+
+<img width="1932" height="1050" alt="playlists" src="https://github.com/user-attachments/assets/43e3288a-d9ea-4094-9df9-db68fe9e14ae" />
+
+<img width="1932" height="1050" alt="lyrics" src="https://github.com/user-attachments/assets/09919a74-0237-43f4-a858-f68b1ea46c0c" />
+
+<img width="1932" height="1050" alt="classic" src="https://github.com/user-attachments/assets/b7e3cde1-861a-4e6c-b4fb-5ccce1c6a5c1" />
+
+<img width="1932" height="1050" alt="signal" src="https://github.com/user-attachments/assets/19aa2113-09b0-426f-80e3-0efc116e899d" />
+
+<img width="1932" height="1050" alt="style" src="https://github.com/user-attachments/assets/e41d48a4-d335-4414-9056-95c07281c4c0" />
+
+<img width="3412" height="1606" alt="162b47adff8e2d2c7f9ca23ff9757cc3" src="https://github.com/user-attachments/assets/aec4c0a3-d1f3-4503-9a76-5632f00b5246" />
+
 **Download** the zip from [Releases](../../releases), unzip it and run `install.ps1`. Requirements, install, use
 and screenshots: [theme/README.md](theme/README.md).
 
