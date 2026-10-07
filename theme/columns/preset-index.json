@@ -1,0 +1,55 @@
+{
+ "name": "Index",
+ "groups": false,
+ "columns": [
+  {
+   "title": "",
+   "width": 6,
+   "resize": 0,
+   "align": "left",
+   "sort": ""
+  },
+  {
+   "title": "NO.",
+   "width": 52,
+   "resize": 0,
+   "align": "left",
+   "sort": ""
+  },
+  {
+   "title": "TITLE",
+   "width": 360,
+   "resize": 100,
+   "align": "left",
+   "sort": "%title%"
+  },
+  {
+   "title": "ARTIST",
+   "width": 200,
+   "resize": 40,
+   "align": "left",
+   "sort": "%artist%"
+  },
+  {
+   "title": "ALBUM",
+   "width": 220,
+   "resize": 40,
+   "align": "left",
+   "sort": "%album artist%|%album%|%discnumber%|%tracknumber%"
+  },
+  {
+   "title": "YEAR",
+   "width": 56,
+   "resize": 0,
+   "align": "left",
+   "sort": "%date%"
+  },
+  {
+   "title": "TIME",
+   "width": 64,
+   "resize": 0,
+   "align": "right",
+   "sort": "%length_seconds%"
+  }
+ ]
+}

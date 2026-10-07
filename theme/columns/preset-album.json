@@ -1,0 +1,48 @@
+{
+ "name": "Album",
+ "groups": true,
+ "columns": [
+  {
+   "title": "",
+   "width": 6,
+   "resize": 0,
+   "align": "left",
+   "sort": ""
+  },
+  {
+   "title": "NO.",
+   "width": 46,
+   "resize": 0,
+   "align": "left",
+   "sort": ""
+  },
+  {
+   "title": "TITLE",
+   "width": 420,
+   "resize": 100,
+   "align": "left",
+   "sort": "%title%"
+  },
+  {
+   "title": "ARTIST",
+   "width": 230,
+   "resize": 40,
+   "align": "left",
+   "sort": "%artist%"
+  },
+  {
+   "title": "TIME",
+   "width": 64,
+   "resize": 0,
+   "align": "right",
+   "sort": "%length_seconds%"
+  },
+  {
+   "title": "POS",
+   "width": 56,
+   "resize": 0,
+   "align": "right",
+   "sort": ""
+  }
+ ]
+}
