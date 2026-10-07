@@ -155,6 +155,6 @@ powershell -ExecutionPolicy Bypass -File uninstall.ps1 -Foobar "C:\Program Files
 
 #### Special Thanks
 
-路北路陈 (LuBeiLuChen) https://space.bilibili.com/40238601 | RhineLabUI project: https://github.com/LBEILC/RhineLabUI
-Ronald没有魔杖 (Ronald Has No Wand) https://space.bilibili.com/171289190 | RhineLabUI-Music-Demo project: https://github.com/RonaldDeng/Rhine-Music-Demo
-Original Arknights PV: "Arknights Special Footage [Rhine Lab: Visit]" bilibili.com/video/BV1rr4y1b7sz
+- 路北路陈 (LuBeiLuChen) https://space.bilibili.com/40238601 | RhineLabUI project: https://github.com/LBEILC/RhineLabUI
+- Ronald没有魔杖 (Ronald Has No Wand) https://space.bilibili.com/171289190 | RhineLabUI-Music-Demo project: https://github.com/RonaldDeng/Rhine-Music-Demo
+- Original Arknights PV: "Arknights Special Footage [Rhine Lab: Visit]" bilibili.com/video/BV1rr4y1b7sz
