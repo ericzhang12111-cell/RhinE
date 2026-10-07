@@ -152,3 +152,9 @@ powershell -ExecutionPolicy Bypass -File uninstall.ps1 -Foobar "C:\Program Files
 - **改了专辑封面但主题里没变：** 删除 `<profile>\audio-archive-cache\covers\` 后重启，封面会重新生成。
 - **空闲时 foobar2000 占用约 5–8% 的单核 CPU：** 这是 JSplitter 每个面板约 1% 的固有开销，主题本身静止时不重绘。
 - **动画不够流畅：** 可在 *Preferences › Advanced* 中打开 JSplitter 的 *Use high-resolution timers*（可选）。
+
+#### Special Thanks
+
+路北路陈 (LuBeiLuChen) https://space.bilibili.com/40238601 | RhineLabUI project: https://github.com/LBEILC/RhineLabUI
+Ronald没有魔杖 (Ronald Has No Wand) https://space.bilibili.com/171289190 | RhineLabUI-Music-Demo project: https://github.com/RonaldDeng/Rhine-Music-Demo
+Original Arknights PV: "Arknights Special Footage [Rhine Lab: Visit]" bilibili.com/video/BV1rr4y1b7sz
