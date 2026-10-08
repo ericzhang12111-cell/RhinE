@@ -5,6 +5,7 @@
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\emblem.js");
+include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\translate.js");
 
 const VIEWS = ["archive", "playlists", "lyrics", "signal", "style"];
 const NAV = { archive: ["01", "ARCHIVE"], playlists: ["02", "PLAYLISTS"], lyrics: ["03", "LYRICS"], signal: ["04", "SIGNAL"], style: ["05", "STYLE"] };
@@ -318,6 +319,22 @@ function showMenu(a) {
     theme.AppendMenuItem(STATE.reduce ? 0x8 : 0, 6, "Reduce motion");   // MF_CHECKED
     theme.AppendMenuItem(STATE.grain ? 0x8 : 0, 9, "Grain texture");
     theme.AppendMenuItem(STATE.lyricsOnline ? 0x8 : 0, 11, "Fetch lyrics online (LRCLIB)");
+    // translate lyrics: off or a target language, the provider, the providers' keys
+    const tr = window.CreatePopupMenu(), trs = trSettings();
+    tr.AppendMenuItem(0, 400, "Off");
+    TR_TARGETS.forEach(([, name], i) => tr.AppendMenuItem(0, 401 + i, name));
+    tr.CheckMenuRadioItem(400, 400 + TR_TARGETS.length, trs.target === "off" ? 400 : 401 + TR_TARGETS.findIndex(t => t[0] === trs.target));
+    tr.AppendMenuSeparator();
+    tr.AppendMenuItem(trs.community ? 0x8 : 0, 410, "NetEase Cloud Music: community translations (Chinese) and lyrics");
+    tr.AppendMenuItem(trs.machine ? 0x8 : 0, 411, "Machine translation when there is none");
+    const prov = window.CreatePopupMenu();
+    TR_PROVIDERS.forEach(([, name], i) => prov.AppendMenuItem(0, 420 + i, name));
+    prov.CheckMenuRadioItem(420, 420 + TR_PROVIDERS.length - 1, 420 + TR_PROVIDERS.findIndex(p => p[0] === trs.provider));
+    prov.AppendMenuSeparator();
+    prov.AppendMenuItem(0, 430, "Baidu Translate APP ID and key…");
+    prov.AppendMenuItem(0, 431, "DeepL API key…");
+    prov.AppendTo(tr, 0, "Machine translation service");
+    tr.AppendTo(theme, 0, "Translate lyrics");
     theme.AppendMenuItem(STATE.boot ? 0x8 : 0, 7, "Intro film at start");
     theme.AppendMenuItem(0, 8, "Play intro film\tB");
     theme.AppendMenuItem(0, 10, "Shuffle entire library\tS");
@@ -351,6 +368,13 @@ function showMenu(a) {
     else if (id === 7) send("boot", !STATE.boot);
     else if (id === 9) send("grain", !STATE.grain);
     else if (id === 11) send("lyrics-online", !STATE.lyricsOnline);
+    else if (id === 400) { setSetting("lyricsTarget", "off"); send("lyrics-translate"); }
+    else if (id > 400 && id <= 400 + TR_TARGETS.length) { setSetting("lyricsTarget", TR_TARGETS[id - 401][0]); send("lyrics-translate"); }
+    else if (id === 410) { setSetting("lyricsNetease", !trSettings().community); send("lyrics-translate"); }
+    else if (id === 411) { setSetting("lyricsTranslate", !trSettings().machine); send("lyrics-translate"); }
+    else if (id >= 420 && id < 420 + TR_PROVIDERS.length) { setSetting("trProvider", TR_PROVIDERS[id - 420][0]); send("lyrics-translate"); }
+    else if (id === 430) askKeys("baidu", [["trBaiduId", "Baidu Translate APP ID (fanyi-api.baidu.com › 管理控制台 › APP ID)"], ["trBaiduKey", "Baidu Translate secret key (密钥)"]]);
+    else if (id === 431) askKeys("deepl", [["trDeeplKey", "DeepL API key (deepl.com › Account › API keys; a Free key ends in :fx)"]]);
     else if (id === 8) send("boot-play");
     else if (id === 10) shuffleLibrary();
     else if (id >= 340 && id < 340 + INSPECT_SCALES.length) send("inspect-scale", INSPECT_SCALES[id - 340]);
@@ -358,6 +382,18 @@ function showMenu(a) {
     else if (id >= 300 && id < 300 + TEXT_SCALES.length) send("text-scale", TEXT_SCALES[id - 300]);
     else if (id >= 200 && schemes[id - 200]) send("scheme", schemes[id - 200]);
     else if (id >= 100 && skins[id - 100]) send("skin", skins[id - 100].id);
+}
+
+// asks for a translation provider's key(s) and switches to that provider; kept in the settings file only
+function askKeys(provider, fields) {
+    const values = [];
+    try {
+        for (const [key, prompt] of fields) values.push(String(utils.InputBox(window.ID, prompt, "Audio Archive · Translate lyrics", String(getSetting(key, "")), true)).trim());
+    } catch (e) { return; }   // cancelled
+    fields.forEach(([key], i) => setSetting(key, values[i], true));
+    setSetting("trProvider", provider);
+    setSetting("lyricsTranslate", true);   // a key is entered to be used
+    send("lyrics-translate");
 }
 
 function on_colours_changed() { refreshTokens(); window.Repaint(); }

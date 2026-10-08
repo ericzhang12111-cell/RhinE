@@ -22,8 +22,9 @@ function getSetting(key, def) {
     return Object.prototype.hasOwnProperty.call(s, key) ? s[key] : window.GetProperty(key, def);
 }
 
-function setSetting(key, value) {
-    window.SetProperty(key, value);
+// fileOnly: not also a panel property (those are part of the layout, which a user may export and share): for API keys
+function setSetting(key, value, fileOnly = false) {
+    if (!fileOnly) window.SetProperty(key, value);
     const s = readSettings();
     if (s[key] === value) return;
     s[key] = value;

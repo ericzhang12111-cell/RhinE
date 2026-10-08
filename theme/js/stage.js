@@ -13,7 +13,7 @@
 // view repaints ten times a second (and every frame while lines scroll); nothing runs while paused, stopped or hidden.
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
-for (const f of ["emblem", "audio", "ring", "lyrics", "waveform", "album", "playlists", "nowplaying", "library"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
+for (const f of ["emblem", "audio", "ring", "lyrics", "translate", "waveform", "album", "playlists", "nowplaying", "library"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
 include(fb.ProfilePath + "themes\\audio-archive\\js\\archive.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\grid.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\style.js");
@@ -44,12 +44,23 @@ Ring.mode = getSetting("ringMode", "3d");
 // (lib/nowplaying.js reads the track; this view adds its lyrics and the signal trace)
 const lyrOff = Spring(0, 9);
 let lyrIdx = -1;
+const sameHandle = h => !!(T.handle && h && T.handle.RawPath === h.RawPath && T.handle.SubSong === h.SubSong);
+// the current lyrics translated (lib/translate.js), when that is on and they have one language
+function trLyrics(h) {
+    translateLyrics(h, T.lyrics, () => { if (sameHandle(h)) { dirty.left = true; window.Repaint(); } });
+}
+// the translation settings changed (MENU): load the lyrics again without the old translation
+onMessage("lyrics-translate", () => { if (T.handle) { T.lyrics = null; npChanged(false, T.handle); } });
+
 function npChanged(same, h, what) {
     if (what === "cover") { dirty.card = true; window.Repaint(); return; }
     if (!h) T.lyrics = null;
     else if (!same) {
         T.lyrics = loadLyrics(h);
-        if (!T.lyrics) lyricsOnline(h, L => { if (T.handle && T.handle.RawPath === h.RawPath && T.handle.SubSong === h.SubSong) { T.lyrics = L; lyrIdx = -1; dirty.left = true; clock.wake(); window.Repaint(); } });
+        trLyrics(h);
+        const found = L => { if (sameHandle(h) && !T.lyrics) { T.lyrics = L; lyrIdx = -1; dirty.left = true; trLyrics(h); clock.wake(); window.Repaint(); } };
+        // LRCLIB first; when it has none, NetEase (lib/translate.js; only when that source is on)
+        if (!T.lyrics) lyricsOnline(h, found, () => neteaseLyrics(h, L => { if (sameHandle(h)) { LYR.state = ""; found(L); } }));
         lyrIdx = -1;
         waveLoad(h, () => { if (STATE.view === "signal") window.Repaint(); });
         clock.wake();
@@ -186,7 +197,7 @@ function drawLyricsFrame(gr, g) {
     const L = T.lyrics, playing = fb.IsPlaying && !fb.IsPaused, lx = g.x0 + dp(40), ty = dp(30);
     gr.FillSolidRect(lx, ty + dp(2), dp(5), dp(5), C.fg);
     const lw = label(gr, "LYRICS MONITOR  ·  03", st(LF_ST.head, C.fg), lx + dp(15), ty - dp(2));
-    const state = T.missing ? "FAULT" : !T.info ? "STANDBY" : L ? `${L.source} · SYNCED` : "NO LYRICS";
+    const state = T.missing ? "FAULT" : !T.info ? "STANDBY" : L ? `${L.source} · ${!L.translated ? "SYNCED" : L.translated === "netease" ? "TR" : "MT"}` : "NO LYRICS";
     chip(gr, state, lx + dp(15) + lw + dp(14), dp(24), dp(18), L && playing ? "acc" : "inv", 8.5, C.bg);
     if (L) label(gr, `${pad(L.lines.length, 2)} LINES  ·  ${L.langs} LANG`, st(LF_ST.tiny, C["text-muted"]), g.x1 - dp(40), ty, 2);
     if (!L || T.missing || !T.info) return;
@@ -346,7 +357,8 @@ function drawLyrics(gr, g) {
         }
     }
     gr.PopClip();
-    label(gr, `LYRICS / ${T.lyrics.source}  ·  LINE ${pad(i + 1, 2)} OF ${pad(L.length, 2)}`, st(ST.key, C["text-muted"]), cx, H - dp(46), 1);
+    const tr = TR.state ? `  ·  ${TR_STATE_TEXT[TR.state] || TR.state}` : T.lyrics.translated ? `  ·  TRANSLATED · ${T.lyrics.translated.toUpperCase()}` : "";
+    label(gr, `LYRICS / ${T.lyrics.source}  ·  LINE ${pad(i + 1, 2)} OF ${pad(L.length, 2)}${tr}`, st(ST.key, C["text-muted"]), cx, H - dp(46), 1);
 }
 
 // a warning pop-up: a framed window with a filled title strip and a hatched drop shadow; inside, the triangle, the title

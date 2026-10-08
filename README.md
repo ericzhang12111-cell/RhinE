@@ -141,7 +141,20 @@ RhinE（An Audio Archive）是一个 foobar2000 主题，一个为聆听而设�
 标题、专辑和时长**发送给 lrclib.net，结果保存在 `<profile>\audio-archive-cache\lyrics\`，不会写入音乐文件夹或标签；
 没找到的曲目一周内不再重复查询。LRCLIB 对部分语言收录较少；如果无法访问或不需要，可在菜单中关闭
 *Fetch lyrics online*。也可以用 [OpenLyrics](https://github.com/jacquesh/foo_openlyrics) 组件保存 `.lrc` 文件或标签，
-主题会直接读取。中文等 CJK 文字使用系统的中文界面字体显示（Geist Mono 不含中文）。文字大小只作用于主题自己绘制的面板；
+主题会直接读取。
+
+**歌词翻译：** 歌词只有一种语言、且不是你的语言时，可以在每行下方显示译文（*MENU › Audio Archive › Translate lyrics*；
+默认跟随 Windows 显示语言）：
+- **中文：网易云音乐的网友翻译，Windows 为中文时默认开启。** 主题会在[网易云音乐](https://music.163.com)查找这首歌
+  （发送曲目的**艺术家、标题和时长**），显示网友翻译并校准好时间的译文；LRCLIB 也没有歌词时，会直接使用网易云的歌词。
+  这里用的是网易云公开的网页接口，不是官方 API，将来可能失效。
+- **机器翻译，默认关闭**，在没有网友翻译时使用：MyMemory（免费，无需密钥，每日有额度）、百度翻译（填入你自己的免费
+  APP ID 和密钥，国内可直接访问）或 DeepL（你自己的密钥）。只发送歌词文本，且只发给你选择的服务；密钥只保存在本机的
+  `<profile>\audio-archive-settings.json`。
+
+译文同样保存在 `<profile>\audio-archive-cache\lyrics\`，每首歌只查询一次。
+
+中文等 CJK 文字使用系统的中文界面字体显示（Geist Mono 不含中文）。文字大小只作用于主题自己绘制的面板；
 原生播放列表（曲目表格）的字体在 *Preferences › Display › Columns UI › Colours and fonts* 中设置。
 
 #### 5. 卸载

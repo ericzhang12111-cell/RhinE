@@ -107,6 +107,20 @@ track's **artist, title, album and length** to lrclib.net and keeps what comes b
 `<profile>\audio-archive-cache\lyrics\` (it never writes next to your music or into its tags; a miss is not looked
 up again for a week). Turn it off with `MENU › Audio Archive › Fetch lyrics online`. For more sources, the
 [OpenLyrics](https://github.com/jacquesh/foo_openlyrics) component can save `.lrc` files or tags, which the theme reads.
+
+**Translated lyrics.** When a track's lyrics are in one language and it is not yours, a translation can be shown under
+each line (`MENU › Audio Archive › Translate lyrics`; the language follows Windows' display language until you pick
+one):
+- **Chinese: community translations, on by default when Windows is in Chinese.** The theme finds the song on
+  [NetEase Cloud Music](https://music.163.com) (it sends the track's **artist, title and length**) and shows the
+  translation its listeners wrote and timed. When a track has no lyrics on LRCLIB either, NetEase's lyrics are used.
+  This uses NetEase's public web endpoints, not an official API, so it can stop working without notice.
+- **Machine translation, off by default**, for when there is no community translation: MyMemory (free, no key, a daily
+  quota), Baidu Translate (your own free APP ID and key; reachable from mainland China) or DeepL (your own key). Only the
+  lyric lines are sent, only to the service you chose. Keys are kept in `<profile>\audio-archive-settings.json`
+  on your computer.
+
+Translations are kept in `<profile>\audio-archive-cache\lyrics\` too, so a song is looked up once.
 Tracks without lyrics show a *NO LYRICS* pop-up. The read-outs and a live spectrum sit on the left, the profile card with the queue on the right (the two
 columns mirror each other), and the line index beside the lyrics shows where you are in the text. Long lines shrink to
 fit instead of being cut short.
@@ -174,7 +188,8 @@ Taken at 175 % display scaling with an invented test library (generated covers a
 - Archive cover thumbnails are not refreshed when you change an album's artwork; delete
   `<profile>\audio-archive-cache\covers\` to rebuild them. The first start with a large library extracts every
   album's cover once in the background (≈ 30 s for 600 albums).
-- Online lyrics come from LRCLIB only; its coverage of some languages is thin. Lyrics a lookup missed are not looked
+- Online lyrics come from LRCLIB, and from NetEase Cloud Music when that is on (Chinese users by default).
+  Community translations exist only in Chinese; for other languages there is machine translation. Lyrics a lookup missed are not looked
   up again for a week (delete `<profile>\audio-archive-cache\lyrics\` to retry at once).
 - The seek line shows only the `START` marker; chapter and cue markers are not read yet.
 - The Lyrics view's warning panel appears for local files that are missing; other decode errors are not reported to

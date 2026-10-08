@@ -73,8 +73,9 @@ const TF_LYR = fb.TitleFormat("[%artist%]\u0001[%title%]\u0001[%album%]");
 const LYR = { state: "", key: "", step: "", req: null };   // state: "" | SEARCHING | NOT FOUND | OFFLINE (the current track's)
 const lyrQuery = o => Object.entries(o).filter(([, v]) => v !== "").map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
 
-// starts an online lookup for `handle` (with no lyrics of its own); onFound(lyrics) runs when synced lyrics arrive
-function lyricsOnline(handle, onFound) {
+// starts an online lookup for `handle` (with no lyrics of its own); onFound(lyrics) runs when synced lyrics arrive,
+// onMiss() when LRCLIB has none (another source may then be asked)
+function lyricsOnline(handle, onFound, onMiss = () => {}) {
     LYR.state = ""; LYR.req = null;
     if (!handle || !STATE.lyricsOnline || !(handle.Length > 0)) return;
     const [artist, title, album] = TF_LYR.EvalWithMetadb(handle).split("\u0001").map(v => v.trim());
@@ -83,10 +84,10 @@ function lyricsOnline(handle, onFound) {
     if (utils.IsFile(base + ".lrc")) { const r = parseLrc(utils.ReadTextFile(base + ".lrc", 65001)); if (r) { onFound({ lines: r, source: "LRCLIB", langs: r.some(l => l.b) ? 2 : 1 }); return; } }
     if (utils.IsFile(base + ".none")) {
         const t = +utils.ReadTextFile(base + ".none", 65001) || 0;
-        if (Date.now() - t < LYR_MISS_DAYS * 864e5) { LYR.state = "NOT FOUND"; return; }
+        if (Date.now() - t < LYR_MISS_DAYS * 864e5) { LYR.state = "NOT FOUND"; onMiss(); return; }
     }
     if (!utils.IsDirectory(LYR_DIR)) utils.CreateFolder(LYR_DIR);
-    LYR.req = { key, base, len: handle.Length, onFound, step: "get", q: { artist_name: artist, track_name: title, album_name: album } };
+    LYR.req = { key, base, len: handle.Length, onFound, onMiss, step: "get", q: { artist_name: artist, track_name: title, album_name: album } };
     LYR.state = "SEARCHING";
     utils.DownloadFileAsync(`https://lrclib.net/api/get?${lyrQuery({ ...LYR.req.q, duration: Math.round(handle.Length) })}`, base + ".get.json");
 }
@@ -119,6 +120,7 @@ function lyricsDownloaded(path, ok) {
     } else {
         utils.WriteTextFile(R.base + ".none", String(Date.now()), false);
         LYR.state = "NOT FOUND"; LYR.req = null;
+        R.onMiss();
     }
     return true;
 }
