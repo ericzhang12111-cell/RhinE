@@ -248,14 +248,55 @@ function neteaseLines(c, withTr) {
     return orig.map(l => { const b = tr.get(Math.round(l.t * 10)); return { t: l.t, a: l.a, b: useful(b) ? b : "" }; });
 }
 
-// the community translation laid onto lyrics L from elsewhere (an .lrc, a tag, LRCLIB): lines are matched by their text,
-// so a different timing does not matter. Returns the number of lines that got one.
+// The community translation laid onto lyrics L from elsewhere (an .lrc, a tag, LRCLIB). Lines are matched by their text,
+// so a different timing does not matter, and walked in order, since the two sources often write the same song apart:
+// NetEase splits a long line in two (or joins two), and a word or the punctuation differs ("oh-ooh" / "oh, ooh",
+// "thing" / "things"). A line takes the most alike line, or two or three in a row, a few lines ahead; a line with no
+// match of its own may form one with the next lines (each then shows the joined line's translation). What the walk
+// misses (a chorus written once) takes the most alike line anywhere. Returns the number of lines that got one.
+const lyrKey = s => String(s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+// how alike two keys are: the Dice coefficient of their character pairs (1 = the same)
+function likeness(a, b) {
+    if (a === b) return 1;
+    if (a.length < 2 || b.length < 2) return 0;
+    const pairs = new Map();
+    for (let i = 0; i < a.length - 1; i++) { const p = a.substr(i, 2); pairs.set(p, (pairs.get(p) || 0) + 1); }
+    let hit = 0;
+    for (let i = 0; i < b.length - 1; i++) { const p = b.substr(i, 2), n = pairs.get(p); if (n) { hit++; pairs.set(p, n - 1); } }
+    return 2 * hit / (a.length + b.length - 2);
+}
+// lengths within a quarter of each other: a part of a line is not taken for the whole
+const closeLen = (a, b) => Math.min(a.length, b.length) >= .75 * Math.max(a.length, b.length);
 function applyCommunity(L, c) {
-    const key = s => String(s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
-    const map = new Map();
-    for (const l of neteaseLines(c, true)) if (l.b && key(l.a)) map.set(key(l.a), l.b);
-    let n = 0;
-    for (const l of L.lines) { const b = map.get(key(l.a)); if (b && !l.b) { l.b = b; n++; } }
+    const N = neteaseLines(c, true).filter(l => lyrKey(l.a)).map(l => ({ k: lyrKey(l.a), b: l.b }));
+    const A = L.lines.map(l => lyrKey(l.a)), LIKE = .8, AHEAD = 8;
+    const better = (best, score) => !best || score > best.score + .02;
+    let j = 0, n = 0;
+    for (let i = 0; i < A.length; i++) {
+        if (!A[i] || L.lines[i].b) continue;
+        let best = null;
+        for (let s = j; s < Math.min(N.length, j + AHEAD) && !(best && best.score === 1); s++)
+            for (let k = 1; k <= 3 && s + k <= N.length; k++) {
+                const there = N.slice(s, s + k).map(x => x.k).join(""), score = likeness(A[i], there);
+                if (score >= LIKE && closeLen(A[i], there) && better(best, score)) best = { s, k, score, lines: 1 };
+            }
+        if (!best) for (let m = 2; m <= 3 && i + m <= A.length; m++)
+            for (let s = j; s < Math.min(N.length, j + AHEAD); s++) {
+                const here = A.slice(i, i + m).join(""), score = likeness(here, N[s].k);
+                if (score >= LIKE && closeLen(here, N[s].k) && better(best, score)) best = { s, k: 1, score, lines: m };
+            }
+        if (!best) continue;
+        const b = N.slice(best.s, best.s + best.k).map(x => x.b).filter(Boolean).join(" ");
+        if (b) for (let m = 0; m < best.lines; m++) if (!L.lines[i + m].b) { L.lines[i + m].b = b; n++; }
+        j = best.s + best.k;
+        i += best.lines - 1;
+    }
+    for (let i = 0; i < A.length; i++) {
+        if (L.lines[i].b || !A[i]) continue;
+        let b = "", top = .85;
+        for (const x of N) { const s = x.b ? likeness(A[i], x.k) : 0; if (s >= top && closeLen(A[i], x.k)) { top = s; b = x.b; } }
+        if (b) { L.lines[i].b = b; n++; }
+    }
     return n;
 }
 
