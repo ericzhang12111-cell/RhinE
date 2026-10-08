@@ -2,7 +2,7 @@
 
 *A foobar2000 theme.*
 
-**English** · [中文](#中文)
+**English** · [中文：安装指南](安装指南.md) · [中文：其他信息](其他信息.md)
 
 An archive terminal for listening: Swiss typography, a monochrome palette with one accent colour, and a sci-fi layer —
 your albums as rendered specimen cases on shelves, a Möbius signal ring that pulses with the music, synced lyrics
@@ -30,149 +30,216 @@ foobar2000 v2 with Columns UI and JSplitter.
 
 <img width="3412" height="1606" alt="162b47adff8e2d2c7f9ca23ff9757cc3" src="https://github.com/user-attachments/assets/aec4c0a3-d1f3-4503-9a76-5632f00b5246" />
 
-## English
+
+## Install
+
+**→ [INSTALL.md](INSTALL.md)** (中文：**[安装指南.md](安装指南.md)**). In short: download the portable bundle and
+double-click `Setup 一键安装.cmd`, or download the theme and double-click `install.cmd`.
+
+This page is about everything else. 其他信息的中文版：[其他信息.md](其他信息.md)。
+
+What changed in each version: [CHANGELOG.md](CHANGELOG.md).
+
+## What it is
 
 Five views: **Archive** (every album, or every track, as a rendered specimen case on shelves, or a cover grid),
 **Playlists** (playlist manager, track rail, the native playlist in two presets, a profile card with the queue),
 **Lyrics** (synced lyrics from your files or fetched online, with a translation when they are in another language),
 **Signal** (a rendered ∞ ring, spectrum and the whole-track waveform, or a Classic player screen) and **Style** (ten
-case skins and five colour schemes). A pre-rendered intro film, scan transitions, grain and a Reduce motion option.
-The interface is in English, Chinese or Japanese.
+case skins and five colour schemes, each in light and dark). A pre-rendered intro film, scan transitions, grain and a
+Reduce motion option. The interface is in English, Simplified Chinese or Japanese.
 
-### Download / install / use
+## Requirements
 
-#### 1. Before you start
+- **Windows 10 or 11, 64-bit**
+- **foobar2000 v2, 64-bit** (developed on v2.26 x64). The 32-bit build shows a black window, and the installer refuses it.
+- **[Columns UI](https://github.com/reupen/columns_ui/releases)** 3.7 or later
+- **[JSplitter](https://github.com/dima-lur/jsplitter/releases)** x64: tested with 3.9.4, 4.3.1 and 4.3.3. If the window
+  stays black with *Error setting panel config* in the console, check that foobar2000 and JSplitter are both x64, then
+  try JSplitter 3.9.4.
 
-| You need | Version | Download |
+The installer installs the two components when they are missing (Columns UI 3.7.0 and JSplitter 3.9.4, from their
+official GitHub releases, each checked against its SHA-256).
+
+## What the installer does
+
+`install.cmd` runs `install.ps1` (Windows PowerShell 5.1 or PowerShell 7). Nothing in your foobar2000 changes until
+every check has passed. In order, it:
+
+1. finds foobar2000: the standard install, or a portable one next to the theme folder. It asks when it finds several,
+   and opens a folder picker when it finds none. `-Foobar "<folder>"` names it directly.
+2. checks that this foobar2000 is v2 and 64-bit. If it is running, it offers to close it. If it has never run, it starts
+   it once to create its configuration.
+3. installs Columns UI and JSplitter if they are missing. It uses `.fb2k-component` files next to the installer or in
+   `-ComponentDir`, and otherwise downloads them after asking. The x64 files go to
+   `<profile>\user-components-x64\<component>\`.
+4. backs up the configuration to `<profile>\audio-archive-backup\<date-time>\`;
+5. copies the theme to `<profile>\themes\audio-archive\`;
+6. installs the Geist Mono fonts for your Windows user only (no admin rights; `-NoFonts` skips this);
+7. selects Columns UI as the user interface;
+8. starts foobar2000 and imports the theme's layout (`-NoStart` skips this). If Columns UI has never run before, its
+   one-time Quick setup dialog is closed so its presets do not replace the theme.
+
+`-Yes` answers every question with yes. `<profile>` is `%APPDATA%\foobar2000-v2` for a standard install and
+`<foobar2000 folder>\profile` for a portable one. The messages are in Chinese on a Chinese Windows.
+
+**The portable bundle.** foobar2000's licence allows only its unmodified installer to be passed on. So the bundle carries
+that installer, not a ready-made foobar2000. `Setup 一键安装.cmd` runs `setup\portable.ps1`, which does three things:
+
+1. It unpacks the installer's files into `foobar2000\` with the bundled 7-Zip and marks the folder as portable. That is
+   what the installer's own portable mode installs, with no registry entries, shortcuts or file associations, and no
+   admin rights.
+2. It runs `install.ps1` on that folder. Columns UI comes from the bundle (LGPL-3.0). JSplitter is downloaded from its
+   GitHub release, because it comes with no licence that allows passing it on.
+3. It adds the `RhinE (foobar2000)` shortcut.
+
+Running it again keeps the foobar2000 folder and installs the theme again.
+
+**By hand instead:**
+1. Copy `js`, `tokens`, `columns` and `assets` to `<profile>\themes\audio-archive\`.
+2. Install the fonts in `assets\fonts`.
+3. Switch to Columns UI (*Preferences › Display › User interface module*).
+4. Open *Preferences › Display › Columns UI › Import configuration…* and pick `columns\audio-archive.fcl`.
+
+## Use
+
+| | Mouse | Key (any of the theme's panels focused) |
 |---|---|---|
-| foobar2000 | v2, **64-bit** (x64) | [foobar2000.org](https://www.foobar2000.org/download) |
-| Columns UI | 3.7 or later | [GitHub Releases](https://github.com/reupen/columns_ui/releases) |
-| JSplitter | **x64** (tested: 3.9.4, 4.3.1, 4.3.3) | [GitHub Releases](https://github.com/dima-lur/jsplitter/releases) |
-
-> **Note:** foobar2000 and JSplitter must both be **64-bit (x64)**. The 32-bit (x86) foobar2000 shows a **black
-> window**, and the installer refuses it. If the window stays black with *Error setting panel config* in the console,
-> switch to JSplitter 3.9.4.
-
-Install the components: in foobar2000 open *Preferences › Components*, click *Install…*, pick the downloaded component
-file and restart foobar2000 when asked. Install both before you go on.
-
-#### 2. Download the theme
-
-1. Open this repository's [Releases](../../releases) page and download `audio-archive-1.2.0.zip`.
-2. (Optional) Check the file: open PowerShell in the download folder and run
-   `Get-FileHash .\audio-archive-1.2.0.zip -Algorithm SHA256`;
-   the result should match `audio-archive-1.2.0.zip.sha256` on the same page.
-3. Right-click the zip › *Extract All*, which gives you the folder `audio-archive-1.2.0`.
-
-#### 3. Install
-
-1. **Close foobar2000 first.**
-2. Open the extracted `audio-archive-1.2.0` folder, right-click an empty spot › *Open in Terminal* (Windows 10: hold
-   Shift and right-click › *Open PowerShell window here*).
-3. Run the command below; after `-Foobar` put **the folder that contains `foobar2000.exe`**:
-
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File install.ps1 -Foobar "C:\Program Files\foobar2000"
-   ```
-
-   For a portable install, give the portable folder; the script detects it.
-
-The installer:
-
-1. checks that foobar2000 is v2 and 64-bit, is closed, and has Columns UI and JSplitter (if anything is missing it
-   changes nothing);
-2. backs up the current configuration to `<profile>\audio-archive-backup\<date-time>\`;
-3. copies the theme to `<profile>\themes\audio-archive\`;
-4. installs the Geist Mono fonts for your Windows user (no admin rights; `-NoFonts` skips this);
-5. switches the interface to Columns UI;
-6. starts foobar2000 and imports the theme's layout (`-NoStart` skips this).
-
-`<profile>` is the configuration folder: `%APPDATA%\foobar2000-v2` for a standard install, `<foobar2000 folder>\profile`
-for a portable one.
-
-**Updating:** run the new version's `install.ps1` the same way. From 1.2 on, your settings (case skin, colour scheme,
-light / dark, sizes, Archive options, language) are kept.
-
-**Last step: add your media library.** In *Preferences › Media Library*, add your music folders. The Archive view shows
-the albums of the media library; without one it shows what is in all your playlists. The first start with a large
-library extracts every album's cover once in the background (about 30 s for 600 albums).
-
-**By hand instead:** copy `js`, `tokens`, `columns` and `assets` to `<profile>\themes\audio-archive\`, install the fonts
-in `assets\fonts`, switch to Columns UI in *Preferences › Display › User interface module*, then
-*Preferences › Display › Columns UI › Import configuration…* and pick `columns\audio-archive.fcl`.
-
-#### 4. Use
-
-| To | Mouse | Key |
-|---|---|---|
-| Switch view: Archive / Playlists / Lyrics / Signal / Style | click `01` – `05` in the header | `1` – `5` |
-| Light / dark | `LIGHT` / `DARK` at the right of the bottom bar | `T` |
-| Play / pause, previous, next, stop | the bottom bar's buttons | `Space` |
-| Search | click `SEARCH ARCHIVE` and type (in the Archive it filters the albums) | `/` then type, `Esc` to leave |
-| Archive: pick an album / change shelf | hover and click a case; the wheel | `↑` `↓` album, `←` `→` shelf |
-| Inspect the playing album | click the cover at the left of the bottom bar, or the *SIGNAL PROFILE* card in the Playlists / Lyrics view (right-click the cover: show the track in its playlist) | — |
-| Archive: inspect an album (the case lifts and turns) | click the selected case | `Enter`, `Esc` to return |
-| Archive: play from a track | click the track in the list on the right | — |
-| Archive: group / sort / show tracks / grid | `GROUP`, `SORT`, `SHOW`, `LAYOUT` at the top | `G` toggles the grid |
-| Lyrics: read ahead or back | the wheel over the lyrics (it returns to the sung line after 5 s) | — |
+| Archive / Playlists / Lyrics / Signal / Style view | click `01` – `05` in the header | `1` – `5` |
+| Light / dark | `LIGHT` / `DARK` at the right of the transport | `T` |
+| foobar2000's Preferences | `PREFERENCES` in the header (just the gear on narrow windows) | — |
+| DSP: presets, equalizer, DSP Manager | `DSP` in the transport (it shows the active DSPs, or `OFF`) | — |
+| Visualizations (foobar2000's own and those of installed components, each in its own window) | `VISUALIZATIONS` at the top right of the Signal view | — |
+| Playlist preset: Album / Index | `LAYOUT` in the playlist head, or `MENU › Audio Archive` | `P` |
+| Play / pause, previous, next, stop | the transport buttons | `Space` |
+| Seek | click or drag the seek line; wheel over it = ±5 s | — |
+| Volume | click or drag the volume line; wheel over it | — |
+| Playback order | click `ORDER` | — |
+| Shuffle the whole library | `SHUFFLE ALL` beside `ORDER`, or `ORDER › Shuffle entire library`, or `MENU` | `S` |
+| Inspect the playing album (else the focused track's) | click the cover at the left of the transport, or the *Signal profile* card (Playlists and Lyrics views); right-click the cover to show the track in its playlist | — |
+| Search | click `SEARCH ARCHIVE` and type: in the Archive it filters the albums in place (click the `FILTER` chip's × to clear), elsewhere it fills the *Search* playlist | `/`, then type; `Enter` now, `Esc` back |
+| foobar2000's main menu | `MENU` (top right) | — |
+| Reduce motion, grain | `MENU › Audio Archive › Reduce motion` / `Grain texture` | — |
+| Playlists: switch | click a row in the playlist manager | `↑` `↓` (manager) |
+| Playlists: new, rename, duplicate, remove | `+ NEW PLAYLIST`; double-click a row (or the name in the head) to rename; right-click a row | `Ctrl+N`, `F2`, `Delete` (manager) |
+| Playlists: reorder | drag a row in the manager | — |
+| Playlists: find a track | hover the track rail for its card; click to scroll there, double-click to play | — |
+| Playlists: sort | click a column title in the playlist head (again: reversed; *Edit › Undo* restores) | — |
+| Play from the queue | click a row under `QUEUE / NEXT` on the profile card (Playlists and Lyrics views) | — |
+| Signal display: 3D ring, 2D ring or Classic | `MODEL 3D / 2D / CLASSIC` at the top right | `R` cycles (Signal view) |
+| Seek ±5 s | click the signal trace to jump (Signal view) | `←` `→` (Lyrics and Signal views) |
+| Lyrics: read ahead or back | the wheel over the lyrics; the view returns to the sung line 5 s later | — |
 | Lyrics: play from a line | click the line | — |
-| Signal: 3D ring / 2D ring / Classic | `MODEL 3D / 2D / CLASSIC` at the top right | `R` |
-| Case skin, colour scheme | click a card in the `05 STYLE` view | `5` |
-| Text size (90 – 150 %), Archive array scale (80 – 130 %), inspected case size (100 – 150 %) | `TEXT`, `ARRAY`, `INSPECT` at the top of the `05 STYLE` view, or `MENU › Audio Archive › Text size` / `Archive array scale` / `Inspection size` | — |
-| Interface language: English / 简体中文 / 日本語 | `MENU › Audio Archive › Language · 语言 · 言語` | — |
-| Intro film | `MENU › Audio Archive › Play intro film`, or `PLAY INTRO` in the Style view | `B` |
-| Shuffle the whole library | `SHUFFLE ALL` | `S` |
-| foobar2000's main menu | `MENU` at the top right | — |
+| Lyrics translation: language, sources, keys | `MENU › Audio Archive › Translate lyrics` (see *Translated lyrics* below) | — |
+| Intro film | `MENU › Audio Archive › Play intro film`, or `PLAY INTRO` in the Style view; switch it off at start there | `B` |
+| Archive: add music | `+ ADD MUSIC FOLDER` while the Archive is empty (foobar2000's *Media Library* page) | — |
+| Archive: album / row | hover and click a case; `↑` `↓` beside the album index; `←` `→` beside the row name; wheel | `↑` `↓` album, `←` `→` row, `PgUp` `PgDn` `Home` `End` (Archive) |
+| Archive: inspect the album | click the selected case | `Enter`; `Esc` or click to return |
+| Archive: play / open the album | `PLAY ALBUM` / `OPEN ALBUM` | `Space` plays (or pauses it if it is playing); `Enter` while inspecting opens |
+| Archive: group by genre, decade, artist initial or none | `GROUP` in the Archive's top bar, or right-click | — |
+| Archive: sort albums by artist, title, year or date added | `SORT` in the Archive's top bar, or right-click | — |
+| Archive: next / previous shelf | `← SHELF 04 / 31 →` under the array | `←` `→` |
+| Archive: every track as its own case / tile (with its album's cover) | `SHOW [ALBUMS | TRACKS]` in the Archive's top bar, or right-click | — |
+| Archive: play a track | click it in the album file's track list (the album plays from there) | — |
+| Archive: case array or cover grid | `LAYOUT ARRAY / GRID` at the top right of the Archive, or right-click | `G` |
+| Archive grid: covers per page (10, 36, 50, 75, 100, 200) | `PER PAGE` in the grid's bar, or right-click | — |
+| Archive: look again for covers of albums without artwork | right-click › `Re-index library` | — |
+| Archive grid: select / play / open | click a cover / double-click / `OPEN ALBUM` | arrows, `PgUp` `PgDn` `Home` `End`; `Space` plays, `Enter` opens |
+| Archive grid: scroll | the wheel, or drag the scroll bar at its right edge (a click on the bar jumps there) | `PgUp` `PgDn` |
+| Case skin | `MENU › Audio Archive › Case skin`, or right-click the Archive | — |
+| Colour scheme (ARCHIVE, HAZARD, FLARE, FIELD, COLD FRONT) | `MENU › Audio Archive › Colour scheme` | — |
+| Style: see and switch skins and schemes | the `05 STYLE` view: hover a card for its preview, click to apply | `5` |
+| Text size (90 – 150 %), Archive array scale (80 – 130 %), inspection size (100 – 150 %) | `TEXT`, `ARRAY` and `INSPECT` at the top of the `05 STYLE` view, or `MENU › Audio Archive › Text size` / `Archive array scale` / `Inspection size` | — |
+| Interface language: English, 简体中文, 日本語 (default: Windows' display language) | `MENU › Audio Archive › Language · 语言 · 言語` | — |
 
-Keys reach the theme when one of its panels has focus (click an empty spot in it first). The theme starts dark, with
-the ARCHIVE colour scheme and the WHITE case, in Windows' display language. `MENU › Audio Archive` also has *Reduce
-motion*, *Grain texture*, *Intro film at start* and *Fetch lyrics online*.
+The theme starts dark, with the ARCHIVE colour scheme and the WHITE case skin, in Windows' display language. Its
+settings are kept in `<profile>\audio-archive-settings.json` as well as in the layout, so running a newer `install.cmd`
+keeps them (from 1.2 on). Keys reach the theme when one of its scripted panels has keyboard focus (click an empty spot in
+it first); the native playlist keeps foobar2000's own keys.
 
-**Lyrics:** the theme reads an `.lrc` file with the track's name, or a `LYRICS` / `SYNCEDLYRICS` tag with time stamps;
-two lines with the same time stamp are shown as original and translation. When a track has neither, the theme looks
-it up on [LRCLIB](https://lrclib.net), an open database of synced lyrics: it sends the track's **artist, title, album
-and length** to lrclib.net and keeps the result in `<profile>\audio-archive-cache\lyrics\` (never next to your music or
-in its tags); a miss is not looked up again for a week. LRCLIB covers some languages thinly; turn it off with
-*Fetch lyrics online* if you cannot reach it or do not want it. The
-[OpenLyrics](https://github.com/jacquesh/foo_openlyrics) component can also save `.lrc` files or tags, which the theme
-reads.
+**Light and dark** are Columns UI's mode (*View › Mode*). The theme runs that command by its place in the menu, so it
+also works in translated builds of foobar2000. If the colours still do not change, a message says where to switch the
+mode. When the mode is *Use system setting*, Windows' own light / dark setting decides until you switch it in the theme.
 
-**Translated lyrics:** when a track's lyrics are in one language and it is not yours, a translation can be shown under
-each line (*MENU › Audio Archive › Translate lyrics*; the language follows Windows' display language until you pick
+## How the views work
+
+**Playlists view.** The manager lists every playlist with a rail line as long as the log of its track count; the
+active one is inverted, the playing one has an orange tab. The track rail beside the list shows one line per track
+(a long playlist is spread over the lines, each standing for an equal share), and the hover card names the track
+under the mouse. The head shows the playlist's number, name, size and state, switches the layout, and carries the
+column titles. The profile card ends with what plays next: the playback queue, or the next tracks of the playlist.
+
+**Lyrics view.** Lyrics come from an `.lrc` file next to the track (same name) or from a `LYRICS` / `SYNCEDLYRICS`
+tag with time stamps; two lines with the same time stamp are shown as original and translation. When a track has
+neither, the theme looks it up on [LRCLIB](https://lrclib.net), an open database of synced lyrics: it sends the
+track's **artist, title, album and length** to lrclib.net and keeps what comes back in
+`<profile>\audio-archive-cache\lyrics\` (it never writes next to your music or into its tags; a miss is not looked
+up again for a week). Turn it off with `MENU › Audio Archive › Fetch lyrics online`. For more sources, the
+[OpenLyrics](https://github.com/jacquesh/foo_openlyrics) component can save `.lrc` files or tags, which the theme reads.
+Tracks without lyrics show a *NO LYRICS* pop-up. The read-outs and a live spectrum sit on the left, the profile card
+with the queue on the right (the two columns mirror each other), and the line index beside the lyrics shows where you
+are in the text. Long lines shrink to fit instead of being cut short.
+
+**Translated lyrics.** When a track's lyrics are in one language and it is not yours, a translation can be shown under
+each line (`MENU › Audio Archive › Translate lyrics`; the language follows Windows' display language until you pick
 one):
-- **Chinese: community translations from NetEase Cloud Music, on by default when Windows is in Chinese.** The theme
-  finds the song on [NetEase Cloud Music](https://music.163.com) (it sends the track's **artist, title and length**)
-  and shows the translation its listeners wrote and timed; when LRCLIB has no lyrics either, NetEase's lyrics are used.
+- **Chinese: community translations, on by default when Windows is in Chinese.** The theme finds the song on
+  [NetEase Cloud Music](https://music.163.com) (it sends the track's **artist, title and length**) and shows the
+  translation its listeners wrote and timed. When a track has no lyrics on LRCLIB either, NetEase's lyrics are used.
   This uses NetEase's public web endpoints, not an official API, so it can stop working without notice.
 - **Machine translation, off by default**, for when there is no community translation: MyMemory (free, no key, a daily
   quota), Baidu Translate (your own free APP ID and key; reachable from mainland China) or DeepL (your own key). Only the
-  lyric lines are sent, only to the service you chose; keys are kept on your computer only, in
-  `<profile>\audio-archive-settings.json`.
+  lyric lines are sent, only to the service you chose. Keys are kept in `<profile>\audio-archive-settings.json`
+  on your computer.
 
-Translations are kept in `<profile>\audio-archive-cache\lyrics\` too, so a song is looked up once.
+Translations are kept in `<profile>\audio-archive-cache\lyrics\` too, so a song is looked up once. Chinese and other
+CJK text uses Windows' own UI font (Geist Mono has no CJK).
 
-Chinese and other CJK text uses Windows' own UI font (Geist Mono has no CJK). The text size applies to the theme's own
-panels; the native playlist's font is set in *Preferences › Display › Columns UI › Colours and fonts*.
+**Signal view.** *CLASSIC* (beside the model switch) shows a familiar player screen instead, set out like a specimen
+plate: the cover inside a dial of progress and segmented spectrum, the title and time under it, the current lyric on
+a caption plate (else what plays next), the file's data and the up-next list in the margins, the frosted cover
+behind. Otherwise graphics only: the ring, whose light pulses spawn on bass onsets and run faster with the music's energy
+(they freeze while paused), a spectrum strip and the whole-track signal trace, which is decoded once per track and
+cached in `<profile>\audio-archive-cache\waveform\`. `VISUALIZATIONS` opens foobar2000's own visualizations, and those
+of components you installed, in windows of their own.
 
-#### 5. Uninstall
+**Archive view.** Every album of the media library is one case (or, with `SHOW TRACKS`, every track, with its album's
+cover). An album is the tracks with the same album tag in the same folder (a `CD2` / `Disc 1` folder counts as its
+parent), so tracks with guest artists stay together. The cases stand on shelves of 20: the groups (genre, decade,
+artist initial or none) follow one another, so every shelf is full; `SORT` orders them by artist, title, year or date
+added. Each shelf keeps its own selection. The file on the right lists the album's tracks: click one to play the album
+from there. `LAYOUT GRID` shows the same albums as a cover grid. The library is read on a background thread and cached
+in `<profile>\audio-archive-cache\library.db`, so the view appears at once on the next start and follows library
+changes by itself; cover thumbnails are extracted once in the background and cached in
+`<profile>\audio-archive-cache\covers\`. Without media library folders the Archive shows the contents of all
+playlists instead (it says so under the buttons). `PLAY ALBUM` and `OPEN ALBUM` fill one playlist, *Archive · Album*,
+which they reuse. **Case skins** change the look of the specimen cases (Archive and profile cards): the theme ships ten
+(the `05 STYLE` view shows them all). The Archive keys work when the Archive has keyboard focus (click it once).
 
-Close foobar2000, then run in the theme folder:
+**Search** updates an autoplaylist called *Search* 300 ms after you stop typing: every word must appear in the title,
+artist, album artist, album, genre or date. It searches foobar2000's **media library** (*Preferences › Media
+Library*), so folders must be added there first. `Esc` clears the field and returns to the playlist you were on.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File uninstall.ps1 -Foobar "C:\Program Files\foobar2000"
-```
+**Playlist presets.** *Album* groups tracks by album, with one group line (`ARTIST — ALBUM · DISC n` on the left, year,
+format and track count on the right), disc track numbers and a running position. *Index* is a flat table with the
+playlist position, artist, album and year on every row, for mixed playlists and search results. The playing track is
+marked orange in both.
 
-It restores the configuration from before the theme was first installed (settings changed since then are reverted
-too; the current configuration is backed up first) and removes the theme folder, its settings file and the fonts.
-`-KeepConfig` removes the files only; `-KeepFonts` keeps Geist Mono.
+## Uninstall in detail
 
-#### 6. Troubleshooting
+`uninstall.cmd` runs `uninstall.ps1`. It finds the foobar2000 that has the theme (or takes `-Foobar "<folder>"`) and asks
+you to confirm. It then restores the configuration from before the theme was first installed, so settings changed since
+then are reverted too. The current configuration is kept in the backup folder first. Finally it removes the theme
+folder, its settings file and the fonts. `-KeepConfig` removes only the files; `-KeepFonts` leaves Geist Mono
+installed. Columns UI and JSplitter stay installed.
+
+## Troubleshooting
 
 - **Black window, or one empty panel:** check that foobar2000 and JSplitter are both 64-bit; if it persists, switch to
-  JSplitter 3.9.4. Then run `install.ps1` again so it imports the layout again.
-- **PowerShell says scripts are blocked:** use the full command above (with `-ExecutionPolicy Bypass`); if it is still
+  JSplitter 3.9.4. Then run `install.cmd` again so it imports the layout again.
+- **PowerShell says scripts are blocked:** `install.cmd` runs the script with `-ExecutionPolicy Bypass`. If it is still
   blocked, run `Get-ChildItem -Recurse | Unblock-File` in the folder first.
-- **The Archive is empty, or shows "all playlists":** no media library folder yet; see *Add your media library* above.
+- **The Archive is empty, or shows "all playlists":** no media library folder yet; click `+ ADD MUSIC FOLDER`.
 - **Changed an album's cover but the theme still shows the old one:** delete `<profile>\audio-archive-cache\covers\` and
   restart; the covers are made again.
 - **foobar2000 uses about 5 – 8 % of one CPU core while idle:** that is JSplitter's own cost of about 1 % per panel;
@@ -180,159 +247,37 @@ too; the current configuration is backed up first) and removes the theme folder,
 - **Animations are not smooth:** turn on JSplitter's *Use high-resolution timers* in *Preferences › Advanced*
   (optional).
 
-More detail (every control, how each view works, known limits): [theme/README.md](theme/README.md). What changed in
-each version: [CHANGELOG.md](CHANGELOG.md).
+## Known limits
 
-MIT licence ([LICENSE](LICENSE)); the Geist Mono fonts are under the SIL Open Font License.
+- The column titles in the playlist head follow the preset's column widths. If you resize columns by hand in
+  Columns UI's settings, re-import the theme layout (or switch the preset twice) to line them up again.
+- The window title bar is the system one.
+- The text size applies to the theme's own panels. The native playlist keeps Columns UI's fonts (*Preferences ›
+  Display › Columns UI › Colours and fonts*).
+- Archive cover thumbnails are not refreshed when you change an album's artwork; delete
+  `<profile>\audio-archive-cache\covers\` to rebuild them. The first start with a large library extracts every
+  album's cover once in the background (≈ 30 s for 600 albums).
+- Online lyrics come from LRCLIB, and from NetEase Cloud Music when that is on (Chinese users by default).
+  Community translations exist only in Chinese; for other languages there is machine translation. Lyrics a lookup
+  missed are not looked up again for a week (delete `<profile>\audio-archive-cache\lyrics\` to retry at once).
+- The seek line shows only the `START` marker; chapter and cue markers are not read yet.
+- The Lyrics view's warning panel appears for local files that are missing; other decode errors are not reported to
+  scripts by foobar2000.
+- Animations run at up to ≈ 64 fps with foobar2000's default timer. For steadier motion turn on JSplitter's *Use
+  high-resolution timers* (*Preferences › Advanced*, JSplitter's *Performance* section; optional).
+- JSplitter itself uses about 1 % of one CPU core per child panel while idle (measured with empty panels; the theme's
+  own scripts add nothing while nothing moves but the clock). The theme has 8 child panels (Archive, Lyrics, Signal
+  and Style share one; the playlist manager and the track rail share one), so foobar2000 idles at ≈ 5–8 % of a core.
 
----
+## Credits and licence
 
-## 中文
-
-RhinE（An Audio Archive）是一个 foobar2000 主题，一个为聆听而设计的档案终端：瑞士风格排版、只有一种强调色的单色调色板，再加一层科幻感——你的专辑化作渲染出的标本盒陈列在
-货架上，莫比乌斯信号环随音乐脉动，同步歌词（本地没有时自动在线获取，可显示中文译文），十种外壳皮肤和五套配色，每套都有浅色与深色。
-适用于 Windows 上的 foobar2000 v2，基于 Columns UI 和 JSplitter。
-
-[![Bilibili 视频](https://img.shields.io/badge/Bilibili-Demo_Video_on_BILIBILI-fb7299?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1mYpK6WEPn)
-[![RhinE](https://i2.hdslb.com/bfs/archive/02ff5d803b96978126e29b571d7eebaf551ca2c1.jpg)](https://www.bilibili.com/video/BV1mYpK6WEPn)
-
-五个视图：**档案**（每张专辑——或每首曲目——都是货架上的一个标本盒，也可切换为封面网格）、**播放列表**（播放列表管理器、
-曲目导轨、两种预设的原生播放列表、带播放队列的资料卡）、**歌词**（同步歌词，来自本地文件或 LRCLIB 在线获取）、
-**信号**（渲染的 ∞ 信号环、频谱和整首曲目的波形，或经典播放器界面）以及**风格**（十种外壳皮肤和五套配色）。
-另有预渲染的开场动画、扫描式切换转场、颗粒质感和"减少动态"选项。界面支持中文、英文和日文。
-
-中文指南也作为单独的文件随发布包提供：`安装指南与其他信息.md`。
-
-### 下载 / 安装 / 使用指南
-
-#### 1. 准备工作
-
-| 需要 | 版本 | 下载 |
-|---|---|---|
-| foobar2000 | v2，**64 位**（x64） | [foobar2000.org](https://www.foobar2000.org/download) |
-| Columns UI | 3.7 或更高 | [GitHub Releases](https://github.com/reupen/columns_ui/releases) |
-| JSplitter | **x64**（已测试 3.9.4、4.3.1、4.3.3） | [GitHub Releases](https://github.com/dima-lur/jsplitter/releases) |
-
-> **注意：** foobar2000 和 JSplitter 都必须是 **64 位（x64）**。32 位（x86）的 foobar2000 会出现**黑屏**，安装脚本会拒绝安装。
-> 如果仍然黑屏、控制台显示 *Error setting panel config*，请换用 JSplitter 3.9.4。
-
-安装组件：在 foobar2000 中打开 *Preferences › Components*（首选项 › 组件），点 *Install…*（安装），选择下载的组件文件，
-然后按提示重启 foobar2000。两个组件都装好后再继续。
-
-#### 2. 下载主题
-
-1. 打开本仓库的 [Releases](https://github.com/ericzhang12111-cell/RhinE/releases) 页面，下载 `audio-archive-1.2.0.zip`。
-2. （可选）校验文件：在下载文件夹打开 PowerShell，运行
-   `Get-FileHash .\audio-archive-1.2.0.zip -Algorithm SHA256`，
-   结果应与同一页面的 `audio-archive-1.2.0.zip.sha256` 一致。
-3. 右键 zip › *全部解压缩*，得到文件夹 `audio-archive-1.2.0`。
-
-#### 3. 安装
-
-1. **先关闭 foobar2000。**
-2. 打开解压出的 `audio-archive-1.2.0` 文件夹，在空白处右键 › *在终端中打开*（Windows 10：按住 Shift 再右键 ›
-   *在此处打开 PowerShell 窗口*）。
-3. 运行下面的命令，`-Foobar` 后面填 **`foobar2000.exe` 所在的文件夹**：
-
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File install.ps1 -Foobar "C:\Program Files\foobar2000"
-   ```
-
-   便携版直接填便携版的文件夹即可，脚本会自动识别。
-
-安装脚本会依次：
-
-1. 检查 foobar2000 是否为 v2 和 64 位、是否已关闭、是否装好 Columns UI 和 JSplitter（任何一项不满足都不会做任何改动）；
-2. 把当前配置备份到 `<profile>\audio-archive-backup\<日期时间>\`；
-3. 把主题复制到 `<profile>\themes\audio-archive\`；
-4. 为当前 Windows 用户安装 Geist Mono 字体（无需管理员权限；加 `-NoFonts` 跳过）；
-5. 把界面切换为 Columns UI；
-6. 启动 foobar2000 并导入主题布局（加 `-NoStart` 跳过）。
-
-`<profile>` 是配置文件夹：标准安装为 `%APPDATA%\foobar2000-v2`，便携版为 `<foobar2000 文件夹>\profile`。
-
-**更新：** 用同样的方法运行新版本的 `install.ps1` 即可。从 1.2 起，你的设置（外壳、配色、浅色 / 深色、各项大小、档案
-选项、界面语言）都会保留。
-
-**最后一步：添加媒体库。** 在 *Preferences › Media Library*（首选项 › 媒体库）中添加你的音乐文件夹。档案视图展示的是
-媒体库里的专辑；没有媒体库时，它会改为显示所有播放列表的内容。第一次打开大型曲库时，主题会在后台提取一次所有封面
-（约 600 张专辑需 30 秒）。
-
-**手动安装（不用脚本）：** 把 `js`、`tokens`、`columns`、`assets` 复制到 `<profile>\themes\audio-archive\`，安装
-`assets\fonts` 里的字体，在 *Preferences › Display › User interface module* 中切换到 Columns UI，然后
-*Preferences › Display › Columns UI › Import configuration…*，选择 `columns\audio-archive.fcl`。
-
-#### 4. 使用
-
-| 操作 | 鼠标 | 键盘 |
-|---|---|---|
-| 切换视图：档案 / 播放列表 / 歌词 / 信号 / 外观 | 点顶栏的 `01` – `05` | `1` – `5` |
-| 浅色 / 深色 | 底栏右侧的浅色 / 深色按钮 | `T` |
-| 播放 / 暂停、上一首、下一首、停止 | 底栏按钮 | `Space` |
-| 搜索 | 点顶栏的搜索框后输入（档案视图中直接筛选专辑） | `/` 后输入，`Esc` 退出 |
-| 档案：选专辑 / 换货架 | 鼠标悬停并点击标本盒；滚轮 | `↑` `↓` 专辑，`←` `→` 货架 |
-| 查看正在播放的专辑 | 点击底栏左侧的封面，或播放列表 / 歌词视图右侧的*信号资料*卡片（右键封面：在播放列表中显示该曲目） | — |
-| 档案：查看专辑（标本盒抬起并翻转） | 点击已选中的标本盒 | `Enter`，`Esc` 返回 |
-| 档案：从某首曲目开始播放 | 点击右侧曲目列表中的曲目 | — |
-| 档案：分组 / 排序 / 显示曲目 / 网格 | 顶部的分组、排序、显示、布局按钮 | `G` 切换网格 |
-| 歌词：往前或往后看 | 在歌词上滚动滚轮（5 秒后自动回到正在唱的一行） | — |
-| 歌词：从某一行开始播放 | 点击那一行 | — |
-| 信号：3D 环 / 2D 环 / 经典界面 | 右上角的模型切换 | `R` |
-| 外壳、配色方案 | 在 `05` 外观视图中点击卡片 | `5` |
-| 文字大小（90–150%）、档案阵列缩放（80–130%）、查看时的标本盒大小（100–150%） | 外观视图的文字、阵列、查看三组按钮，或 `MENU › Audio Archive` 里的对应菜单 | — |
-| 界面语言：English / 简体中文 / 日本語 | `MENU › Audio Archive › Language · 语言 · 言語` | — |
-| 开场动画 | 外观视图的播放开场按钮，或菜单中的 *Play intro film* | `B` |
-| 随机播放整个曲库 | 底栏的随机全部按钮 | `S` |
-| foobar2000 主菜单 | 右上角的菜单按钮 | — |
-
-键盘操作需要主题的某个面板获得焦点（先在面板空白处点一下）。主题默认为深色、ARCHIVE 配色、WHITE 外壳，界面语言跟随
-Windows 显示语言。菜单里还有：减少动态、颗粒质感、启动时播放开场动画、在线获取歌词。
-
-**歌词：** 主题读取与曲目同名的 `.lrc` 文件，或带时间戳的 `LYRICS` / `SYNCEDLYRICS` 标签；时间戳相同的两行会显示为
-原文和译文。曲目没有歌词时，主题会到 [LRCLIB](https://lrclib.net)（开放的同步歌词库）查找：会把曲目的**艺术家、
-标题、专辑和时长**发送给 lrclib.net，结果保存在 `<profile>\audio-archive-cache\lyrics\`，不会写入音乐文件夹或标签；
-没找到的曲目一周内不再重复查询。LRCLIB 对部分语言收录较少；如果无法访问或不需要，可在菜单中关闭在线获取歌词。
-也可以用 [OpenLyrics](https://github.com/jacquesh/foo_openlyrics) 组件保存 `.lrc` 文件或标签，主题会直接读取。
-
-**歌词翻译：** 歌词只有一种语言、且不是你的语言时，可以在每行下方显示译文（*MENU › Audio Archive › Translate lyrics*；
-默认跟随 Windows 显示语言）：
-- **中文：网易云音乐的网友翻译，Windows 为中文时默认开启。** 主题会在[网易云音乐](https://music.163.com)查找这首歌
-  （发送曲目的**艺术家、标题和时长**），显示网友翻译并校准好时间的译文；LRCLIB 也没有歌词时，会直接使用网易云的歌词。
-  这里用的是网易云公开的网页接口，不是官方 API，将来可能失效。
-- **机器翻译，默认关闭**，在没有网友翻译时使用：MyMemory（免费，无需密钥，每日有额度）、百度翻译（填入你自己的免费
-  APP ID 和密钥，国内可直接访问）或 DeepL（你自己的密钥）。只发送歌词文本，且只发给你选择的服务；密钥只保存在本机的
-  `<profile>\audio-archive-settings.json`。
-
-译文同样保存在 `<profile>\audio-archive-cache\lyrics\`，每首歌只查询一次。
-
-中文等 CJK 文字使用系统的中文界面字体显示（Geist Mono 不含中文）。文字大小只作用于主题自己绘制的面板；
-原生播放列表（曲目表格）的字体在 *Preferences › Display › Columns UI › Colours and fonts* 中设置。
-
-#### 5. 卸载
-
-先关闭 foobar2000，再在主题文件夹中运行：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File uninstall.ps1 -Foobar "C:\Program Files\foobar2000"
-```
-
-卸载会恢复首次安装主题之前的配置（之后改过的设置也会还原；当前配置会先存入备份文件夹），并删除主题文件夹、设置文件和字体。
-加 `-KeepConfig` 只删除文件，加 `-KeepFonts` 保留 Geist Mono 字体。
-
-#### 6. 常见问题
-
-- **黑屏，或只有一个空面板：** 检查 foobar2000 与 JSplitter 是否都是 64 位；仍不行就换用 JSplitter 3.9.4。换好后重新运行一次
-  `install.ps1`，让它重新导入布局。
-- **PowerShell 提示脚本被阻止运行：** 请使用上面完整的命令（带 `-ExecutionPolicy Bypass`）；如仍被拦截，先运行
-  `Get-ChildItem -Recurse | Unblock-File` 解除下载文件的锁定。
-- **档案视图是空的，或显示"所有播放列表"：** 还没有添加媒体库文件夹，见上文"添加媒体库"。
-- **改了专辑封面但主题里没变：** 删除 `<profile>\audio-archive-cache\covers\` 后重启，封面会重新生成。
-- **空闲时 foobar2000 占用约 5–8% 的单核 CPU：** 这是 JSplitter 每个面板约 1% 的固有开销，主题本身静止时不重绘。
-- **动画不够流畅：** 可在 *Preferences › Advanced* 中打开 JSplitter 的 *Use high-resolution timers*（可选）。
-
-更详细的说明（全部操作、各视图的工作方式、已知限制）见 [theme/README.md](theme/README.md)（英文）；各版本的更新内容见 [CHANGELOG.md](CHANGELOG.md)。
-
-本主题以 MIT 协议发布（[LICENSE](LICENSE)），Geist Mono 字体采用 SIL 开放字体协议。
+The theme is MIT-licensed ([LICENSE](LICENSE)). [Geist Mono](https://github.com/vercel/geist-font) is under the SIL Open
+Font License 1.1 (`assets/fonts/OFL.txt`). Built on [foobar2000](https://www.foobar2000.org),
+[Columns UI](https://github.com/reupen/columns_ui) and [JSplitter](https://github.com/dima-lur/jsplitter); online
+lyrics from [LRCLIB](https://lrclib.net). The portable bundle carries foobar2000's unmodified installer, Columns UI
+(LGPL-3.0, its licence alongside) and [7-Zip](https://www.7-zip.org) (LGPL, its licence alongside). The 3D art was
+rendered in [Blender](https://www.blender.org), partly with materials from third-party material libraries used under
+their licences.
 
 #### Special Thanks
 

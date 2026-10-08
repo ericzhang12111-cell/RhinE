@@ -3,6 +3,34 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
+## 1.3.0 — 2026-10-08
+
+**Added · 新增**
+- Portable bundle `RhinE-1.3.0-portable.zip`: unzip, double-click `Setup 一键安装.cmd`, done.
+  便携懒人包：解压后双击 `Setup 一键安装.cmd` 即可。
+- One-click install into your own foobar2000: double-click `install.cmd`. It finds foobar2000, offers to close it, and
+  installs Columns UI and JSplitter when they are missing. `uninstall.cmd` works the same way.
+  一键安装到你自己的 foobar2000：双击 `install.cmd`。它会自动找到 foobar2000、询问是否关闭它，缺少 Columns UI 或
+  JSplitter 时自动安装；卸载同样只需双击 `uninstall.cmd`。
+- `DSP` in the bottom bar: pick a DSP preset, open the equalizer or the DSP Manager.
+  底栏新增 `DSP`：切换 DSP 预设，打开均衡器或 DSP 管理器。
+- `PREFERENCES` in the header opens foobar2000's Preferences. 顶栏新增 `首选项`，直接打开 foobar2000 首选项。
+- `VISUALIZATIONS` in the Signal view opens foobar2000's visualizations and those of installed components.
+  信号视图新增 `可视化`：打开 foobar2000 自带及已安装组件提供的可视化。
+- `+ ADD MUSIC FOLDER` in the empty Archive. 档案为空时显示 `+ 添加音乐文件夹`。
+
+**Changed · 改进**
+- Installation guides are now separate and short: `INSTALL.md` / `安装指南.md`. Everything else is in `README.md` /
+  `其他信息.md`. 安装说明独立成篇：`INSTALL.md` / `安装指南.md`；其余内容在 `README.md` / `其他信息.md`。
+
+**Fixed · 修复**
+- Light / dark now also switches in translated (e.g. Chinese) builds of foobar2000; if it still cannot, a message says
+  where to switch it. 浅色 / 深色切换在汉化版 foobar2000 中也能生效；仍无法切换时会提示在哪里设置。
+- Translated lyrics: many more lines get their translation. NetEase often splits, joins or words lines differently from
+  LRCLIB; lines are now matched by how alike they are, in order (Believer: 44 of 45 lines instead of 37).
+  歌词翻译：更多歌词行能显示译文。网易云的歌词常与 LRCLIB 分行或用词不同，现在按相似度依次匹配（Believer：45 行中
+  44 行有译文，原来是 37 行）。
+
 ## 1.2.0 — 2026-10-08
 
 **Added · 新增**
