@@ -153,11 +153,15 @@ function drawCard(gr, w, h, kind = "pager", ghost = "INFO") {
 // QUEUE / NEXT ……… 03, then one row per item: position, title, length; a click plays the item
 function drawQueue(gr, x, y, w, h) {
     const rowH = dp(24), n = Math.max(0, Math.floor((h - dp(22)) / rowH)), items = upNext(n);
+    if (h < labelHeight(NP_ST.qh)) return;          // a short window: no room for the section at all
     const queued = items.length && items[0].queued;
     label(gr, queued ? "QUEUE" : "QUEUE / NEXT", npSt(NP_ST.qh, C["text-muted"]), x, y);
     label(gr, pad(items.length, 2), npSt(NP_ST.qh, queued ? C.accent : C["text-muted"]), x + w, y, 2);
     y += dp(22);
-    if (!items.length) { label(gr, "END OF PLAYLIST", npSt(NP_ST.key, C["text-muted"]), x, y + dp(6)); return; }
+    if (!items.length) {
+        if (dp(22 + 6) + labelHeight(NP_ST.key) <= h) label(gr, "END OF PLAYLIST", npSt(NP_ST.key, C["text-muted"]), x, y + dp(6));
+        return;
+    }
     items.forEach(it => {
         const [title, len] = TF_QUEUE.EvalWithMetadb(it.handle).split("\u0001");
         const pos = it.index >= 0 ? pad(it.index + 1, 3) : "—";
