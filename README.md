@@ -2,7 +2,7 @@
 
 *A foobar2000 theme.*
 
-**English** · [Jump to Installation](#installation) · [中文：安装指南](安装指南.md) · [中文：其他信息](其他信息.md)
+**English** · [Jump to Installation](INSTALL.md) · [中文：安装指南](安装指南.md) · [中文：其他信息](其他信息.md)
 
 An archive terminal for listening: Swiss typography, a monochrome palette with one accent colour, and a sci-fi layer —
 your albums as rendered specimen cases on shelves, a Möbius signal ring that pulses with the music, synced lyrics
