@@ -46,8 +46,11 @@ function cover(handle, onLoad) {
     utils.GetAlbumArtAsyncV2(window.ID, handle, 0).then(r => {
         entry.loading = false;
         if (r && r.image) {
-            const s = 640, src = r.image;
-            entry.img = src.Width > s || src.Height > s ? src.Resize(s, s) : src;
+            // cut square from the middle like the library thumbnails, so a cover that is not square is not
+            // squeezed, and the inspected case does not change shape when the large cover replaces the thumbnail
+            const s = 640, src = r.image, w = src.Width, h = src.Height, m = Math.min(w, h);
+            const sq = w === h ? src : src.Clone(Math.floor((w - m) / 2), Math.floor((h - m) / 2), m, m);
+            entry.img = m > s ? sq.Resize(s, s) : sq;
             const b = entry.img.Resize(128, 128);
             b.StackBlur(14);
             entry.blur = b;

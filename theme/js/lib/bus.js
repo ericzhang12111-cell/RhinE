@@ -8,7 +8,12 @@
 
 const BUS = "audio-archive";
 const BUS_HANDLERS = {};
-const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, skin: "white", grain: true, lyricsOnline: true };
+const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, skin: "white", grain: true, lyricsOnline: true,
+                textScale: 1, arrayScale: 1, inspectScale: 1.3 };
+
+// text size, Array scale and inspection size: the choices offered in MENU › Audio Archive and the Style view (frame.js keeps the value)
+const TEXT_SCALES = [.9, 1, 1.1, 1.2, 1.35, 1.5], ARRAY_SCALES = [.8, .9, 1, 1.15, 1.3], INSPECT_SCALES = [1, 1.15, 1.3, 1.5];
+const pickScale = (v, list) => list.reduce((a, b) => Math.abs(b - v) < Math.abs(a - v) ? b : a, 1);
 
 function send(type, data = null) { window.NotifyOthers(BUS, JSON.stringify({ type, data })); }
 function onMessage(type, fn) { (BUS_HANDLERS[type] = BUS_HANDLERS[type] || []).push(fn); }
@@ -17,7 +22,12 @@ function on_notify_data(name, info) {
     if (name !== BUS) return;
     let m;
     try { m = JSON.parse(info); } catch (e) { return; }
-    if (m.type === "state") { Object.assign(STATE, m.data); REDUCE_MOTION = !!STATE.reduce; }
+    if (m.type === "state") {
+        Object.assign(STATE, m.data);
+        REDUCE_MOTION = !!STATE.reduce;
+        // a new text size: caches that hold drawn text are dropped like after a colour change
+        if (setTextScale(STATE.textScale)) { TOKEN_LISTENERS.forEach(f => f()); window.Repaint(); }
+    }
     (BUS_HANDLERS[m.type] || []).forEach(fn => fn(m.data));
 }
 

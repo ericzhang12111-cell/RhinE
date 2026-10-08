@@ -1,4 +1,6 @@
-# Audio Archive — a foobar2000 theme
+# RhinE — An Audio Archive
+
+*A foobar2000 theme.*
 
 An archive terminal for listening: Swiss typography, a monochrome palette with one orange accent, and a sci-fi layer
 (a Möbius signal ring, rendered album cases, profile cards). Windows only, light and dark.
@@ -57,7 +59,7 @@ powershell -ExecutionPolicy Bypass -File install.ps1 -Foobar "C:\Program Files\f
 | Volume | click or drag the volume line; wheel over it | — |
 | Playback order | click `ORDER` | — |
 | Shuffle the whole library | `SHUFFLE ALL` beside `ORDER`, or `ORDER › Shuffle entire library`, or `MENU` | `S` |
-| Show the playing track | click the cover at the left of the transport (Playlists view, track selected) | — |
+| Inspect the playing album (else the focused track's) | click the cover at the left of the transport, or the *Signal profile* card (Playlists and Lyrics views); right-click the cover to show the track in its playlist | — |
 | Search | click `SEARCH ARCHIVE` and type: in the Archive it filters the albums in place (click the `FILTER` chip's × to clear), elsewhere it fills the *Search* playlist | `/`, then type; `Enter` now, `Esc` back |
 | foobar2000's main menu | `MENU` (top right) | — |
 | Reduce motion, grain | `MENU › Audio Archive › Reduce motion` / `Grain texture` | — |
@@ -86,6 +88,7 @@ powershell -ExecutionPolicy Bypass -File install.ps1 -Foobar "C:\Program Files\f
 | Case skin | `MENU › Audio Archive › Case skin`, or right-click the Archive | — |
 | Colour scheme (ARCHIVE, HAZARD, FLARE, FIELD, COLD FRONT) | `MENU › Audio Archive › Colour scheme` | — |
 | Style: see and switch skins and schemes | the `05 STYLE` view: hover a card for its preview, click to apply | `5` |
+| Text size (90 – 150 %), Archive array scale (80 – 130 %), inspection size (100 – 150 %) | `TEXT`, `ARRAY` and `INSPECT` at the top of the `05 STYLE` view, or `MENU › Audio Archive › Text size` / `Archive array scale` / `Inspection size` | — |
 
 The theme starts dark, with the ARCHIVE colour scheme and the WHITE case skin. Keys reach the theme when one of its scripted panels has keyboard
 focus (click an empty spot in it first); the native playlist keeps foobar2000's own keys.
@@ -103,8 +106,9 @@ track's **artist, title, album and length** to lrclib.net and keeps what comes b
 `<profile>\audio-archive-cache\lyrics\` (it never writes next to your music or into its tags; a miss is not looked
 up again for a week). Turn it off with `MENU › Audio Archive › Fetch lyrics online`. For more sources, the
 [OpenLyrics](https://github.com/jacquesh/foo_openlyrics) component can save `.lrc` files or tags, which the theme reads.
-Tracks without lyrics show a *NO LYRICS* pop-up. The read-outs sit on the left, the profile card with the queue on the right, and the line
-index beside the lyrics shows where you are in the text.
+Tracks without lyrics show a *NO LYRICS* pop-up. The read-outs and a live spectrum sit on the left, the profile card with the queue on the right (the two
+columns mirror each other), and the line index beside the lyrics shows where you are in the text. Long lines shrink to
+fit instead of being cut short.
 
 **Signal view.** *CLASSIC* (beside the model switch) shows a familiar player screen instead, set out like a specimen
 plate: the cover inside a dial of progress and segmented spectrum, the title and time under it, the current lyric on
@@ -164,6 +168,8 @@ Taken at 175 % display scaling with an invented test library (generated covers a
 - The column titles in the playlist head follow the preset's column widths. If you resize columns by hand in
   Columns UI's settings, re-import the theme layout (or switch the preset twice) to line them up again.
 - The window title bar is the system one.
+- The text size applies to the theme's own panels. The native playlist keeps Columns UI's fonts (*Preferences ›
+  Display › Columns UI › Colours and fonts*).
 - Archive cover thumbnails are not refreshed when you change an album's artwork; delete
   `<profile>\audio-archive-cache\covers\` to rebuild them. The first start with a large library extracts every
   album's cover once in the background (≈ 30 s for 600 albums).

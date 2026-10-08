@@ -35,16 +35,18 @@ function label(gr, str, st, x, y, align = 0) {
 }
 
 function labelWidth(str, st) { const L = labelBitmap(str, st); return L ? L.w : 0; }
-function labelHeight(st) { return Math.ceil(font(st.size, st.weight || 400).Height); }
+function labelHeight(st) { return Math.ceil(font(stSize(st), st.weight || 400).Height); }
+// st.fixed: a label that keeps its designed size whatever the text size (the header's wordmark)
+const stSize = st => st.fixed ? st.size / TEXT_SCALE : st.size;
 
 function labelBitmap(str, st) {
     str = String(str);
     if (!str) return null;
     const weight = st.weight || 400, track = st.track || 0, colour = st.colour, bg = st.bg;
-    const key = `${str}|${st.size}|${weight}|${track}|${colour}|${bg}`;
+    const size = stSize(st), key = `${str}|${size * TEXT_SCALE}|${weight}|${track}|${colour}|${bg}`;
     let L = TEXT_CACHE.get(key);
     if (L) return L;
-    const f = fontFor(str, st.size, weight), gap = track * dp(st.size);
+    const f = fontFor(str, size, weight), gap = track * dp(size * TEXT_SCALE);
     const h = Math.ceil(f.Height);
     // measure on the scratch bitmap, then render
     if (!SCRATCH) SCRATCH = d2d.CreateImage(1, 1);

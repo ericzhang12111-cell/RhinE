@@ -22,11 +22,16 @@ STATE.boot = window.GetProperty("bootSelfTest", true);
 STATE.skin = window.GetProperty("caseSkin", SKIN_DEFAULT);
 STATE.grain = window.GetProperty("grain", true);
 STATE.lyricsOnline = window.GetProperty("lyricsOnline", true);
+STATE.textScale = pickScale(+window.GetProperty("textScale", 1), TEXT_SCALES);
+STATE.arrayScale = pickScale(+window.GetProperty("arrayScale", 1), ARRAY_SCALES);
+setTextScale(STATE.textScale);   // the root panel's own copy: the Playlists view's column widths follow it
+STATE.inspectScale = pickScale(+window.GetProperty("inspectScale", 1.3), INSPECT_SCALES);
 REDUCE_MOTION = STATE.reduce;
 const P = {};          // child name -> PanelObject
 let ready = false;
 
-const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, reduce: STATE.reduce, boot: STATE.boot, skin: STATE.skin, grain: STATE.grain, lyricsOnline: STATE.lyricsOnline });
+const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, reduce: STATE.reduce, boot: STATE.boot, skin: STATE.skin, grain: STATE.grain, lyricsOnline: STATE.lyricsOnline,
+                                   textScale: STATE.textScale, arrayScale: STATE.arrayScale, inspectScale: STATE.inspectScale });
 
 // The layout creates the children in CHILDREN order and that is their z-order, so GetPanelByIndex(i) is CHILDREN[i].
 // They may not exist yet on the root's first on_size, so look again (briefly) until they are all there.
@@ -73,7 +78,7 @@ function regions() {
     // Archive, Lyrics and Signal are all drawn by the stage panel
     if (STATE.view !== "playlists") return Object.assign(r, { stage: [0, top, W, vh] });
     // the manager panel also draws the track rail along the playlist's left edge
-    const rail = dp(M["manager-width"] + M["rail-width"]);
+    const rail = dp(M["manager-width"] * Math.min(TEXT_SCALE, 1.3) + M["rail-width"]);   // the list widens with the text size
     const card = W - dp(M["card-width"] + 2 * M.gutter), head = dp(M["playlist-head"]);
     return Object.assign(r, {
         manager: [0, top, rail, vh],
@@ -190,6 +195,9 @@ onMessage("boot-play", () => { if (ready && !fx) startBoot(); });
 onMessage("skin", id => { if (id && id !== STATE.skin) { STATE.skin = String(id); window.SetProperty("caseSkin", STATE.skin); broadcast(); } });
 onMessage("boot", on => { STATE.boot = !!on; window.SetProperty("bootSelfTest", STATE.boot); broadcast(); });
 onMessage("lyrics-online", on => { STATE.lyricsOnline = !!on; window.SetProperty("lyricsOnline", STATE.lyricsOnline); broadcast(); });
+onMessage("text-scale", v => { STATE.textScale = pickScale(+v, TEXT_SCALES); window.SetProperty("textScale", STATE.textScale); setTextScale(STATE.textScale); broadcast(); layout(); });
+onMessage("inspect-scale", v => { STATE.inspectScale = pickScale(+v, INSPECT_SCALES); window.SetProperty("inspectScale", STATE.inspectScale); broadcast(); });
+onMessage("array-scale", v => { STATE.arrayScale = pickScale(+v, ARRAY_SCALES); window.SetProperty("arrayScale", STATE.arrayScale); broadcast(); });
 onMessage("grain", on => { STATE.grain = !!on; window.SetProperty("grain", STATE.grain); broadcast(); window.Repaint(); });
 
 const COMMANDS = [["Archive view", () => setView("archive")], ["Playlists view", () => setView("playlists")],

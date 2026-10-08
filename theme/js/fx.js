@@ -69,6 +69,8 @@ function filmDir() { const d = INTRO_ROOT + STATE.skin + "\\"; return utils.IsFi
 const FILM_M = new Float32Array([1, 0, 0, 1, 0, 0]);
 const FPS = INTRO ? INTRO.fps : 24, NF = INTRO ? INTRO.frames : 144, LAND = INTRO ? INTRO.land : 94;
 const FILM_MS = NF / FPS * 1000;
+// the overlays are timed in frames of the 24 fps cut; a film at another rate (a 60 fps render) keeps their timing
+const F24 = 24 / FPS, LAND24 = LAND * F24;
 const BK = {};   // the active scheme's dark set (refreshed with the tokens)
 const refreshBK = () => { for (const [k, v] of Object.entries(TOKENS.schemes[SCHEME].dark)) BK[k] = argb(v); };
 refreshBK();
@@ -157,7 +159,7 @@ function drawBoot(gr, ms) {
     gr_ = gr;
     gr.FillSolidRect(0, 0, W, H, BK.bg);
     if (!boot.started) return;
-    const k = (a, b) => clamp((ms - a) / (b - a), 0, 1), f = filmIndex(ms);
+    const k = (a, b) => clamp((ms - a) / (b - a), 0, 1), f = filmIndex(ms), g = f * F24;
     // the film, cover-fitted
     const res = INTRO ? INTRO.res : [1600, 900], sc = Math.max(W / res[0], H / res[1]), fw = res[0] * sc, fh = res[1] * sc;
     const fx0 = (W - fw) / 2, fy0 = (H - fh) / 2;
@@ -180,16 +182,16 @@ function drawBoot(gr, ms) {
     // machine vision and callouts on tracked points
     if (INTRO) {
         const tr = INTRO.track[f], at = p => [fx0 + p[0] * fw, fy0 + p[1] * fh, p[2]];
-        if (f < 124) drawVision(gr, tr, f, ms, fx0, fy0, fw, fh, bh, m);
-        const lit = clamp(Math.round((f - 8) / 36 * 13), 0, 13);
-        callout(gr, at(tr.front), "IGNITION", `RAIL 02  ·  ${pad(lit, 2)} / 13`, clamp((f - 8) / 4, 0, 1) * clamp((44 - f) / 4, 0, 1), 1, bh);
-        callout(gr, at(tr.nose), "ROW 02", "RAIL ONLINE", clamp((f - 58) / 4, 0, 1) * clamp((100 - f) / 4, 0, 1), -1, bh);
-        const locked = f >= LAND, flash = locked && f < LAND + 6;
+        if (g < 124) drawVision(gr, tr, g, ms, fx0, fy0, fw, fh, bh, m);
+        const lit = clamp(Math.round((g - 8) / 36 * 13), 0, 13);
+        callout(gr, at(tr.front), "IGNITION", `RAIL 02  ·  ${pad(lit, 2)} / 13`, clamp((g - 8) / 4, 0, 1) * clamp((44 - g) / 4, 0, 1), 1, bh);
+        callout(gr, at(tr.nose), "ROW 02", "RAIL ONLINE", clamp((g - 58) / 4, 0, 1) * clamp((100 - g) / 4, 0, 1), -1, bh);
+        const locked = g >= LAND24, flash = locked && g < LAND24 + 6;
         callout(gr, at(tr.case), locked ? "LOCKED" : "ARC-0001", locked ? "SPECIMEN  ·  SLOT 01" : "SPECIMEN  ·  LOWERING",
-                clamp((f - 72) / 4, 0, 1) * clamp((124 - f) / 4, 0, 1), 1, bh, flash);
+                clamp((g - 72) / 4, 0, 1) * clamp((124 - g) / 4, 0, 1), 1, bh, flash);
     }
     // the window's glow taken to the theme's orange as the camera enters it
-    if (f >= 122) gr.FillSolidRect(0, 0, W, H, withAlpha(BK.accent, .82 * easeOut(clamp((f - 122) / 14, 0, 1))));
+    if (g >= 122) gr.FillSolidRect(0, 0, W, H, withAlpha(BK.accent, .82 * easeOut(clamp((g - 122) / 14, 0, 1))));
     drawManifest(gr, ms, k, bh);
     drawVerdict(gr, ms, k);
     // letterbox bars
@@ -225,6 +227,7 @@ function brackets(gr, x0, y0, x1, y1, L, colour, t = HAIR) {
 // case as the target (orange brackets, cross-lines to the frame edges, range), the camera telemetry and a status line.
 const VIS = { seen: new Map() };
 function conf(id) { let h = 7; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return .86 + (h % 1300) / 10000; }
+// f: the film's time in frames of the 24 fps cut (see F24)
 function drawVision(gr, tr, f, ms, fx0, fy0, fw, fh, bh, m) {
     const top = bh, bot = H - bh, faint = withAlpha(BK.fg, .5);
     if (f === 0) VIS.seen.clear();
@@ -260,7 +263,7 @@ function drawVision(gr, tr, f, ms, fx0, fy0, fw, fh, bh, m) {
     }
     for (const r of kept) {
         if (!VIS.seen.has(r[4])) VIS.seen.set(r[4], f);
-        const age = f - VIS.seen.get(r[4]);
+        const age = Math.floor(f - VIS.seen.get(r[4]));
         if (age < 5 && age % 2) continue;                       // blinks while it is acquired
         const grow = (1 - easeOut(clamp(age / 5, 0, 1))) * dp(22);
         const x0 = r[0] - grow, y0 = r[1] - grow, x1 = r[2] + grow, y1 = r[3] + grow;
@@ -276,7 +279,7 @@ function drawVision(gr, tr, f, ms, fx0, fy0, fw, fh, bh, m) {
     // the target
     const aimed = !!target;
     if (aimed && target[2] - target[0] < W * .85) {
-        const [x0, y0, x1, y1] = target, mx = (x0 + x1) / 2, my = (y0 + y1) / 2, locked = f >= LAND;
+        const [x0, y0, x1, y1] = target, mx = (x0 + x1) / 2, my = (y0 + y1) / 2, locked = f >= LAND24;
         const col = locked ? BK.accent : withAlpha(BK.accent, Math.floor(ms / 120) % 2 ? 1 : .55);
         brackets(gr, x0, y0, x1, y1, dp(30), col, Math.max(HAIR, dp(2)));
         const lc = withAlpha(BK.accent, .45);
@@ -291,7 +294,7 @@ function drawVision(gr, tr, f, ms, fx0, fy0, fw, fh, bh, m) {
     // status line under the top bar, telemetry above the bottom bar
     const n = kept.length + (aimed ? 1 : 0);
     if (Math.floor(ms / 400) % 2) gr.FillSolidRect(m, top + dp(31), dp(6), dp(6), BK.accent);
-    tx(`VISION  ·  CAM-01  ·  OBJ ${pad(n, 2)}  ·  ${aimed ? (f >= LAND ? "TARGET LOCKED" : "TARGET ACQUIRED") : "SCANNING"}`, BT.tag, BK.fg, m + dp(14), top + dp(26));
+    tx(`VISION  ·  CAM-01  ·  OBJ ${pad(n, 2)}  ·  ${aimed ? (f >= LAND24 ? "TARGET LOCKED" : "TARGET ACQUIRED") : "SCANNING"}`, BT.tag, BK.fg, m + dp(14), top + dp(26));
     const c = tr.cam;
     if (c) {
         const sg = v => (v >= 0 ? "+" : "-") + Math.abs(v).toFixed(2).padStart(5, "0");
@@ -381,13 +384,13 @@ function hazardStrip(gr, x, y, w, h, ms) {
 }
 
 // the bottom bar: the film's chapters along a line, the current one bright, an orange playhead
-const CHAPTERS = [[0, "IGNITION"], [40, "TRANSFER"], [70, "DEPLOY"], [94, "LOCK"], [118, "LINK"]];
+const CHAPTERS = [[0, "IGNITION"], [40, "TRANSFER"], [70, "DEPLOY"], [94, "LOCK"], [118, "LINK"]];   // frames of the 24 fps cut
 function drawChapters(gr, f, m, y0, bh) {
     const x0 = m, x1 = W - m, ly = y0 + Math.round(bh / 2), w = x1 - x0, at = fr => x0 + w * fr / NF;
     gr.FillSolidRect(x0, ly, w, HAIR, withAlpha(BK.fg, .25));
     gr.FillSolidRect(x0, ly - HAIR, Math.round(w * (f + 1) / NF), HAIR * 2, BK.fg);
-    CHAPTERS.forEach(([c0, name], i) => {
-        const c1 = i + 1 < CHAPTERS.length ? CHAPTERS[i + 1][0] : NF, cur = f >= c0 && f < c1, past = f >= c1;
+    CHAPTERS.forEach(([s0, name], i) => {
+        const c0 = s0 / F24, c1 = i + 1 < CHAPTERS.length ? CHAPTERS[i + 1][0] / F24 : NF, cur = f >= c0 && f < c1, past = f >= c1;
         const cx = Math.round(at(c0));
         gr.FillSolidRect(cx, ly - dp(5), HAIR, dp(10), past || cur ? BK.fg : withAlpha(BK.fg, .4));
         bl(`${pad(i + 1, 2)}  ${name}`, BT.tiny, cur ? BK.fg : past ? BK["fg-soft"] : BK["text-muted"], BK.bg, cx + dp(8), ly - dp(16));

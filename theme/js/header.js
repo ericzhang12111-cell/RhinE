@@ -9,10 +9,10 @@ include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\emblem.js");
 const VIEWS = ["archive", "playlists", "lyrics", "signal", "style"];
 const NAV = { archive: ["01", "ARCHIVE"], playlists: ["02", "PLAYLISTS"], lyrics: ["03", "LYRICS"], signal: ["04", "SIGNAL"], style: ["05", "STYLE"] };
 const ST = {
-    ident: { size: 18.5, weight: 700, track: -.02 },
-    spread: { size: 7.5, weight: 500, track: .04 },
-    term: { size: 13.4, weight: 400, track: -.01 },
-    termB: { size: 13.4, weight: 700, track: 0 },
+    ident: { size: 18.5, weight: 700, track: -.02, fixed: true },   // the wordmark keeps its size at any text size
+    spread: { size: 7.5, weight: 500, track: .04, fixed: true },
+    term: { size: 13.4, weight: 400, track: -.01, fixed: true },
+    termB: { size: 13.4, weight: 700, track: 0, fixed: true },
     navNo: { size: 9, weight: 400, track: .08 },
     nav: { size: 11, weight: 400, track: .08 },
     search: { size: 9.5, weight: 500, track: .14 },
@@ -79,6 +79,8 @@ function movePlate(animate) {
 
 // ------------------------------------------------------------------------------------------------------- layout
 function on_size(w, h) { W = w; H = h; navRects = {}; plate.placed = false; }
+// the navigation is measured from its labels: measure again after a text size change
+TOKEN_LISTENERS.push(() => { navRects = {}; plate.placed = false; });
 
 function on_paint(gr) {
     hits.clear();
@@ -161,7 +163,9 @@ function drawRight(gr, navEnd) {
     const cx = W - dp(284), now = new Date();
     const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"], months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     const tw = label(gr, `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}:${pad(now.getSeconds(), 2)}`, st(ST.time, C.fg), cx, dp(18));
-    const dw = label(gr, `${days[now.getDay()]} · ${pad(now.getDate(), 2)} ${months[now.getMonth()]} ${now.getFullYear()}`, st(ST.date, C["text-muted"]), cx, dp(39));
+    // the date under the time, however large the text is set
+    const dy = Math.max(dp(39), dp(18) + labelHeight(ST.time) - dp(2));
+    const dw = label(gr, `${days[now.getDay()]} · ${pad(now.getDate(), 2)} ${months[now.getMonth()]} ${now.getFullYear()}`, st(ST.date, C["text-muted"]), cx, dy);
     hits.add("clock", cx, dp(16), Math.max(tw, dw) + dp(4), dp(36));
 
     // search field between the navigation and the clock; it shrinks, then hides, on narrow windows
@@ -323,6 +327,19 @@ function showMenu(a) {
     schemes.forEach((s, i) => sch.AppendMenuItem(0, 200 + i, TOKENS.schemes[s].name));
     sch.CheckMenuRadioItem(200, 200 + schemes.length - 1, 200 + Math.max(0, schemes.indexOf(SCHEME)));
     sch.AppendTo(theme, 0, "Colour scheme");
+    // text size and Array scale, in per cent
+    const pct = v => `${Math.round(v * 100)} %`;
+    const ts = window.CreatePopupMenu(), as = window.CreatePopupMenu();
+    TEXT_SCALES.forEach((v, i) => ts.AppendMenuItem(0, 300 + i, pct(v)));
+    ts.CheckMenuRadioItem(300, 300 + TEXT_SCALES.length - 1, 300 + Math.max(0, TEXT_SCALES.indexOf(STATE.textScale)));
+    ts.AppendTo(theme, 0, "Text size");
+    ARRAY_SCALES.forEach((v, i) => as.AppendMenuItem(0, 320 + i, pct(v)));
+    as.CheckMenuRadioItem(320, 320 + ARRAY_SCALES.length - 1, 320 + Math.max(0, ARRAY_SCALES.indexOf(STATE.arrayScale)));
+    as.AppendTo(theme, 0, "Archive array scale");
+    const is = window.CreatePopupMenu();
+    INSPECT_SCALES.forEach((v, i) => is.AppendMenuItem(0, 340 + i, pct(v)));
+    is.CheckMenuRadioItem(340, 340 + INSPECT_SCALES.length - 1, 340 + Math.max(0, INSPECT_SCALES.indexOf(STATE.inspectScale)));
+    is.AppendTo(theme, 0, "Inspection size");
     theme.AppendTo(root, 0, "Audio Archive");
     const id = root.TrackPopupMenu(a.x - dp(8), a.y + a.h, 0);
     const k = Math.floor(id / 1000) - 1;
@@ -336,6 +353,9 @@ function showMenu(a) {
     else if (id === 11) send("lyrics-online", !STATE.lyricsOnline);
     else if (id === 8) send("boot-play");
     else if (id === 10) shuffleLibrary();
+    else if (id >= 340 && id < 340 + INSPECT_SCALES.length) send("inspect-scale", INSPECT_SCALES[id - 340]);
+    else if (id >= 320 && id < 320 + ARRAY_SCALES.length) send("array-scale", ARRAY_SCALES[id - 320]);
+    else if (id >= 300 && id < 300 + TEXT_SCALES.length) send("text-scale", TEXT_SCALES[id - 300]);
     else if (id >= 200 && schemes[id - 200]) send("scheme", schemes[id - 200]);
     else if (id >= 100 && skins[id - 100]) send("skin", skins[id - 100].id);
 }

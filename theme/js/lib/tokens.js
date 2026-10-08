@@ -54,13 +54,24 @@ refreshTokens();
 // Geist Mono has no CJK; those strings use the system's CJK UI font
 const isCJK = s => /[⺀-鿿가-힯豈-﫿＀-￯]/.test(s);
 const FONT_CACHE = new Map();
-// font(13, 600) -> D2DFont of Geist Mono at 13 dp, weight 600 (static TTFs: the weight picks the family name)
+// Text size (MENU › Audio Archive › Text size, or the Style view): every font of the scripted panels is scaled by it,
+// the boxes around the text stay as designed. setTextScale() returns true when it changed (the caller then drops caches
+// that hold drawn text and repaints).
+let TEXT_SCALE = 1;
+function setTextScale(s) {
+    s = clamp(+s || 1, .8, 1.5);
+    if (s === TEXT_SCALE) return false;
+    TEXT_SCALE = s;
+    FONT_CACHE.clear();
+    return true;
+}
+// font(13, 600) -> D2DFont of Geist Mono at 13 dp (× the text size), weight 600 (static TTFs: the weight picks the family)
 function font(sizeDp, weight = 400, cjk = false) {
     const key = sizeDp + "/" + weight + (cjk ? "/cjk" : "");
     if (!FONT_CACHE.has(key)) {
         const family = cjk ? "Microsoft YaHei UI"
             : { 300: "Geist Mono Light", 400: "Geist Mono", 500: "Geist Mono Medium", 600: "Geist Mono SemiBold", 700: "Geist Mono" }[weight] || "Geist Mono";
-        FONT_CACHE.set(key, d2d.Font(family, dp(sizeDp), weight >= 700 || (cjk && weight >= 600) ? 1 : 0));
+        FONT_CACHE.set(key, d2d.Font(family, dp(sizeDp * TEXT_SCALE), weight >= 700 || (cjk && weight >= 600) ? 1 : 0));
     }
     return FONT_CACHE.get(key);
 }

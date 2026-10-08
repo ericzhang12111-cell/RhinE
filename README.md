@@ -1,4 +1,6 @@
-# Audio Archive — a foobar2000 theme
+# RhinE — An Audio Archive
+
+*A foobar2000 theme.*
 
 **English** · [中文](#中文)
 
@@ -37,7 +39,7 @@ MIT licence ([LICENSE](LICENSE)); the Geist Mono fonts are under the SIL Open Fo
 
 ## 中文
 
-一个为聆听而设计的档案终端：瑞士风格排版、只有一种强调色的单色调色板，再加一层科幻感——你的专辑化作渲染出的标本盒陈列在
+RhinE（An Audio Archive）是一个 foobar2000 主题，一个为聆听而设计的档案终端：瑞士风格排版、只有一种强调色的单色调色板，再加一层科幻感——你的专辑化作渲染出的标本盒陈列在
 货架上，莫比乌斯信号环随音乐脉动，同步歌词（本地没有时自动在线获取），十种外壳皮肤和五套配色，每套都有浅色与深色。
 适用于 Windows 上的 foobar2000 v2，基于 Columns UI 和 JSplitter。
 
@@ -67,16 +69,16 @@ MIT licence ([LICENSE](LICENSE)); the Geist Mono fonts are under the SIL Open Fo
 
 #### 2. 下载主题
 
-1. 打开本仓库的 [Releases](../../releases) 页面，下载 `audio-archive-1.0.0.zip`。
+1. 打开本仓库的 [Releases](../../releases) 页面，下载 `audio-archive-1.1.0.zip`。
 2. （可选）校验文件：在下载文件夹打开 PowerShell，运行
-   `Get-FileHash .\audio-archive-1.0.0.zip -Algorithm SHA256`，
-   结果应与同一页面的 `audio-archive-1.0.0.zip.sha256` 一致。
-3. 右键 zip › *全部解压缩*，得到文件夹 `audio-archive-1.0.0`。
+   `Get-FileHash .\audio-archive-1.1.0.zip -Algorithm SHA256`，
+   结果应与同一页面的 `audio-archive-1.1.0.zip.sha256` 一致。
+3. 右键 zip › *全部解压缩*，得到文件夹 `audio-archive-1.1.0`。
 
 #### 3. 安装
 
 1. **先关闭 foobar2000。**
-2. 打开解压出的 `audio-archive-1.0.0` 文件夹，在空白处右键 › *在终端中打开*（Windows 10：按住 Shift 再右键 ›
+2. 打开解压出的 `audio-archive-1.1.0` 文件夹，在空白处右键 › *在终端中打开*（Windows 10：按住 Shift 再右键 ›
    *在此处打开 PowerShell 窗口*）。
 3. 运行下面的命令，`-Foobar` 后面填 **`foobar2000.exe` 所在的文件夹**：
 
@@ -114,11 +116,13 @@ MIT licence ([LICENSE](LICENSE)); the Geist Mono fonts are under the SIL Open Fo
 | 播放 / 暂停、上一首、下一首、停止 | 底栏按钮 | `Space` |
 | 搜索 | 点 `SEARCH ARCHIVE` 后输入（档案视图中直接筛选专辑） | `/` 后输入，`Esc` 退出 |
 | 档案：选专辑 / 换货架 | 鼠标悬停并点击标本盒；滚轮 | `↑` `↓` 专辑，`←` `→` 货架 |
+| 查看正在播放的专辑 | 点击底栏左侧的封面，或播放列表 / 歌词视图右侧的 *SIGNAL PROFILE* 卡片（右键封面：在播放列表中显示该曲目） | — |
 | 档案：查看专辑（标本盒抬起并翻转） | 点击已选中的标本盒 | `Enter`，`Esc` 返回 |
 | 档案：从某首曲目开始播放 | 点击右侧曲目列表中的曲目 | — |
 | 档案：分组 / 排序 / 显示曲目 / 网格 | 顶部的 `GROUP`、`SORT`、`SHOW`、`LAYOUT` | `G` 切换网格 |
 | 信号：3D 环 / 2D 环 / 经典界面 | 右上角 `MODEL 3D / 2D / CLASSIC` | `R` |
 | 外壳皮肤、配色方案 | `05 STYLE` 视图中点击卡片 | `5` |
+| 文字大小（90–150%）、档案阵列缩放（80–130%）、查看时的标本盒大小（100–150%） | `05 STYLE` 视图顶部的 `TEXT`、`ARRAY`、`INSPECT`，或 `MENU › Audio Archive › Text size` / `Archive array scale` / `Inspection size` | — |
 | 开场动画 | `MENU › Audio Archive › Play intro film`，或风格视图的 `PLAY INTRO` | `B` |
 | 随机播放整个曲库 | `SHUFFLE ALL` | `S` |
 | foobar2000 主菜单 | 右上角 `MENU` | — |
@@ -132,7 +136,8 @@ MIT licence ([LICENSE](LICENSE)); the Geist Mono fonts are under the SIL Open Fo
 标题、专辑和时长**发送给 lrclib.net，结果保存在 `<profile>\audio-archive-cache\lyrics\`，不会写入音乐文件夹或标签；
 没找到的曲目一周内不再重复查询。LRCLIB 对部分语言收录较少；如果无法访问或不需要，可在菜单中关闭
 *Fetch lyrics online*。也可以用 [OpenLyrics](https://github.com/jacquesh/foo_openlyrics) 组件保存 `.lrc` 文件或标签，
-主题会直接读取。中文等 CJK 文字使用系统的中文界面字体显示（Geist Mono 不含中文）。
+主题会直接读取。中文等 CJK 文字使用系统的中文界面字体显示（Geist Mono 不含中文）。文字大小只作用于主题自己绘制的面板；
+原生播放列表（曲目表格）的字体在 *Preferences › Display › Columns UI › Colours and fonts* 中设置。
 
 #### 5. 卸载
 

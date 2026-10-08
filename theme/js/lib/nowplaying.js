@@ -71,8 +71,10 @@ function nextTitle() {
 // kind "queue": ends in QUEUE / NEXT, as many rows as fit in h (Playlists view)
 const CARD_TOP = 14 + 16 + 6 + 250 + 18 + 10 + 54 + 10 + 32 + 12 + 18 + 70;
 function cardHeight() { return dp(CARD_TOP + 14 + 10 + 16); }
-const CARD_HITS = { pager: [], queue: [] };
+// profile: the card from its top to the end of the profile table (a click inspects the album in the Archive)
+const CARD_HITS = { pager: [], queue: [], profile: null };
 function hitsCard(ox, oy) {
+    if (CARD_HITS.profile && T.handle) { const [x, y, w, h] = CARD_HITS.profile; hits.add("profile", ox + x, oy + y, w, h); }
     for (const [i, x, y, w, h] of CARD_HITS.pager) hits.add("pager", ox + x, oy + y, w, h, i);
     for (const [q, x, y, w, h] of CARD_HITS.queue) hits.add("queue", ox + x, oy + y, w, h, q);
 }
@@ -133,6 +135,7 @@ function drawCard(gr, w, h, kind = "pager", ghost = "INFO") {
         gr.DrawText(String(v), font(11, 400), C.fg, cx + dp(64), cy - dp(2), colW - dp(70), dp(18), DT_SINGLE | DT_ELLIPSIS);
     });
     y += dp(40) + dp(10);
+    CARD_HITS.profile = [0, 0, w, y];
     hline(gr, px, y, iw);
     y += dp(14);
     CARD_HITS.pager = [];

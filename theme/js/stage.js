@@ -31,7 +31,9 @@ const ST = {
     ph: { size: 9, weight: 600, track: .14 },
 };
 const st = (s, colour, bg = C.bg) => Object.assign({ colour, bg }, s);
-const LEFT_W = 400, CARD_W = 328;   // the card (lib/nowplaying.js) is as wide as the Playlists view's
+// the two side columns mirror each other: the read-outs on the left are as wide as the card (lib/nowplaying.js, as wide
+// as the Playlists view's) on the right, each with a 24 dp margin to the window and to the lyrics
+const CARD_W = 328, LEFT_W = CARD_W + 48;
 
 let W = 0, H = 0;
 const hits = Hits();
@@ -69,7 +71,7 @@ function on_item_focus_change() { if (!fb.IsPlaying) loadTrack(); }
 function on_metadb_changed() { if (T.handle) loadTrack(); }
 
 // ----------------------------------------------------------------------------------------------- animation clock
-let lastPaint = 0, lastLeft = 0, alertShown = false, lyrBar = null;   // lyrBar: the karaoke rule's rect, repainted every frame
+let lastPaint = 0, lastLeft = 0, alertShown = false, lyrBar = null, specRect = null, LEFT_SPEC = null;   // lyrBar: the karaoke rule's rect, repainted every frame
 const visible = () => (STATE.view === "lyrics" || STATE.view === "signal") && W > 0;
 const clock = Clock((dt, now) => {
     if (W <= 0) return false;
@@ -90,13 +92,17 @@ const clock = Clock((dt, now) => {
     if (T.title && !scrambleDone(T.title)) { anim = true; dirty.card = true; }
     if (playing && now - lastLeft > 250) { lastLeft = now; dirty.left = true; }
     if (anim || ((playing || alertShown) && now - lastPaint > 100)) { lastPaint = now; window.Repaint(); }
-    else if (playing && lyrBar) window.RepaintRect(...lyrBar);
+    else if (playing && (lyrBar || specRect)) { if (lyrBar) window.RepaintRect(...lyrBar); if (specRect) window.RepaintRect(...specRect); }
     return anim || playing || alertShown;
 });
+let arrayScaleWas = STATE.arrayScale;
 onMessage("state", () => {
     if (STATE.skin !== CASE_SKIN && loadSkin(STATE.skin)) dirty.card = true;
     const on = STATE.view === "archive";
     if (on !== ARCHIVE_ON) { ARCHIVE_ON = on; if (on) requestVisibleThumbs(); else archiveHidden(); }
+    if (on) inspectPending();
+    // a new Array scale: the shelves hold another number of cases, so the selection is placed again
+    if (STATE.arrayScale !== arrayScaleWas) { arrayScaleWas = STATE.arrayScale; placeSelection(curAlbum() ? curAlbum().key : AR.selAlbum); requestVisibleThumbs(); }
     // the ring's image is kept only while the Signal view is shown
     if (STATE.view !== "signal" && Ring.img.mode) Ring.img = { mode: "", still: null, shadow: null };
     styleShown(STATE.view === "style");
@@ -109,6 +115,8 @@ onMessage("state", () => {
     if (STATE.lyricsOnline && !lyricsWasOnline && T.handle && !T.lyrics) npChanged(false, T.handle);
     lyricsWasOnline = STATE.lyricsOnline;
 });
+// the transport's cover and the Playlists view's profile card ask to inspect the playing album
+onMessage("inspect", () => inspectRequest());
 onMessage("library?", () => { if (LIB.live) send("library", { files: LIB.tracks, albums: LIB.albums.length }); });
 window.DlgCode = 0x0004;   // DLGC_WANTALLKEYS: Enter and Esc reach the archive
 send("hello");
@@ -118,7 +126,7 @@ window.SetTimeout(libStart, 0);
 // ------------------------------------------------------------------------------------------------------ layout
 const cardX = () => W - dp(24 + CARD_W);
 function lyricsGeom() {
-    const x0 = dp(LEFT_W), x1 = cardX(), cx = Math.round((x0 + x1) / 2), cw = x1 - x0 - dp(160);   // room for the line index on the right, mirrored on the left
+    const x0 = dp(LEFT_W), x1 = cardX() - dp(24), cx = Math.round((x0 + x1) / 2), cw = x1 - x0 - dp(160);   // room for the line index on the right, mirrored on the left
     return { x0, x1, cx, cw, cy: Math.round(H * .46) };
 }
 
@@ -144,6 +152,7 @@ function drawLyricsView(gr) {
     if (dirty.left || !layers.left) { layers.left = renderLayer(dp(LEFT_W), H, drawLeft, layers.left); dirty.left = false; }
     gr.DrawImage(layers.left.img, 0, 0, layers.left.w, layers.left.h, 0, 0, layers.left.w, layers.left.h);
     gr.FillSolidRect(dp(LEFT_W), 0, HAIR, H, withAlpha(C["line-dim"], .6));
+    drawSpectrumBox(gr);
     // card, as tall as the view
     const ch = Math.max(cardHeight(), H - 2 * dp(24));
     if (dirty.card || !layers.card || layers.card.h !== ch) {
@@ -152,6 +161,7 @@ function drawLyricsView(gr) {
     }
     gr.DrawImage(layers.card.img, cardX(), dp(24), layers.card.w, layers.card.h, 0, 0, layers.card.w, layers.card.h);
     hitsCard(cardX(), dp(24));
+    if (hover && hover.id === "profile") box(gr, hover.x, hover.y, hover.w, hover.h, C.accent);
     // centre
     const g = lyricsGeom();
     drawLyricsFrame(gr, g);
@@ -236,7 +246,7 @@ function drawLeft(gr, w, h) {
     gr.FillSolidRect(x, y, tw, th, C.fg);
     label(gr, "ANALYSIS LOG", st(ST.tag, C.bg, C.fg), x + dp(6), y + Math.round((th - labelHeight(ST.tag)) / 2));
     y += th + dp(10);
-    const bw = dp(330), lines = analysisLines(), bh = dp(12 + 10 + 10) + HAIR + lines.length * dp(18) + dp(12);
+    const bw = dp(CARD_W), lines = analysisLines(), bh = dp(12 + 10 + 10) + HAIR + lines.length * dp(18) + dp(12);
     box(gr, x, y, bw, bh, C["line-faint"]);
     const fault = T.missing;
     label(gr, "ANALYSIS", st(ST.anaH, C.fg), x + dp(14), y + dp(12));
@@ -250,6 +260,32 @@ function drawLeft(gr, w, h) {
         if (last && on) gr.FillSolidRect(sx, sy, s, s, C.accent); else box(gr, sx, sy, s, s, C["fg-soft"]);
         ly += dp(18);
     });
+    // the live spectrum takes the rest of the column, down to where the card ends (drawn every frame by drawSpectrumBox)
+    const sy = y + bh + dp(22);
+    LEFT_SPEC = { x, y: sy, w: bw, h: h - dp(24) - sy };
+}
+
+// SPECTRUM: the 48 live bands as bars, the loudest in orange; a flat line while nothing plays. Hidden when the
+// column has no room for it.
+function drawSpectrumBox(gr) {
+    const R = LEFT_SPEC;
+    specRect = null;
+    if (!R || R.h < dp(110)) return;
+    const th = dp(13), ts = st(ST.tag, C.bg, C.fg), tw = labelWidth("SPECTRUM", ts) + dp(12);
+    gr.FillSolidRect(R.x, R.y, tw, th, C.fg);
+    label(gr, "SPECTRUM", ts, R.x + dp(6), R.y + Math.round((th - labelHeight(ST.tag)) / 2));
+    const by = R.y + th + dp(10), bh = R.h - th - dp(10), padX = dp(14);
+    box(gr, R.x, by, R.w, bh, C["line-faint"]);
+    gr.FillSolidRect(R.x + 1, by + 1, R.w - 2, bh - 2, C.bg);
+    const n = 48, gw = (R.w - 2 * padX) / n, top = by + dp(16), base = by + bh - dp(30), live = fb.IsPlaying;
+    for (let i = 0; i < n; i++) {
+        const v = live ? clamp(AUDIO.bands[i] || 0, 0, 1) : 0, hb = Math.max(HAIR, Math.round((base - top) * v));
+        gr.FillSolidRect(Math.round(R.x + padX + i * gw), base - hb, Math.max(1, Math.round(gw * .55)), hb, v > .78 ? C.accent : withAlpha(C.fg, .3 + .6 * v));
+    }
+    gr.FillSolidRect(R.x + padX, base + dp(4), R.w - 2 * padX, HAIR, C["line-dim"]);
+    label(gr, "20 HZ", st(ST.key, C["text-muted"]), R.x + padX, base + dp(10));
+    label(gr, "20 KHZ", st(ST.key, C["text-muted"]), R.x + R.w - padX, base + dp(10), 2);
+    specRect = [R.x, by, R.w, bh];
 }
 
 function analysisLines() {
@@ -284,7 +320,9 @@ function drawLyrics(gr, g) {
         if (!line) continue;
         const off = k * pitch + (k > 0 ? dp(hasTr ? 34 : 8) : 0), y = cy + off + o, a = line.a || line.b;
         if (k === 0) {
-            const fa = fontFor(a, 30, 700);
+            // the line shrinks (down to 18 dp) rather than being cut short when it is wider than the column
+            let size = 30, fa = fontFor(a, size, 700);
+            while (size > 18 && gr.CalcTextWidth(a, fa) > g.cw) fa = fontFor(a, size -= 2, 700);
             gr.DrawText(a, fa, C.fg, left, y - dp(24), g.cw, dp(46), DT_CENTER_SINGLE | DT_ELLIPSIS);
             if (hasTr) gr.DrawText(line.b.toUpperCase(), fontFor(line.b, 13, 500), C["fg-soft"], left, y + dp(22), g.cw, dp(22), DT_CENTER_SINGLE | DT_ELLIPSIS);
             const wa = Math.min(g.cw, gr.CalcTextWidth(a, fa));
@@ -295,11 +333,15 @@ function drawLyrics(gr, g) {
             gr.FillSolidRect(cx - rw / 2, ry, rw, HAIR, C.hair);
             gr.FillSolidRect(cx - rw / 2, ry - dp(1), rw * prog, dp(3), C.accent);
             lyrBar = [Math.floor(cx - rw / 2) - 1, Math.floor(ry - dp(2)), Math.ceil(rw) + 2, Math.ceil(dp(5)) + 1];
-            gr.FillSolidRect(cx - wa / 2 - dp(40), y - dp(3), dp(6), dp(6), C.accent);
-            gr.DrawText(`${fmtTime(line.t)}.${pad(Math.floor(line.t % 1 * 100), 2)}`, font(9, 500), C["text-muted"], cx - wa / 2 - dp(170), y - dp(9), dp(118), dp(16), DT_RIGHT_SINGLE);
+            // the line's time stamp and marker to its left, when there is room for them in the column
+            if (cx - wa / 2 - dp(40) > g.x0 + dp(8)) gr.FillSolidRect(cx - wa / 2 - dp(40), y - dp(3), dp(6), dp(6), C.accent);
+            if (cx - wa / 2 - dp(170) > g.x0 + dp(8))
+                gr.DrawText(`${fmtTime(line.t)}.${pad(Math.floor(line.t % 1 * 100), 2)}`, font(9, 500), C["text-muted"], cx - wa / 2 - dp(170), y - dp(9), dp(118), dp(16), DT_RIGHT_SINGLE);
         } else {
             const d = Math.abs(off + o) / pitch;
-            gr.DrawText(a, fontFor(a, k < 0 ? 17 : 18, 500), withAlpha(k < 0 ? C["text-muted"] : C["fg-soft"], clamp(1.05 - d * .19, .1, .85)),
+            let size = k < 0 ? 17 : 18, fo = fontFor(a, size, 500);
+            while (size > 12 && gr.CalcTextWidth(a, fo) > g.cw) fo = fontFor(a, --size, 500);
+            gr.DrawText(a, fo, withAlpha(k < 0 ? C["text-muted"] : C["fg-soft"], clamp(1.05 - d * .19, .1, .85)),
                 left, y - dp(16), g.cw, dp(32), DT_CENTER_SINGLE | DT_ELLIPSIS);
         }
     }
@@ -371,9 +413,14 @@ function on_mouse_move(x, y, mask) {
     const a = hits.at(x, y), onCase = STATE.view === "archive" && archiveMouseMove(x, y, a);
     if (STATE.view === "style") styleMouseMove(a);
     window.SetCursor(a || onCase ? 32649 : 32512);
+    if ((a && a.id) !== (hover && hover.id) && STATE.view === "lyrics") window.Repaint();
     hover = a;
 }
-function on_mouse_leave() { if (STATE.view === "archive") archiveMouseLeave(); if (STATE.view === "style") styleMouseMove(null); }
+function on_mouse_leave() {
+    if (STATE.view === "archive") archiveMouseLeave();
+    if (STATE.view === "style") styleMouseMove(null);
+    if (hover) { hover = null; if (STATE.view === "lyrics") window.Repaint(); }
+}
 function on_mouse_lbtn_dblclk(x, y) { if (STATE.view === "archive" && AR.layout === "grid" && !hits.at(x, y)) gridDblClick(x, y); }
 function on_mouse_wheel(step) { if (STATE.view === "archive") archiveWheel(step); }
 function on_mouse_rbtn_up(x, y, mask) {
@@ -388,6 +435,7 @@ function on_mouse_lbtn_up(x, y) {
     if (STATE.view === "style") { styleClick(a); return; }
     if (!a) return;
     if (a.id === "model" && a.data !== Ring.mode) { Ring.mode = a.data; window.SetProperty("ringMode", a.data); window.Repaint(); }
+    else if (a.id === "profile") inspectRequest();
     else if (a.id === "pager") { if (a.data === 0) fb.Prev(); else if (a.data === 2) fb.Next(); }
     else if (a.id === "queue") plman.ExecutePlaylistDefaultAction(a.data.pl, a.data.index);
     else if (a.id === "trace" && fb.IsPlaying && fb.PlaybackLength > 0) fb.PlaybackTime = clamp((x - a.x) / a.w, 0, 1) * fb.PlaybackLength;

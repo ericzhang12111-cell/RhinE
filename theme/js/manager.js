@@ -22,7 +22,7 @@ const MST = {
 const mst = (s, colour, bg = C.bg) => Object.assign({ colour, bg }, s);
 const M = TOKENS.metrics;
 const ROW = () => dp(M["manager-row"]), TOP = () => dp(52), PITCH = () => dp(13);
-const MW = () => dp(M["manager-width"]);   // the rail starts here
+const MW = () => dp(M["manager-width"] * Math.min(TEXT_SCALE, 1.3));   // the rail starts here (wider with larger text)
 
 let W = 0, H = 0;
 const hits = Hits();

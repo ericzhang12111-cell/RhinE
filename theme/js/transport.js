@@ -1,5 +1,6 @@
 ﻿"use strict";
-// Transport + status line (all views, 64 + 32 dp): the playing album's cover (click: show the track in Playlists),
+// Transport + status line (all views, 64 + 32 dp): the playing album's cover (click: inspect it in the Archive;
+// right-click: show the track in Playlists),
 // previous / play-pause / next / stop, the seek line (elapsed, remaining, START marker, orange playhead; click, drag,
 // wheel ±5 s), volume line, SHUFFLE ALL (the whole library, lib/bus.js), playback order, the LIGHT / DARK toggle with a
 // sliding plate; below, the section label (per view) and the signature with library counts.
@@ -157,15 +158,23 @@ function drawButtons(gr) {
     });
 }
 
+let TIME_W = new Map();
+function timeW(f, s) {
+    const k = f.Size + s;
+    if (!TIME_W.has(k)) { const img = d2d.CreateImage(1, 1), g = img.GetGraphics(); TIME_W.set(k, Math.ceil(g.CalcTextWidth(s, f))); img.ReleaseGraphics(g); }
+    return TIME_W.get(k);
+}
 function drawRuler(gr, left, right) {
     const len = fb.PlaybackLength, playing = fb.IsPlaying && len > 0;
-    const y = dp(ROW_Y), x0 = left + dp(64), x1 = right - dp(74);
+    // the time read-outs are as wide as their text at the current text size
+    const tf = font(15, 500), lw = Math.max(dp(64), timeW(tf, "00:00") + dp(10)), rw = Math.max(dp(74), timeW(tf, "−00:00") + dp(12));
+    const y = dp(ROW_Y), x0 = left + lw, x1 = right - rw;
     if (x1 - x0 < dp(80)) return;
     let el = playing ? fb.PlaybackTime : 0;
     if (drag && drag.id === "seek") el = drag.value;
     const cur = playing ? x0 + (x1 - x0) * clamp(el / len, 0, 1) : x0;
-    text(gr, fmtTime(el), 15, 500, playing ? C.fg : C["text-muted"], left, y - dp(12), dp(64), dp(24));
-    text(gr, playing ? "−" + fmtTime(len - el) : "−00:00", 15, 500, C["text-muted"], x1 + dp(12), y - dp(12), dp(74), dp(24));
+    text(gr, fmtTime(el), 15, 500, playing ? C.fg : C["text-muted"], left, y - dp(12), lw, dp(24));
+    text(gr, playing ? "−" + fmtTime(len - el) : "−00:00", 15, 500, C["text-muted"], x1 + dp(12), y - dp(12), rw, dp(24));
     gr.FillSolidRect(x0, y, x1 - x0, HAIR, C["line-dim"]);
     if (playing) gr.FillSolidRect(x0, y - HAIR, Math.round(cur - x0), HEAVY, C.fg);
     // START marker (orange once passed); chapter and cue markers join it when a track has them
@@ -293,6 +302,13 @@ function on_mouse_lbtn_down(x, y) {
     repaintRuler();
 }
 
+// right-click on the cover: the playing track in its playlist (JSplitter's own menu with Shift, as elsewhere)
+function on_mouse_rbtn_up(x, y, mask) {
+    const a = hits.at(x, y);
+    if (!a || a.id !== "cover" || (mask & 0x0004)) return false;
+    showPlaying();
+    return true;
+}
 function on_mouse_lbtn_up(x, y) {
     if (drag) {
         if (drag.id === "seek") fb.PlaybackTime = drag.value;
@@ -306,7 +322,7 @@ function on_mouse_lbtn_up(x, y) {
     else if (a.id === "mode" && a.data !== MODE) send("mode");
     else if (a.id === "order") orderMenu(a);
     else if (a.id === "shuffle") shuffleLibrary();
-    else if (a.id === "cover") showPlaying();
+    else if (a.id === "cover") send("inspect");
 }
 
 function on_mouse_wheel(step) {
@@ -335,3 +351,6 @@ function on_key_down(vk) {
 }
 
 function on_colours_changed() { refreshTokens(); placeToggle(true); window.Repaint(); }
+
+// the toggle and the read-outs are measured from their labels: measure again after a text size change
+TOKEN_LISTENERS.push(() => { togRects = {}; tog.placed = false; TIME_W.clear(); });

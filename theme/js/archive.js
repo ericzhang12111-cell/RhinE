@@ -143,7 +143,7 @@ function rowState(gi) {
 const scrollTarget = (sel, row) => clamp(slotOf(row, sel) - 4, 0, Math.max(0, slotCount(row) - slotsInView()));
 let SLOTS_IN_VIEW = { key: "", n: 0 };
 function slotsInView() {
-    const key = `${W}|${H}|${CASE_DIR}`;
+    const key = `${W}|${H}|${CASE_DIR}|${STATE.arrayScale}`;
     if (SLOTS_IN_VIEW.key === key) return SLOTS_IN_VIEW.n;
     const k = arK(), ax = CASE_META.axes, m = CASE_META.array, S = CASE_META.array_res[0] * k, [Ox, Oy] = origin(), aw = arrayW();
     let n = 0;
@@ -214,8 +214,10 @@ function albumTracks(a, max) {
     return AR.tracks;
 }
 
-function fmtChip(a) {
-    const codec = (a.codec || "—").toUpperCase();
+// short: without the codec's bracketed note ("PCM (FLOATING-POINT)" → "PCM"), for a narrow header
+function fmtChip(a, short = false) {
+    let codec = (a.codec || "—").toUpperCase();
+    if (short) codec = codec.replace(/\s*\(.*?\)/g, "") || codec;
     if (a.lossless && a.bits && a.rate) return `${codec} ${a.bits}/${+(a.rate / 1000).toFixed(1)}`;
     return a.kbps ? `${codec} ${a.kbps}` : codec;
 }
@@ -312,7 +314,8 @@ const origin = () => [Math.round(arrayW() * .37), H - dp(87)];
 // the array grows with the view: 1 at the design's 1440 × 900 window (array 936 × 731 dp), up to 1.6 on large screens,
 // so a maximised window on a big display is filled instead of showing the same small cases in a sea of black
 const AR_REF = [936, 731];
-const arZoom = () => clamp(Math.min(arrayW() / dp(AR_REF[0]), H / dp(AR_REF[1])), 1, 1.6);
+// × the Array scale chosen in MENU › Audio Archive or the Style view
+const arZoom = () => clamp(Math.min(arrayW() / dp(AR_REF[0]), H / dp(AR_REF[1])), 1, 1.6) * (STATE.arrayScale || 1);
 const arK = () => AS * SCALE * arZoom();   // array sprite px → screen px
 // the album index fits between ALBUM / SELECT and the row switcher
 const RULER_STEP = 7;
@@ -655,6 +658,13 @@ function drawGroupSwitch(gr) {
     hits.add("ar-gnext", cx + dp(80), y - dp(4), dp(36), dp(36));
 }
 
+// the inspected case's final scale: ×2 of its size in the row, × the inspection size (MENU › Audio Archive or the Style
+// view), but never larger than fits the array area with the caption above and the button below
+function inspectK(k0) {
+    const last = CASE_META.inspect[CASE_META.inspect.length - 1], c = last.crop || [0, 0, ...CASE_META.inspect_res];
+    const fit = Math.min(arrayW() * .9 / c[2], (H - dp(190)) / c[3]);
+    return Math.max(k0, Math.min(k0 * INSPECT_ZOOM * (STATE.inspectScale || 1), fit));
+}
 // inspection, stage 2 (e: 0 lifted above its row … 1 in front): the case moves to the middle, grows ×2 and turns
 // square-on through the evenly spaced pre-rendered frames; between two frames the next one fades in over the current
 // one and the cover and label quads are interpolated, so the turn has no visible steps
@@ -664,7 +674,7 @@ function drawInspection(gr, e) {
     if (!frames || !a) return;
     const n = frames.length, x = e * (n - 1), i0 = Math.min(n - 2, Math.floor(x)), f = clamp(x - i0, 0, 1);
     const M0 = CASE_META.inspect[i0], M1 = CASE_META.inspect[i0 + 1], full = CASE_META.inspect_res;
-    const k0 = arK() * CASE_META.array_ppu / CASE_META.inspect_ppu, k = lerp(k0, k0 * INSPECT_ZOOM, e);
+    const k0 = arK() * CASE_META.array_ppu / CASE_META.inspect_ppu, k = lerp(k0, inspectK(k0), e);
     const cx = lerp(AR.from[0], aw * .49, e), cy = lerp(AR.from[1], H * .5, e);
     const ox = cx - M0.center[0] * k, oy = cy - M0.center[1] * k;
     const mixQ = (A, B) => A.map((p, j) => [lerp(p[0], B[j][0], f), lerp(p[1], B[j][1], f)]);
@@ -727,8 +737,10 @@ function drawInfo(gr, w, h) {
     const ty = y + Math.round((hh - labelHeight(AR_ST.head)) / 2);
     label(gr, "ALBUM NO. ", hs, x + dp(20), ty);
     drawRoll(gr, AR.noRoll, f, C.fg, x + dp(20) + lw, ty, cell, labelHeight(AR_ST.head));
-    const chipTxt = fmtChip(a), cw = labelWidth(chipTxt, { size: 9.5, weight: 600, track: .1, colour: 0, bg: 0 }) + dp(8) * 2 + dp(12);
-    chip(gr, chipTxt, x + iw - cw, y + Math.round((hh - dp(22)) / 2), dp(22), "acc", 9.5, C.bg);
+    // the format chip keeps clear of the bracket: the short form when the full one does not fit, none when neither does
+    const chipW = t => labelWidth(t, { size: 9.5, weight: 600, track: .1, colour: 0, bg: 0 }) + dp(8) * 2 + dp(12);
+    const chipTxt = [fmtChip(a), fmtChip(a, true)].find(t => chipW(t) <= iw - bw - dp(10));
+    if (chipTxt) chip(gr, chipTxt, x + iw - chipW(chipTxt), y + Math.round((hh - dp(22)) / 2), dp(22), "acc", 9.5, C.bg);
     y += hh + dp(14);
     gr.FillSolidRect(x, y, w - x, HEAVY, C.fg);
     y += HEAVY + dp(20);
@@ -769,7 +781,9 @@ function drawInfo(gr, w, h) {
     y += dp(60) + dp(12);
     // the album's tracks, as many as fit above the buttons: click one to play the album from it (the selected track
     // item is marked, the playing track has ▶)
-    const rowH = dp(24), fit = clamp(Math.floor((h - y - dp(24 + 18 + 40 + 90)) / rowH), 5, 40), TL = albumTracks(a, fit);
+    // (below the list: the "+ N MORE" row, the buttons and a margin, more with the source note)
+    const below = dp(24 + 18 + 40) + dp(LIB.source === "playlists" ? 56 : 28);
+    const rowH = dp(24), fit = clamp(Math.floor((h - y - below) / rowH), 1, 40), TL = albumTracks(a, fit);
     if (!TL.rows.length) label(gr, LIB.live ? "NO TRACKS" : "INDEXING …", st(AR_ST.more, C["text-muted"]), x + dp(34), y + dp(6));
     TL.rows.forEach((t, k) => {
         const ry = y + k * rowH, hov = AR.infoHover === t.i;
@@ -834,6 +848,39 @@ function playAlbum(at) {
 }
 // the playing track is this item (a track item) or on this album
 function itemPlaying(a, np = fb.GetNowPlaying()) { return !!(a && np && (a.album ? sameTrack(itemTrack(a), np) : albumKey(np) === a.key)); }
+// Inspect from elsewhere: the transport's cover and the signal profile card ask for the playing (else focused) track.
+// The Archive opens on its album (or on the track itself while SHOW TRACKS is on) and inspects it once the view is
+// shown and the item is listed; the inspection belongs to the case array, so the grid gives way to it.
+const INSPECT_ASK = { key: "", timer: 0 };
+function inspectRequest() {
+    const h = fb.GetNowPlaying() || fb.GetFocusItem();
+    if (!h) return;
+    INSPECT_ASK.key = LIB.unit === "tracks" ? `t|${h.Path.toLowerCase()}|${h.SubSong}` : albumKey(h);
+    if (STATE.view !== "archive") send("view", "archive");   // the view comes back here with the next "state"
+    else inspectPending(0);
+}
+function inspectPending(delay = 450) {
+    if (!INSPECT_ASK.key || !ARCHIVE_ON || INSPECT_ASK.timer) return;
+    // after the view's scan transition, so the lift and turn are seen
+    INSPECT_ASK.timer = window.SetTimeout(() => {
+        INSPECT_ASK.timer = 0;
+        const key = INSPECT_ASK.key;
+        if (!key || !ARCHIVE_ON) return;
+        // not listed: wait for the catalog while the library is still being read, else leave the selection alone
+        if (!LIB.groups.some(g => g.albums.some(x => x.key === key))) {   // the groups list every item, in either layout
+            if (LIB.live) INSPECT_ASK.key = "";
+            return;
+        }
+        INSPECT_ASK.key = "";
+        if (AR.layout === "grid") setLayout("array");
+        AR.inspOn = false; AR.insp = 0;
+        placeSelection(key);
+        if (!curAlbum()) return;
+        AR.inspOn = true; inspectImages(); clock.wake(); window.Repaint();
+    }, delay);
+}
+LIB_LISTENERS.push(kind => { if (kind === "catalog") inspectPending(0); });
+
 function openAlbum() {
     const pl = loadAlbum(curAlbum());
     if (pl < 0) return;

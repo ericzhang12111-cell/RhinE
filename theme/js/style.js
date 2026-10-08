@@ -12,6 +12,7 @@ const STY_ST = {
     sec: { size: 9, weight: 600, track: .16 },
     tiny: { size: 8, weight: 500, track: .14 },
     name: { size: 10, weight: 600, track: .12 },
+    nameS: { size: 8.5, weight: 600, track: .06 },   // on narrow cards
     big: { size: 22, weight: 700, track: .04 },
     tog: { size: 9, weight: 500, track: .14 },
 };
@@ -102,7 +103,7 @@ function styleGeom(nSkins = 10, nSchemes = 5) {
     const cols = Math.max(5, Math.min(7, Math.ceil(Math.max(nSkins, nSchemes) / 2)));
     const rows = Math.ceil(nSkins / cols), srows = Math.ceil(nSchemes / cols);
     const byW = (lw - (cols - 1) * gap) / cols;
-    const avail = H - top - dp(24) - dp(30) * 2 - dp(10) - dp(30);
+    const avail = H - top - dp(24) - dp(30) * 3 - dp(10) * 2 - dp(30) - dp(30);   // three section heads, the DISPLAY row
     const byH = (avail - (rows + srows) * gap) / (rows * 1.02 + srows * .86);
     const cw = Math.floor(Math.max(dp(70), Math.min(byW, byH)));
     return { m, top, gap, lx1, cols, cw, skinH: Math.round(cw * 1.02), schemeH: Math.round(cw * .86) };
@@ -111,7 +112,7 @@ function styleGeom(nSkins = 10, nSchemes = 5) {
 function drawStyle(gr) {
     const skins = listSkins(), ids = Object.keys(TOKENS.schemes), g = styleGeom(skins.length, ids.length);
     for (const [x, y] of [[dp(16), dp(16)], [W - dp(27), dp(16)], [dp(16), H - dp(27)], [W - dp(27), H - dp(27)]]) regCross(gr, x, y);
-    // ■ STYLE · 05   [MARBLE · ARCHIVE]                                                        MODE [LIGHT | DARK]
+    // ■ STYLE · 05   [MARBLE · ARCHIVE]          TEXT [90% … 120%]   ARRAY [80% … 130%]   ▶ PLAY INTRO   MODE [LIGHT | DARK]
     gr.FillSolidRect(g.m, dp(32), dp(5), dp(5), C.fg);
     const hw = label(gr, "STYLE  ·  05", st(STY_ST.head, C.fg), g.m + dp(15), dp(28));
     const cur = skins.find(s => s.id === STATE.skin), now = `${cur ? cur.name : "—"}  ·  ${TOKENS.schemes[SCHEME].name}  ·  ${MODE.toUpperCase()}`;
@@ -132,6 +133,10 @@ function drawStyle(gr) {
     label(gr, `COLOUR SCHEME  ·  ${pad(ids.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
     y += dp(30);
     ids.forEach((id, i) => drawSchemeCard(gr, id, i, g.m + (i % g.cols) * (g.cw + g.gap), y + Math.floor(i / g.cols) * (g.schemeH + g.gap), g.cw, g.schemeH));
+    y += Math.ceil(ids.length / g.cols) * (g.schemeH + g.gap) + dp(10);
+    // DISPLAY: text size, Archive array scale, inspection size
+    label(gr, "DISPLAY  ·  03", st(STY_ST.sec, C.fg), g.m, y);
+    drawScaleRow(gr, g.m, y + dp(30), g.lx1);
     drawStylePreview(gr, g, skins);
 }
 
@@ -143,6 +148,12 @@ function cardFrame(gr, x, y, w, h, inUse, hov) {
     } else box(gr, x, y, w, h, hov ? C.accent : C["line-faint"]);
 }
 
+// where a skin card's name starts and in which style: after the index when it fits there, else alone
+function cardNameX(name, w) {
+    if (labelWidth(name, st(STY_ST.name, 0)) <= w - dp(44)) return { x: dp(34), st: STY_ST.name, num: true };
+    if (labelWidth(name, st(STY_ST.name, 0)) <= w - dp(18)) return { x: dp(10), st: STY_ST.name, num: false };
+    return { x: dp(10), st: STY_ST.nameS, num: false };
+}
 function drawSkinCard(gr, s, i, x, y, w, h) {
     const e = skinImages(s), ih = h - dp(40), inUse = s.id === STATE.skin, hov = STY.hover && STY.hover.kind === "skin" && STY.hover.id === s.id;
     gr.FillSolidRect(x, y, w, h, C.panel);
@@ -154,8 +165,10 @@ function drawSkinCard(gr, s, i, x, y, w, h) {
         gr.PopClip();
     }
     gr.FillSolidRect(x, y + ih, w, HAIR, C["line-faint"]);
-    label(gr, pad(i + 1, 2), st(STY_ST.tiny, C["text-muted"], C.panel), x + dp(10), y + ih + dp(14));
-    label(gr, fitLabel(s.name, st(STY_ST.name, C.fg, C.panel), w - dp(80)), st(STY_ST.name, C.fg, C.panel), x + dp(34), y + ih + dp(13));
+    // a narrow card (small window, large text) drops the index and sets the name smaller so it stays whole
+    const nx = cardNameX(s.name, w), ns = nx.st;
+    if (nx.num) label(gr, pad(i + 1, 2), st(STY_ST.tiny, C["text-muted"], C.panel), x + dp(10), y + ih + dp(14));
+    label(gr, fitLabel(s.name, st(ns, C.fg, C.panel), w - nx.x - dp(8)), st(ns, C.fg, C.panel), x + nx.x, y + ih + Math.round((dp(40) - labelHeight(ns)) / 2));
     if (inUse) chip(gr, "IN USE", x + w - dp(8) - labelWidth("IN USE", st(STY_ST.tiny, 0)) - dp(16), y + dp(8), dp(16), "inv", 8);
     cardFrame(gr, x, y, w, h, inUse, hov);
     hits.add("sty-skin", x, y, w, h, s.id);
@@ -169,8 +182,9 @@ function drawSchemeCard(gr, id, i, x, y, w, h) {
     gr.FillSolidRect(x, y + mh, w, h - mh, C.panel);
     gr.FillSolidRect(x, y + mh, w, HAIR, C["line-faint"]);
     gr.FillSolidRect(x + dp(10), y + mh + dp(15), dp(7), dp(7), argb(sc.light.accent === "#ffffff" ? sc.dark.accent : sc.light.accent));
-    label(gr, fitLabel(sc.name, st(STY_ST.name, C.fg, C.panel), w - dp(80)), st(STY_ST.name, C.fg, C.panel), x + dp(24), y + mh + dp(13));
-    if (inUse) chip(gr, "IN USE", x + w - dp(8) - labelWidth("IN USE", st(STY_ST.tiny, 0)) - dp(16), y + mh + dp(11), dp(16), "inv", 8);
+    const ns = labelWidth(sc.name, st(STY_ST.name, 0)) <= w - dp(34) ? STY_ST.name : STY_ST.nameS;
+    label(gr, fitLabel(sc.name, st(ns, C.fg, C.panel), w - dp(34)), st(ns, C.fg, C.panel), x + dp(24), y + mh + Math.round((dp(40) - labelHeight(ns)) / 2));
+    if (inUse) chip(gr, "IN USE", x + w - dp(8) - labelWidth("IN USE", st(STY_ST.tiny, 0)) - dp(16), y + dp(8), dp(16), "inv", 8);
     cardFrame(gr, x, y, w, h, inUse, hov);
     hits.add("sty-scheme", x, y, w, h, id);
 }
@@ -201,6 +215,21 @@ function drawIntroButton(gr, xr, y) {
     icon(gr, "play", x + dp(13), y + hh / 2, 8, hov ? C["on-accent"] : C.bg);
     label(gr, t, st(STY_ST.tog, hov ? C["on-accent"] : C.bg, hov ? C.accent : C.fg), x + dp(24), y + Math.round((hh - labelHeight(STY_ST.tog)) / 2));
     hits.add("sty-intro", x, y, w, hh);
+    return x;
+}
+
+// TEXT [90% … 120%]   ARRAY [80% … 130%]   INSPECT [100% … 150%] from x, wrapping to a second row before x1
+const pct = v => `${Math.round(v * 100)}%`;
+function drawScaleRow(gr, x, y, x1) {
+    const groups = [["TEXT", TEXT_SCALES, STATE.textScale, "sty-text"], ["ARRAY", ARRAY_SCALES, STATE.arrayScale, "sty-array"],
+                    ["INSPECT", INSPECT_SCALES, STATE.inspectScale, "sty-inspect"]];
+    let xl = x;
+    for (const [title, list, cur, id] of groups) {
+        const s = st(GRID_ST.count, 0), need = list.reduce((n, v) => n + dp(18) + labelWidth(pct(v), s), 0) + dp(12) + labelWidth(title, s);
+        if (xl > x && xl + need > x1) { xl = x; y += dp(34); }
+        segToggle(gr, xl + need, y, title, list.map(v => [v, pct(v)]), cur, id);
+        xl += need + dp(28);
+    }
 }
 
 // the preview of the card under the mouse, else of the skin and scheme in use
@@ -246,9 +275,11 @@ function drawStylePreview(gr, g, skins) {
     }
     const ty = y1 - dp(104);
     gr.FillSolidRect(x0, ty, w, dp(3), C.fg);
+    // name, line and index stacked by their heights, so a larger text size does not overlap them
     label(gr, s.name, st(STY_ST.big, C.fg), x0, ty + dp(14));
-    text(gr, SKIN_ABOUT[s.id] || "", 10, 500, C["fg-soft"], x0, ty + dp(48), w, dp(18));
-    label(gr, `CASE SKIN  ${pad(skins.indexOf(s) + 1, 2)} / ${pad(skins.length, 2)}`, st(STY_ST.tiny, C["text-muted"]), x0, ty + dp(74));
+    const ay = ty + dp(14) + labelHeight(STY_ST.big) + dp(6);
+    text(gr, SKIN_ABOUT[s.id] || "", 10, 500, C["fg-soft"], x0, ay, w, Math.round(dp(18) * TEXT_SCALE));
+    label(gr, `CASE SKIN  ${pad(skins.indexOf(s) + 1, 2)} / ${pad(skins.length, 2)}`, st(STY_ST.tiny, C["text-muted"]), x0, ay + Math.round(dp(26) * TEXT_SCALE));
 }
 
 // ------------------------------------------------------------------------------------------------------- input
@@ -264,4 +295,7 @@ function styleClick(a) {
     else if (a.id === "sty-scheme" && a.data !== SCHEME) send("scheme", a.data);
     else if (a.id === "sty-mode" && a.data !== MODE) send("mode");
     else if (a.id === "sty-intro") send("boot-play");
+    else if (a.id === "sty-text" && a.data !== STATE.textScale) send("text-scale", a.data);
+    else if (a.id === "sty-array" && a.data !== STATE.arrayScale) send("array-scale", a.data);
+    else if (a.id === "sty-inspect" && a.data !== STATE.inspectScale) send("inspect-scale", a.data);
 }

@@ -1,7 +1,8 @@
 ﻿"use strict";
 // 02 · PLAYLISTS, right: the signal profile card — the same card as the Lyrics view's
 // (lib/nowplaying.js), ending in QUEUE / NEXT instead of the pager, and as tall as the view. The ghost number behind
-// it is the active playlist's. A click on a queue row plays that track.
+// it is the active playlist's. A click on a queue row plays that track; a click on the profile inspects the album in
+// the Archive.
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
 for (const f of ["waveform", "album", "playlists", "nowplaying"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
@@ -35,18 +36,20 @@ function on_paint(gr) {
     gr.PopTransform();
     hitsCard(x, y);
     if (hover && hover.id === "queue") gr.FillSolidRect(hover.x, hover.y + dp(4), dp(2), hover.h - dp(8), C.accent);
+    if (hover && hover.id === "profile") box(gr, hover.x, hover.y, hover.w, hover.h, C.accent);
     drawGrain(gr, 0, 0, W, H);
 }
 
 function on_mouse_move(x, y) {
     const a = hits.at(x, y);
     window.SetCursor(a ? 32649 : 32512);
-    if ((a && a.y) !== (hover && hover.y)) { hover = a; window.Repaint(); }
+    if ((a && a.id + a.y) !== (hover && hover.id + hover.y)) { hover = a; window.Repaint(); }
 }
 function on_mouse_leave() { if (hover) { hover = null; window.Repaint(); } }
 function on_mouse_lbtn_up(x, y) {
     const a = hits.at(x, y);
     if (a && a.id === "queue") plman.ExecutePlaylistDefaultAction(a.data.pl, a.data.index);
+    else if (a && a.id === "profile") send("inspect");
 }
 function on_char(code) { searchChar(code); }
 function on_key_down(vk) { if (searchKey(vk)) return; if (vk === 0x20) fb.PlayOrPause(); else globalKey(vk); }

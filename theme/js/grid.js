@@ -194,16 +194,19 @@ function drawGrid(gr) {
 //   [FILTER · "word" · 12 ALBUMS ×]               GROUP [GENRE | DECADE | A–Z | NONE]   SORT [ARTIST | TITLE | YEAR | ADDED]
 function drawArchiveBar(gr) {
     const grid = AR.layout === "grid", xr = arrayW() - dp(32), y1 = dp(22), y2 = dp(54), x0 = dp(32);
-    if (grid) {
-        gr.FillSolidRect(x0, y1 + dp(10), dp(5), dp(5), C.fg);
-        const n = filteredCount();
-        const wide = arrayW() > dp(1180);   // the grouping in the title only where the bar has room
-        label(gr, `${showTracks() ? "TRACK" : "ALBUM"} GRID  ·  ${unitWord(n)}${LIB.groupBy === "none" || !wide ? "" : `  ·  BY ${GROUP_LABEL[LIB.groupBy]}`}`, st(GRID_ST.head, C.fg), x0 + dp(14), y1 + dp(6));
-    }
     drawFilterChip(gr, x0, grid ? y2 : y1);
     let lx = segToggle(gr, xr, y1, "LAYOUT", [["array", "ARRAY"], ["grid", "GRID"]], AR.layout, "ar-layout", true);
     if (grid) lx = segToggle(gr, lx - dp(24), y1, "PER PAGE", PER_PAGE.map(n => [n, String(n)]), GRID.per, "ar-per");
-    segToggle(gr, lx - dp(24), y1, "SHOW", [["albums", "ALBUMS"], ["tracks", "TRACKS"]], showTracks() ? "tracks" : "albums", "ar-unit");
+    lx = segToggle(gr, lx - dp(24), y1, "SHOW", [["albums", "ALBUMS"], ["tracks", "TRACKS"]], showTracks() ? "tracks" : "albums", "ar-unit");
+    if (grid) {   // the title in the room left of the toggles: with the grouping when it fits, shortened when even that does not
+        const room = lx - dp(32) - (x0 + dp(14)), hs = st(GRID_ST.head, C.fg), n = filteredCount();
+        const base = `${showTracks() ? "TRACK" : "ALBUM"} GRID  ·  ${unitWord(n)}`, full = LIB.groupBy === "none" ? base : `${base}  ·  BY ${GROUP_LABEL[LIB.groupBy]}`;
+        if (room > dp(40)) {
+            gr.FillSolidRect(x0, y1 + dp(10), dp(5), dp(5), C.fg);
+            const t = [full, base, unitWord(n)].find(v => labelWidth(v, hs) <= room) || unitWord(n);
+            label(gr, fitLabel(t, hs, room), hs, x0 + dp(14), y1 + dp(6));
+        }
+    }
     const sx = segToggle(gr, xr, y2, "SORT", SORT_BY, LIB.sortBy, "ar-sort");
     segToggle(gr, sx - dp(24), y2, "GROUP", GROUP_BY, LIB.groupBy, "ar-group");
 }
