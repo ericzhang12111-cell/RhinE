@@ -15,10 +15,11 @@ colour schemes, each in light and dark). A pre-rendered intro film, scan transit
 
 ## Requirements
 
-- **foobar2000 v2** (64-bit recommended; developed on v2.26 x64)
+- **foobar2000 v2, 64-bit** (developed on v2.26 x64; the 32-bit build shows a black window, and install.ps1 refuses it)
 - **[Columns UI](https://github.com/reupen/columns_ui/releases)** 3.7 or later
-- **[JSplitter](https://github.com/dima-lur/jsplitter/releases)** 3.9.4 x64 (tested). JSplitter 4.3.3 cannot read the
-  layout's panel settings (*Error setting panel config* in the console, a black window): use 3.9.4.
+- **[JSplitter](https://github.com/dima-lur/jsplitter/releases)** x64: tested with 3.9.4, 4.3.1 and 4.3.3. If the
+  window stays black with *Error setting panel config* in the console, check that foobar2000 and JSplitter are both
+  x64, then try JSplitter 3.9.4.
 
 Install both components the usual way (*Preferences › Components › Install…*, then restart foobar2000).
 

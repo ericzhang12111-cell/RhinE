@@ -44,6 +44,13 @@ if (-not (Test-Path $config)) {
     Fail "no foobar2000 v2 configuration at '$profileDir'. foobar2000 v2 is required; if it is installed, start it once, close it and run this again."
 }
 
+# the theme needs the 64-bit foobar2000 (the 32-bit build shows a black window): the PE header's machine field says which
+$pe = [IO.File]::ReadAllBytes($exe)
+$machine = [BitConverter]::ToUInt16($pe, [BitConverter]::ToInt32($pe, 0x3C) + 4)
+if ($machine -ne 0x8664) {
+    Fail "'$exe' is the 32-bit foobar2000. Install the 64-bit foobar2000 v2 (and the x64 Columns UI and JSplitter) and run this again with its folder."
+}
+
 $running = Get-CimInstance Win32_Process -Filter "Name='foobar2000.exe'" | Where-Object { $_.ExecutablePath -eq $exe }
 if ($running) { Fail 'this foobar2000 is running. Close it and run this again.' }
 

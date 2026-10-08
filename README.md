@@ -64,10 +64,10 @@ RhinE（An Audio Archive）是一个 foobar2000 主题，一个为聆听而设�
 |---|---|---|
 | foobar2000 | v2，**64 位**（x64） | [foobar2000.org](https://www.foobar2000.org/download) |
 | Columns UI | 3.7 或更高 | [GitHub Releases](https://github.com/reupen/columns_ui/releases) |
-| JSplitter | **3.9.4 x64** | [GitHub Releases](https://github.com/dima-lur/jsplitter/releases) |
+| JSplitter | **x64**（已测试 3.9.4、4.3.1、4.3.3） | [GitHub Releases](https://github.com/dima-lur/jsplitter/releases) |
 
-> **注意 JSplitter 版本：** 请使用 3.9.4。JSplitter 4.3.3 无法读取本主题布局中的面板设置，会出现**黑屏**，控制台显示
-> *Error setting panel config*。foobar2000 也请使用 64 位版本，旧的 32 位（x86）版本同样会黑屏。
+> **注意：** foobar2000 和 JSplitter 都必须是 **64 位（x64）**。32 位（x86）的 foobar2000 会出现**黑屏**，安装脚本会拒绝安装。
+> 如果仍然黑屏、控制台显示 *Error setting panel config*，请换用 JSplitter 3.9.4。
 
 安装组件：在 foobar2000 中打开 *Preferences › Components*（首选项 › 组件），点 *Install…*（安装），选择下载的组件文件，
 然后按提示重启 foobar2000。两个组件都装好后再继续。
@@ -157,7 +157,7 @@ powershell -ExecutionPolicy Bypass -File uninstall.ps1 -Foobar "C:\Program Files
 
 #### 6. 常见问题
 
-- **黑屏，或只有一个空面板：** 检查 JSplitter 是否为 3.9.4 x64，foobar2000 是否为 64 位。换好后重新运行一次
+- **黑屏，或只有一个空面板：** 检查 foobar2000 与 JSplitter 是否都是 64 位；仍不行就换用 JSplitter 3.9.4。换好后重新运行一次
   `install.ps1`，让它重新导入布局。
 - **PowerShell 提示脚本被阻止运行：** 请使用上面完整的命令（带 `-ExecutionPolicy Bypass`）；如仍被拦截，先运行
   `Get-ChildItem -Recurse | Unblock-File` 解除下载文件的锁定。
