@@ -120,4 +120,14 @@ I18N["ja"] = {
     "LOCK CONFIRMED": "固定を確認", "TRACKING": "追跡中", "TARGET LOCKED": "目標を固定", "TARGET ACQUIRED": "目標を捕捉",
     "SCANNING": "走査中", "TELEMETRY": "テレメトリ", "DEPLOYMENT MANIFEST": "展開マニフェスト", "SELF-CHECK  ·  TTY0": "自己診断  ·  TTY0",
     "QUEUED": "待機", "SESSION AUTHORIZED": "セッション認証済み", "ACCESS GRANTED": "アクセス許可", "DEPLOYMENT SEQUENCE": "展開シーケンス",
+    // 1.3: DSP, Preferences, visualizations, light / dark help
+    "OFF": "オフ",
+    "PREFERENCES": "環境設定",
+    "VISUALIZATIONS": "ビジュアライザー",
+    "No visualizations found": "ビジュアライザーが見つかりません",
+    "foobar2000 Preferences…": "foobar2000 の環境設定…",
+    "No DSP presets yet": "DSP プリセットはまだありません",
+    "DSP Manager…": "DSP マネージャー…",
+    "Light / dark did not switch.\n\nThe theme follows Columns UI's mode. Switch it in MENU › View › Mode, or in Preferences › Display › Columns UI › Colours and fonts. When it is set to “Use system setting”, Windows' own light / dark setting decides.": "ライト / ダークが切り替わりませんでした。\n\nテーマは Columns UI のモードに従います。メニュー › View › Mode で切り替えるか、Preferences › Display › Columns UI › Colours and fonts で設定してください。「Use system setting」のときは、Windows のライト / ダーク設定に従います。",
+    "+ ADD MUSIC FOLDER": "+ 音楽フォルダーを追加",
 };

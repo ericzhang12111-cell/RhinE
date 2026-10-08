@@ -441,13 +441,13 @@ function on_mouse_move(x, y, mask) {
     const a = hits.at(x, y), onCase = STATE.view === "archive" && archiveMouseMove(x, y, a);
     if (STATE.view === "style") styleMouseMove(a);
     window.SetCursor(a || onCase ? 32649 : 32512);
-    if ((a && a.id) !== (hover && hover.id) && STATE.view === "lyrics") window.Repaint();
+    if ((a && a.id) !== (hover && hover.id) && (STATE.view === "lyrics" || STATE.view === "signal")) window.Repaint();
     hover = a;
 }
 function on_mouse_leave() {
     if (STATE.view === "archive") archiveMouseLeave();
     if (STATE.view === "style") styleMouseMove(null);
-    if (hover) { hover = null; if (STATE.view === "lyrics") window.Repaint(); }
+    if (hover) { hover = null; if (STATE.view === "lyrics" || STATE.view === "signal") window.Repaint(); }
 }
 function on_mouse_lbtn_dblclk(x, y) { if (STATE.view === "archive" && AR.layout === "grid" && !hits.at(x, y)) gridDblClick(x, y); }
 function on_mouse_wheel(step) {
@@ -469,7 +469,8 @@ function on_mouse_lbtn_up(x, y) {
     if (STATE.view === "archive") { archiveClick(x, y, a); return; }
     if (STATE.view === "style") { styleClick(a); return; }
     if (!a) return;
-    if (a.id === "model" && a.data !== Ring.mode) { Ring.mode = a.data; setSetting("ringMode", a.data); window.Repaint(); }
+    if (a.id === "vis") visMenu(a.x, a.y + a.h);
+    else if (a.id === "model" && a.data !== Ring.mode) { Ring.mode = a.data; setSetting("ringMode", a.data); window.Repaint(); }
     else if (a.id === "profile") inspectRequest();
     else if (a.id === "pager") { if (a.data === 0) fb.Prev(); else if (a.data === 2) fb.Next(); }
     else if (a.id === "queue") plman.ExecutePlaylistDefaultAction(a.data.pl, a.data.index);

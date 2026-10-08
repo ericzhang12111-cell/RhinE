@@ -97,3 +97,67 @@ function searchKey(vk) {
     if (vk === 0x08 || vk === 0x0D || vk === 0x1B) send("search-key", vk);   // Backspace, Enter, Esc
     return true;   // everything else arrives as characters
 }
+
+// foobar2000's main-menu commands are run by their path ("View/Mode/Dark"), and translated builds of foobar2000 and of
+// its components rename those paths. The commands below are tried by their English path, then found by their place in
+// the menu, which a translation does not change.
+function fbCommands() { try { return JSON.parse(fb.EnumerateMainMenuCommands()); } catch (e) { return []; } }
+const cmdParent = p => p.slice(0, p.lastIndexOf("/"));
+const cmdName = p => p.slice(p.lastIndexOf("/") + 1);
+
+// Columns UI's View › Mode: four commands, "Switch to other mode" (kept out of the menu itself), Light, Dark and Use
+// system setting, the one in use a radio item
+function runSwitchMode() {
+    if (fb.RunMainMenuCommand("View/Mode/Switch to other mode")) return true;
+    const groups = new Map();
+    for (const c of fbCommands()) {
+        if (c.Type !== "Fixed") continue;
+        const p = cmdParent(c.FullPath);
+        groups.set(p, (groups.get(p) || []).concat([c]));
+    }
+    for (const [p, g] of groups) {
+        const hidden = g.filter(c => !c.Visible && !c.HiddenByDefault);
+        if (p.split("/").length === 2 && g.length === 4 && hidden.length === 1 && g.some(c => c.Visible && c.Radio))
+            return fb.RunMainMenuCommand(hidden[0].FullPath);
+    }
+    return false;
+}
+
+// View › Visualizations: foobar2000's own (Spectrum, Oscilloscope, …) and those of installed components, each opening
+// in a window of its own; [path, name] pairs
+const VIS_MENUS = ["Visualizations", "Visualisations", "可视化", "视觉效果", "視覺化", "ビジュアライゼーション", "視覚エフェクト"];
+const visualizations = () => fbCommands()
+    .filter(c => c.Visible && c.FullPath.split("/").length === 3 && VIS_MENUS.includes(cmdName(cmdParent(c.FullPath))))
+    .map(c => [c.FullPath, cmdName(c.FullPath)]);
+function visMenu(x, y) {
+    const list = visualizations(), m = window.CreatePopupMenu();
+    list.forEach(([, name], i) => m.AppendMenuItem(0, 1 + i, name + "…"));
+    if (!list.length) m.AppendMenuItem(0x1, 999, tr("No visualizations found"));   // MF_GRAYED
+    m.AppendMenuSeparator();
+    m.AppendMenuItem(0, 900, tr("foobar2000 Preferences…"));
+    const id = m.TrackPopupMenu(x, y, 0);
+    if (id === 900) fb.ShowPreferences();
+    else if (list[id - 1]) fb.RunMainMenuCommand(list[id - 1][0]);
+}
+
+// DSP: foobar2000's DSP presets, the windows under View › DSP (the equalizer) and the DSP Manager page of Preferences
+function dspPresets() { try { return JSON.parse(fb.GetDSPPresets()); } catch (e) { return []; } }
+function activeDsps() { try { return JSON.parse(fb.GetActiveDSPs()); } catch (e) { return []; } }
+function dspMenu(x, y) {
+    const presets = dspPresets(), names = new Set(presets.map(p => p.name)), all = fbCommands();
+    const windows = all.filter(c => c.Type === "Fixed" && c.Visible && /^[^/]+\/DSP\/[^/]+$/.test(c.FullPath));
+    // Playback › DSP settings: the presets plus one more entry, the DSP Manager
+    const manager = all.find(c => c.Type === "Dynamic" && /DSP/.test(cmdName(cmdParent(c.FullPath))) && !names.has(cmdName(c.FullPath)));
+    const m = window.CreatePopupMenu();
+    presets.forEach((p, i) => m.AppendMenuItem(0, 1 + i, p.name.replace(/&/g, "&&")));
+    const on = presets.findIndex(p => p.active);
+    if (on >= 0) m.CheckMenuRadioItem(1, presets.length, 1 + on);
+    if (!presets.length) m.AppendMenuItem(0x1, 999, tr("No DSP presets yet"));
+    m.AppendMenuSeparator();
+    windows.forEach((c, i) => m.AppendMenuItem(0, 500 + i, cmdName(c.FullPath) + "…"));
+    m.AppendMenuItem(0, 900, tr("DSP Manager…"));
+    const id = m.TrackPopupMenu(x, y, 0);
+    if (id === 900) { if (!(manager && fb.RunMainMenuCommand(manager.FullPath))) fb.ShowPreferences(); }
+    else if (id >= 500 && windows[id - 500]) fb.RunMainMenuCommand(windows[id - 500].FullPath);
+    else if (id >= 1 && id <= presets.length) fb.SetDSPPreset(id - 1);
+}

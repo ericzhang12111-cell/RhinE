@@ -1,7 +1,7 @@
 ﻿"use strict";
 // Header (all views, 73 dp): inverse plate with the live Möbius emblem, identity block, numbered navigation with a
-// sliding inverse plate, search field (→ a "Search" autoplaylist), clock and MENU (the main menu, which the theme's
-// layout has no menu bar for). Registration crosses in the corners, hairline at the bottom.
+// sliding inverse plate, search field (→ a "Search" autoplaylist), clock, PREFERENCES (foobar2000's) and MENU (the main
+// menu, which the theme's layout has no menu bar for). Registration crosses in the corners, hairline at the bottom.
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\emblem.js");
@@ -162,17 +162,36 @@ function drawRight(gr, navEnd) {
     label(gr, tr("MENU"), st(ST.menu, mc, mHover ? C.fg : C.bg), mx + dp(22), my + Math.round((mh - labelHeight(ST.menu)) / 2));
     hits.add("menu", mx - dp(8), my, mw + dp(16), mh);
 
-    // clock: time over date
-    const cx = W - dp(284), now = new Date();
+    // PREFERENCES (foobar2000's Preferences): a small gear + label, left of MENU; just the gear when the label would
+    // leave the search field no room
+    const now = new Date();
     const days = tr("SUN MON TUE WED THU FRI SAT").split(" "), months = tr("JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC").split(" ");
+    const dateText = tr("{0} · {1} {2} {3}", days[now.getDay()], pad(now.getDate(), 2), months[now.getMonth()], now.getFullYear());
+    const cw = Math.max(labelWidth("00:00:00", st(ST.time, 0)), labelWidth(dateText, st(ST.date, 0)));
+    const fullW = dp(14) + dp(8) + labelWidth(tr("PREFERENCES"), st(ST.menu, 0));
+    const withLabel = mx - dp(30) - fullW - dp(36) - cw - dp(26) - (navEnd + dp(24)) >= dp(170);
+    const pw = withLabel ? fullW : dp(14), px = mx - dp(30) - pw;
+    const pHover = hover && hover.id === "prefs";
+    if (pHover) gr.FillSolidRect(px - dp(8), my, pw + dp(16), mh, C.fg);
+    const pc = pHover ? C.bg : C.fg, qx = px + dp(7), qy = my + mh / 2, qr = dp(3.5);
+    gr.DrawEllipse(qx - qr, qy - qr, 2 * qr, 2 * qr, HAIR, pc);
+    for (let k = 0; k < 8; k++) {
+        const t = k * Math.PI / 4, c = Math.cos(t), sn = Math.sin(t);
+        gr.DrawLine(qx + c * dp(4.5), qy + sn * dp(4.5), qx + c * dp(6.5), qy + sn * dp(6.5), Math.max(HAIR, dp(1.5)), pc);
+    }
+    if (withLabel) label(gr, tr("PREFERENCES"), st(ST.menu, pc, pHover ? C.fg : C.bg), px + dp(22), my + Math.round((mh - labelHeight(ST.menu)) / 2));
+    hits.add("prefs", px - dp(8), my, pw + dp(16), mh);
+
+    // clock: time over date, right-aligned before PREFERENCES
+    const cx = Math.min(W - dp(284), px - dp(36) - cw);
     const tw = label(gr, `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}:${pad(now.getSeconds(), 2)}`, st(ST.time, C.fg), cx, dp(18));
     // the date under the time, however large the text is set
     const dy = Math.max(dp(39), dp(18) + labelHeight(ST.time) - dp(2));
-    const dw = label(gr, tr("{0} · {1} {2} {3}", days[now.getDay()], pad(now.getDate(), 2), months[now.getMonth()], now.getFullYear()), st(ST.date, C["text-muted"]), cx, dy);
+    const dw = label(gr, dateText, st(ST.date, C["text-muted"]), cx, dy);
     hits.add("clock", cx, dp(16), Math.max(tw, dw) + dp(4), dp(36));
 
     // search field between the navigation and the clock; it shrinks, then hides, on narrow windows
-    const sx = Math.max(navEnd + dp(24), W - dp(540)), sw = Math.min(dp(230), cx - dp(26) - sx);
+    const sx = Math.max(navEnd + dp(24), cx - dp(26) - dp(230)), sw = Math.min(dp(230), cx - dp(26) - sx);
     if (sw < dp(110)) return;
     const sy = dp(24), sh = dp(24), focus = search.on;
     hline(gr, sx, sy + sh - HAIR, sw, focus ? C.fg : C["line-faint"]);
@@ -210,6 +229,7 @@ function on_mouse_lbtn_up(x, y) {
     if (!a) { if (search.on) blurSearch(); return; }
     if (a.id === "nav") send("view", a.data);
     else if (a.id === "menu") showMenu(a);
+    else if (a.id === "prefs") fb.ShowPreferences();
     else if (a.id === "search") focusSearch();
     if (a.id !== "search" && search.on) blurSearch();
 }

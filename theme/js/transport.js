@@ -2,8 +2,9 @@
 // Transport + status line (all views, 64 + 32 dp): the playing album's cover (click: inspect it in the Archive;
 // right-click: show the track in Playlists),
 // previous / play-pause / next / stop, the seek line (elapsed, remaining, START marker, orange playhead; click, drag,
-// wheel ±5 s), volume line, SHUFFLE ALL (the whole library, lib/bus.js), playback order, the LIGHT / DARK toggle with a
-// sliding plate; below, the section label (per view) and the signature with library counts.
+// wheel ±5 s), volume line, SHUFFLE ALL (the whole library, lib/bus.js), DSP (presets, equalizer, DSP Manager),
+// playback order, the LIGHT / DARK toggle with a sliding plate; below, the section label (per view) and the signature
+// with library counts.
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
 
@@ -192,6 +193,19 @@ function drawRuler(gr, left, right) {
     hits.add("ruler", x0 - dp(4), y - dp(25), x1 - x0 + dp(8), dp(50), { x0, x1, y });
 }
 
+// the DSP value: OFF, the one active DSP, or the first one and how many more (foobar2000 tells of preset changes only,
+// so it is read again whenever the pointer comes over the bar)
+let dspLabel = "", inside = false;
+function readDsp() {
+    const a = activeDsps(), first = a.length ? String(a[0]).toUpperCase() : "";
+    const t = !a.length ? tr("OFF") : (first.length > 18 ? first.slice(0, 17) + "…" : first) + (a.length > 1 ? ` +${a.length - 1}` : "");
+    if (t === dspLabel) return false;
+    dspLabel = t;
+    return true;
+}
+readDsp();
+function on_dsp_preset_changed() { if (readDsp()) window.Repaint(); }
+
 // volume (dB) <-> position 0..1 on a perceptual curve
 const vol2pos = db => clamp((Math.pow(10, db / 50) - 0.01) / 0.99, 0, 1);
 const pos2vol = p => p <= 0 ? -100 : 50 * Math.log10(0.99 * p + 0.01);
@@ -229,6 +243,14 @@ function drawRight(gr) {
     label(gr, tr("ORDER"), st(ST.key, C["text-muted"]), x - dp(8) - okw, ky);
     hits.add("order", x - dp(8) - okw, ty, okw + dp(8) + ow, th);
     x -= dp(8) + okw + dp(18);
+    // DSP: the active DSPs; the menu picks a preset or opens the equalizer / DSP Manager
+    const dhov = hover && hover.id === "dsp", dw = labelWidth(dspLabel, st(ST.val, 0));
+    x -= dw;
+    label(gr, dspLabel, st(ST.val, dhov ? C.accent : dspLabel === tr("OFF") ? C["text-muted"] : C.fg), x, ky);
+    const dkw = labelWidth("DSP", st(ST.key, 0));
+    label(gr, "DSP", st(ST.key, C["text-muted"]), x - dp(8) - dkw, ky);
+    hits.add("dsp", x - dp(8) - dkw, ty, dkw + dp(8) + dw, th);
+    x -= dp(8) + dkw + dp(18);
     // SHUFFLE ALL: the whole library in a random order
     const shov = hover && hover.id === "shuffle", sw = labelWidth(tr("SHUFFLE ALL"), st(ST.key, 0)) + dp(20) + dp(9);
     x -= sw;
@@ -288,11 +310,12 @@ function on_mouse_move(x, y) {
         return;
     }
     const a = hits.at(x, y);
+    if (!inside) { inside = true; if (readDsp()) window.Repaint(); }
     window.SetCursor(a ? 32649 : 32512);
     const key = a ? a.id + ":" + a.data : "", old = hover ? hover.id + ":" + hover.data : "";
     if (key !== old) { hover = a; window.Repaint(); }
 }
-function on_mouse_leave() { if (hover && !drag) { hover = null; window.Repaint(); } }
+function on_mouse_leave() { inside = false; if (hover && !drag) { hover = null; window.Repaint(); } }
 
 function on_mouse_lbtn_down(x, y) {
     const a = hits.at(x, y);
@@ -321,6 +344,7 @@ function on_mouse_lbtn_up(x, y) {
     if (a.id === "btn") [() => fb.Prev(), () => fb.PlayOrPause(), () => fb.Next(), () => fb.Stop()][a.data]();
     else if (a.id === "mode" && a.data !== MODE) send("mode");
     else if (a.id === "order") orderMenu(a);
+    else if (a.id === "dsp") { dspMenu(a.x, a.y + a.h); if (readDsp()) window.Repaint(); }
     else if (a.id === "shuffle") shuffleLibrary();
     else if (a.id === "cover") send("inspect");
 }

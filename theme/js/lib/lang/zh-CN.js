@@ -119,4 +119,14 @@ I18N["zh-CN"] = {
     "LOCK CONFIRMED": "锁定确认", "TRACKING": "追踪中", "TARGET LOCKED": "目标锁定", "TARGET ACQUIRED": "目标捕获",
     "SCANNING": "扫描中", "TELEMETRY": "遥测", "DEPLOYMENT MANIFEST": "部署清单", "SELF-CHECK  ·  TTY0": "自检  ·  TTY0",
     "QUEUED": "排队中", "SESSION AUTHORIZED": "会话已授权", "ACCESS GRANTED": "访问已允许", "DEPLOYMENT SEQUENCE": "部署序列",
+    // 1.3: DSP, Preferences, visualizations, light / dark help
+    "OFF": "关",
+    "PREFERENCES": "首选项",
+    "VISUALIZATIONS": "可视化",
+    "No visualizations found": "没有找到可视化",
+    "foobar2000 Preferences…": "foobar2000 首选项…",
+    "No DSP presets yet": "还没有 DSP 预设",
+    "DSP Manager…": "DSP 管理器…",
+    "Light / dark did not switch.\n\nThe theme follows Columns UI's mode. Switch it in MENU › View › Mode, or in Preferences › Display › Columns UI › Colours and fonts. When it is set to “Use system setting”, Windows' own light / dark setting decides.": "浅色 / 深色没有切换。\n\n主题跟随 Columns UI 的模式。请在 菜单 › View › Mode（汉化版：视图 › 模式）中切换，或在 Preferences › Display › Columns UI › Colours and fonts 中设置。设为“Use system setting”（使用系统设置）时，由 Windows 自己的浅色 / 深色设置决定。",
+    "+ ADD MUSIC FOLDER": "+ 添加音乐文件夹",
 };

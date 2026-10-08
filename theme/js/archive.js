@@ -593,8 +593,18 @@ ${pad(gi + 1, 2)}`, LABEL_FONTS.lipS, tone(0xFFF2F1EC), -84, 10 + ph * .52, 76, 
 function drawArchiveEmpty(gr) {
     const t = LIB.filter ? tr("NOTHING MATCHES \"{0}\"", LIB.filter.toUpperCase()) : tr(LIB.live ? "NO ALBUMS · THE MEDIA LIBRARY AND THE PLAYLISTS ARE EMPTY" : "INDEXING LIBRARY …");
     label(gr, t, st(AR_ST.meta, C["text-muted"]), arrayW() / 2, H / 2 - dp(6), 1);
+    // nothing to show yet: a way to the media library's folders (Preferences › Media Library)
+    if (LIB.live && !LIB.filter) {
+        const bt = tr("+ ADD MUSIC FOLDER"), bw = labelWidth(bt, st(AR_ST.btn, 0)) + dp(36), bh = dp(40);
+        const bx = Math.round(arrayW() / 2 - bw / 2), by = Math.round(H / 2 + dp(26));
+        gr.FillSolidRect(bx, by, bw, bh, C.fg);
+        label(gr, bt, st(AR_ST.btn, C.bg, C.fg), bx + dp(18), by + Math.round((bh - labelHeight(AR_ST.btn)) / 2));
+        hits.add("ar-addmusic", bx, by, bw, bh);
+    }
     drawArchiveBar(gr);
 }
+// foobar2000's Media Library page, where music folders are added (Library › Configure)
+function addMusicFolder() { if (!fb.RunMainMenuCommand("Library/Configure")) fb.ShowPreferences(); }
 
 // FILTER · "word" · 12 ALBUMS  ×   (top left, while the header's search filters the archive)
 function drawFilterChip(gr, x = dp(32), y = dp(22)) {
@@ -918,6 +928,7 @@ function archiveClick(x, y, a) {
     if (a) {
         switch (a.id) {
             case "ar-play": playAlbum(); return;
+            case "ar-addmusic": addMusicFolder(); return;
             case "ar-track": playAlbum(a.data); return;
             case "ar-unit": setUnit(a.data); return;
             case "ar-open": openAlbum(); return;

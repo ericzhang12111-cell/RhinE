@@ -57,14 +57,21 @@ function drawSignal(gr) {
     drawTrace(gr, g.cx - g.traceW / 2, g.traceY, g.traceW, g.traceH);
 }
 
-// MODEL [■ 3D | □ 2D | □ CLASSIC], right-aligned at x
+// [■ VISUALIZATIONS]  MODEL [■ 3D | □ 2D | □ CLASSIC], right-aligned at x
 const MODELS = ["3d", "2d", "classic"];
 function drawModelToggle(gr, xRight, y) {
     const items = [["3d", "3D"], ["2d", "2D"], ["classic", tr("CLASSIC")]], hh = dp(22), s = st(SG_ST.tog, 0);
     const widths = items.map(([, t]) => dp(9) + dp(5) + dp(6) + labelWidth(t, s) + dp(9)), total = widths.reduce((a, b) => a + b, 0);
     let ix = xRight - total;
     const mw = labelWidth(tr("MODEL"), st(SG_ST.tog, 0));
-    gr.FillSolidRect(ix - mw - dp(24), y - dp(6), total + mw + dp(30), hh + dp(12), C.bg);   // a plate (CLASSIC draws over a picture)
+    // VISUALIZATIONS: foobar2000's and installed components' visualizations, each in a window of its own (lib/bus.js)
+    const vt = tr("VISUALIZATIONS"), vw = dp(9) + dp(5) + dp(6) + labelWidth(vt, s) + dp(9), vx = ix - mw - dp(14) - dp(22) - vw;
+    const vhov = hover && hover.id === "vis";
+    gr.FillSolidRect(vx - dp(6), y - dp(6), xRight - vx + dp(12), hh + dp(12), C.bg);   // a plate (CLASSIC draws over a picture)
+    box(gr, vx, y, vw, hh, vhov ? C.accent : C["line-faint"]);
+    gr.FillSolidRect(vx + dp(9), y + hh / 2 - dp(2.5), dp(5), dp(5), vhov ? C.accent : C.fg);
+    label(gr, vt, st(SG_ST.tog, vhov ? C.fg : C["fg-soft"]), vx + dp(20), y + Math.round((hh - labelHeight(SG_ST.tog)) / 2));
+    hits.add("vis", vx, y, vw, hh);
     label(gr, tr("MODEL"), st(SG_ST.tog, C["text-muted"]), ix - dp(14), y + Math.round((hh - labelHeight(SG_ST.tog)) / 2), 2);
     items.forEach(([m, t], i) => {
         const on = Ring.mode === m, col = on ? C.bg : C["text-muted"];

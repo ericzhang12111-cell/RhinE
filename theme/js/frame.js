@@ -146,8 +146,19 @@ function setView(v) {
     broadcast();
 }
 
+// light / dark is Columns UI's mode (View › Mode, lib/bus.js). When nothing changed a moment later (the command was not
+// found, or the mode is managed elsewhere), say where it is set instead of failing silently.
+let modeCheck = 0;
+const MODE_HELP = "Light / dark did not switch.\n\nThe theme follows Columns UI's mode. Switch it in MENU › View › Mode, or in " +
+    "Preferences › Display › Columns UI › Colours and fonts. When it is set to “Use system setting”, Windows' own light / dark setting decides.";
 function switchMode() {
-    if (!fb.RunMainMenuCommand("View/Mode/Switch to other mode")) fb.RunMainMenuCommand(MODE === "dark" ? "View/Mode/Light" : "View/Mode/Dark");
+    const was = MODE;
+    runSwitchMode();
+    window.ClearTimeout(modeCheck);
+    modeCheck = window.SetTimeout(() => {
+        if (MODE !== was || restoring) return;
+        fb.ShowPopupMessage(tr(MODE_HELP), "Audio Archive");
+    }, 2500);
 }
 function toggleMode() {
     if (fx && fx.kind === "mode") return;
