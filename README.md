@@ -9,8 +9,8 @@ your albums as rendered specimen cases on shelves, a Möbius signal ring that pu
 (fetched online when your files have none), ten case skins and five colour schemes in light and dark. Windows,
 foobar2000 v2 with Columns UI and JSplitter.
 
-[![Bilibili 视频](https://img.shields.io/badge/Bilibili-Demo_Video_on_BILIBILI-fb7299?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1mYpK6WEPn)
-[![RhinE](https://i2.hdslb.com/bfs/archive/02ff5d803b96978126e29b571d7eebaf551ca2c1.jpg)](https://www.bilibili.com/video/BV1mYpK6WEPn)
+[![YouTube Video](https://img.shields.io/badge/YouTube-Watch_Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=g_raaMu_Fp0)
+[![RhinE](https://i2.hdslb.com/bfs/archive/02ff5d803b96978126e29b571d7eebaf551ca2c1.jpg)](https://www.youtube.com/watch?v=g_raaMu_Fp0)
 
 <img width="1932" height="1050" alt="archive-light" src="https://github.com/user-attachments/assets/b976cbf7-bd5b-4a20-bc41-62a6bdee1099" />
 
@@ -30,6 +30,8 @@ foobar2000 v2 with Columns UI and JSplitter.
 
 <img width="3412" height="1606" alt="162b47adff8e2d2c7f9ca23ff9757cc3" src="https://github.com/user-attachments/assets/aec4c0a3-d1f3-4503-9a76-5632f00b5246" />
 
+
+
 **Download** the zip from [Releases](../../releases), unzip it and run `install.ps1`. Requirements, install, use
 and screenshots: [theme/README.md](theme/README.md).
 
@@ -42,6 +44,9 @@ MIT licence ([LICENSE](LICENSE)); the Geist Mono fonts are under the SIL Open Fo
 RhinE（An Audio Archive）是一个 foobar2000 主题，一个为聆听而设计的档案终端：瑞士风格排版、只有一种强调色的单色调色板，再加一层科幻感——你的专辑化作渲染出的标本盒陈列在
 货架上，莫比乌斯信号环随音乐脉动，同步歌词（本地没有时自动在线获取），十种外壳皮肤和五套配色，每套都有浅色与深色。
 适用于 Windows 上的 foobar2000 v2，基于 Columns UI 和 JSplitter。
+
+[![Bilibili 视频](https://img.shields.io/badge/Bilibili-Demo_Video_on_BILIBILI-fb7299?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1mYpK6WEPn)
+[![RhinE](https://i2.hdslb.com/bfs/archive/02ff5d803b96978126e29b571d7eebaf551ca2c1.jpg)](https://www.bilibili.com/video/BV1mYpK6WEPn)
 
 五个视图：**档案**（每张专辑——或每首曲目——都是货架上的一个标本盒，也可切换为封面网格）、**播放列表**（播放列表管理器、
 曲目导轨、两种预设的原生播放列表、带播放队列的资料卡）、**歌词**（同步歌词，来自本地文件或 LRCLIB 在线获取）、
