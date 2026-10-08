@@ -17,22 +17,7 @@ const TR = { state: "", gen: 0 };   // state of the current track's translation:
 const TR_STATE_TEXT = { TRANSLATING: "TRANSLATING…", QUOTA: "TRANSLATION QUOTA USED UP", KEY: "TRANSLATION KEY MISSING OR WRONG",
                         OFFLINE: "TRANSLATION OFFLINE", FAILED: "TRANSLATION FAILED" };
 
-// Windows' display language as one of TR_TARGETS' codes ("en" when it is none of them)
-function systemLang() {
-    let tag = "";
-    try {
-        const sh = new ActiveXObject("WScript.Shell");
-        try { const v = sh.RegRead("HKCU\\Control Panel\\Desktop\\PreferredUILanguages"); tag = String(typeof v === "object" && v.toArray ? v.toArray()[0] : v).split(/[,\s]/)[0]; } catch (e) { /* not set */ }
-        if (!tag) tag = String(sh.RegRead("HKCU\\Control Panel\\International\\LocaleName"));
-    } catch (e) { /* no registry access */ }
-    tag = tag.toLowerCase();
-    if (/^zh-(tw|hk|mo|hant)/.test(tag)) return "zh-TW";
-    if (tag.startsWith("zh")) return "zh-CN";
-    const base = tag.split("-")[0];
-    return ["ja", "ko", "de", "fr"].includes(base) ? base : "en";
-}
-const SYSTEM_LANG = systemLang();
-
+// SYSTEM_LANG (Windows' display language) comes from lib/i18n.js
 // target: a TR_TARGETS code or "off"; community: NetEase (lyrics and Chinese translations); machine: machine translation
 function trSettings() {
     const target = getSetting("lyricsTarget", SYSTEM_LANG), provider = getSetting("trProvider", "mymemory");

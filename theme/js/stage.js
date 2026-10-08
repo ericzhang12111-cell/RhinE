@@ -167,7 +167,7 @@ function drawLyricsView(gr) {
     // card, as tall as the view
     const ch = Math.max(cardHeight(), H - 2 * dp(24));
     if (dirty.card || !layers.card || layers.card.h !== ch) {
-        layers.card = renderLayer(dp(CARD_W), ch, (g, w, h) => drawCard(g, w, h, "queue", "INFO"), layers.card);
+        layers.card = renderLayer(dp(CARD_W), ch, (g, w, h) => drawCard(g, w, h, "queue", tr("INFO")), layers.card);
         dirty.card = false;
     }
     gr.DrawImage(layers.card.img, cardX(), dp(24), layers.card.w, layers.card.h, 0, 0, layers.card.w, layers.card.h);
@@ -177,15 +177,15 @@ function drawLyricsView(gr) {
     const g = lyricsGeom();
     drawLyricsFrame(gr, g);
     alertShown = false;
-    if (T.missing) drawAlert(gr, g, { head: ["SYSTEM WARNING", "PLAYBACK · 03"], title: "WARNING", wait: "ADVANCING",
-        lines: [["FILE NOT FOUND", 0], ["DECODER · NO INPUT", 0], ["ADVANCING TO NEXT TRACK", 1]] });
-    else if (!T.info) drawAlert(gr, g, { head: ["SYSTEM NOTICE", "PLAYBACK · 03"], title: "STANDBY", wait: "AWAITING SIGNAL",
-        lines: [["NO TRACK LOADED", 0], ["OUTPUT · IDLE", 0]], tone: C["fg-soft"] });
+    if (T.missing) drawAlert(gr, g, { head: [tr("SYSTEM WARNING"), tr("PLAYBACK · 03")], title: tr("WARNING"), wait: tr("ADVANCING"),
+        lines: [[tr("FILE NOT FOUND"), 0], [tr("DECODER · NO INPUT"), 0], [tr("ADVANCING TO NEXT TRACK"), 1]] });
+    else if (!T.info) drawAlert(gr, g, { head: [tr("SYSTEM NOTICE"), tr("PLAYBACK · 03")], title: tr("STANDBY"), wait: tr("AWAITING SIGNAL"),
+        lines: [[tr("NO TRACK LOADED"), 0], [tr("OUTPUT · IDLE"), 0]], tone: C["fg-soft"] });
     else if (T.lyrics) drawLyrics(gr, g);
     else {
-        const online = !STATE.lyricsOnline ? "OFF" : LYR.state || "NOT FOUND", searching = LYR.state === "SEARCHING";
-        drawAlert(gr, g, { head: ["SYSTEM NOTICE", "LYRICS · 03"], title: searching ? "SEARCHING" : "NO LYRICS", wait: searching ? "QUERYING LRCLIB" : "AWAITING INPUT",
-            lines: [["LRC FILE · NOT FOUND", 0], ["LYRICS TAG · NOT FOUND", 0], [`LRCLIB · ${online}`, searching ? 1 : 0], ["PLAYBACK CONTINUES", 1]] });
+        const online = tr(!STATE.lyricsOnline ? "OFF" : LYR.state || "NOT FOUND"), searching = LYR.state === "SEARCHING";
+        drawAlert(gr, g, { head: [tr("SYSTEM NOTICE"), tr("LYRICS · 03")], title: tr(searching ? "SEARCHING" : "NO LYRICS"), wait: tr(searching ? "QUERYING LRCLIB" : "AWAITING INPUT"),
+            lines: [[tr("LRC FILE · NOT FOUND"), 0], [tr("LYRICS TAG · NOT FOUND"), 0], [`LRCLIB · ${online}`, searching ? 1 : 0], [tr("PLAYBACK CONTINUES"), 1]] });
     }
 }
 
@@ -196,10 +196,10 @@ function drawLyricsFrame(gr, g) {
     // ■ LYRICS MONITOR · 03   [LRC · SYNCED]                                                      06 LINES · 2 LANG
     const L = T.lyrics, playing = fb.IsPlaying && !fb.IsPaused, lx = g.x0 + dp(40), ty = dp(30);
     gr.FillSolidRect(lx, ty + dp(2), dp(5), dp(5), C.fg);
-    const lw = label(gr, "LYRICS MONITOR  ·  03", st(LF_ST.head, C.fg), lx + dp(15), ty - dp(2));
-    const state = T.missing ? "FAULT" : !T.info ? "STANDBY" : L ? `${L.source} · ${!L.translated ? "SYNCED" : L.translated === "netease" ? "TR" : "MT"}` : "NO LYRICS";
+    const lw = label(gr, tr("LYRICS MONITOR  ·  03"), st(LF_ST.head, C.fg), lx + dp(15), ty - dp(2));
+    const state = T.missing ? tr("FAULT") : !T.info ? tr("STANDBY") : L ? `${tr(L.source)} · ${tr(!L.translated ? "SYNCED" : L.translated === "netease" ? "TR" : "MT")}` : tr("NO LYRICS");
     chip(gr, state, lx + dp(15) + lw + dp(14), dp(24), dp(18), L && playing ? "acc" : "inv", 8.5, C.bg);
-    if (L) label(gr, `${pad(L.lines.length, 2)} LINES  ·  ${L.langs} LANG`, st(LF_ST.tiny, C["text-muted"]), g.x1 - dp(40), ty, 2);
+    if (L) label(gr, tr("{0} LINES  ·  {1} LANG", pad(L.lines.length, 2), L.langs), st(LF_ST.tiny, C["text-muted"]), g.x1 - dp(40), ty, 2);
     if (!L || T.missing || !T.info) return;
     // crop marks around the lines
     const pitch = dp(58), bx0 = Math.round(g.cx - g.cw / 2 - dp(24)), bx1 = Math.round(g.cx + g.cw / 2 + dp(24));
@@ -212,7 +212,7 @@ function drawLyricsFrame(gr, g) {
     const lines = L.lines, cur = Math.max(0, lyricIndex(lines, fb.IsPlaying ? fb.PlaybackTime : 0));
     const avail = by1 - by0 - dp(40), n = Math.max(1, Math.min(lines.length, Math.floor(avail / dp(4))));
     const step = Math.min(dp(9), avail / n), rx = g.x1 - dp(58), ry0 = Math.round(g.cy + dp(26) - n * step / 2);
-    label(gr, "LINE", st(LF_ST.tiny, C["text-muted"]), rx, ry0 - dp(20));
+    label(gr, tr("LINE"), st(LF_ST.tiny, C["text-muted"]), rx, ry0 - dp(20));
     const curK = Math.min(n - 1, Math.floor(cur * n / lines.length));
     for (let k = 0; k < n; k++) {
         const y = Math.round(ry0 + k * step);
@@ -235,16 +235,16 @@ function drawLeft(gr, w, h) {
     const x = dp(24);
     let y = dp(26);
     gr.FillSolidRect(x, y + dp(2.5), dp(22), dp(6), C.fg);
-    label(gr, "LYRICS SECTION · PLAYBACK", st(ST.sbar, C.fg), x + dp(34), y);
+    label(gr, tr("LYRICS SECTION · PLAYBACK"), st(ST.sbar, C.fg), x + dp(34), y);
     y += dp(29);
     const I = T.info, playing = fb.IsPlaying;
     const rows = [
-        ["SPECTRUM", "48 BANDS / LIVE"],
-        ["PEAK", playing ? fmtDb(AUDIO.peakDb) : "—"],
-        ["RMS", playing ? fmtDb(AUDIO.rmsDb) : "—"],
-        ["STEREO", playing ? `${AUDIO.corr.toFixed(2)} CORR` : "—"],
-        ["RATE", I && I.rate ? `${+(I.rate / 1000).toFixed(1)} KHZ${I.bits ? " / " + I.bits + " BIT" : ""}` : "—"],
-        ["SESSION", fmtTime((Date.now() - T.session0) / 1000).padStart(8, "00:")],
+        [tr("SPECTRUM"), tr("48 BANDS / LIVE")],
+        [tr("PEAK"), playing ? fmtDb(AUDIO.peakDb) : "—"],
+        [tr("RMS"), playing ? fmtDb(AUDIO.rmsDb) : "—"],
+        [tr("STEREO"), playing ? tr("{0} CORR", AUDIO.corr.toFixed(2)) : "—"],
+        [tr("RATE"), I && I.rate ? `${+(I.rate / 1000).toFixed(1)} KHZ${I.bits ? " / " + I.bits + " BIT" : ""}` : "—"],
+        [tr("SESSION"), fmtTime((Date.now() - T.session0) / 1000).padStart(8, "00:")],
     ];
     for (const [k, v] of rows) {
         label(gr, k, st(ST.key, C["text-muted"]), x, y + dp(1));
@@ -253,15 +253,15 @@ function drawLeft(gr, w, h) {
     }
     // analysis log
     y += dp(18);
-    const tw = labelWidth("ANALYSIS LOG", st(ST.tag, 0)) + dp(12), th = dp(13);
+    const tw = labelWidth(tr("ANALYSIS LOG"), st(ST.tag, 0)) + dp(12), th = dp(13);
     gr.FillSolidRect(x, y, tw, th, C.fg);
-    label(gr, "ANALYSIS LOG", st(ST.tag, C.bg, C.fg), x + dp(6), y + Math.round((th - labelHeight(ST.tag)) / 2));
+    label(gr, tr("ANALYSIS LOG"), st(ST.tag, C.bg, C.fg), x + dp(6), y + Math.round((th - labelHeight(ST.tag)) / 2));
     y += th + dp(10);
     const bw = dp(CARD_W), lines = analysisLines(), bh = dp(12 + 10 + 10) + HAIR + lines.length * dp(18) + dp(12);
     box(gr, x, y, bw, bh, C["line-faint"]);
     const fault = T.missing;
-    label(gr, "ANALYSIS", st(ST.anaH, C.fg), x + dp(14), y + dp(12));
-    label(gr, fault ? "FAULT" : fb.IsPlaying ? (fb.IsPaused ? "PAUSED" : "ACTIVE") : "STANDBY", st(ST.anaH, fault || fb.IsPlaying ? C.accent : C["text-muted"]), x + bw - dp(14), y + dp(12), 2);
+    label(gr, tr("ANALYSIS"), st(ST.anaH, C.fg), x + dp(14), y + dp(12));
+    label(gr, tr(fault ? "FAULT" : fb.IsPlaying ? (fb.IsPaused ? "PAUSED" : "ACTIVE") : "STANDBY"), st(ST.anaH, fault || fb.IsPlaying ? C.accent : C["text-muted"]), x + bw - dp(14), y + dp(12), 2);
     hline(gr, x + dp(14), y + dp(32), bw - dp(28));
     let ly = y + dp(32) + HAIR + dp(10);
     lines.forEach(([text, on], i) => {
@@ -282,9 +282,9 @@ function drawSpectrumBox(gr) {
     const R = LEFT_SPEC;
     specRect = null;
     if (!R || R.h < dp(110)) return;
-    const th = dp(13), ts = st(ST.tag, C.bg, C.fg), tw = labelWidth("SPECTRUM", ts) + dp(12);
+    const th = dp(13), ts = st(ST.tag, C.bg, C.fg), tw = labelWidth(tr("SPECTRUM"), ts) + dp(12);
     gr.FillSolidRect(R.x, R.y, tw, th, C.fg);
-    label(gr, "SPECTRUM", ts, R.x + dp(6), R.y + Math.round((th - labelHeight(ST.tag)) / 2));
+    label(gr, tr("SPECTRUM"), ts, R.x + dp(6), R.y + Math.round((th - labelHeight(ST.tag)) / 2));
     const by = R.y + th + dp(10), bh = R.h - th - dp(10), padX = dp(14);
     box(gr, R.x, by, R.w, bh, C["line-faint"]);
     gr.FillSolidRect(R.x + 1, by + 1, R.w - 2, bh - 2, C.bg);
@@ -305,11 +305,11 @@ function analysisLines() {
     const res = I.bits && I.rate ? ` ${I.bits}/${+(I.rate / 1000).toFixed(1)}` : I.bitrate ? ` ${I.bitrate} KBPS` : "";
     const L = T.lyrics;
     return [
-        [`DECODE · ${I.codec.toUpperCase()}${res}`, true],
-        [`REPLAYGAIN · ${I.gain ? "TRACK " + I.gain.toUpperCase().replace("-", "−") : "NONE"}`, true],
-        [`LYRICS · ${L ? `${L.source} · ${L.langs} LANGUAGE${L.langs > 1 ? "S" : ""}` : "NONE"}`, true],
-        [`OUTPUT · ${I.ch || 2} CH · VOLUME ${fb.Volume <= -100 ? "MUTED" : fmtDb(fb.Volume)}`, true],
-        [`NEXT · ${T.next}`, true],
+        [`${tr("DECODE")} · ${I.codec.toUpperCase()}${res}`, true],
+        [`${tr("REPLAYGAIN")} · ${I.gain ? tr("TRACK") + " " + I.gain.toUpperCase().replace("-", "−") : tr("NONE")}`, true],
+        [`${tr("LYRICS")} · ${L ? `${tr(L.source)} · ${tr(L.langs > 1 ? "{0} LANGUAGES" : "{0} LANGUAGE", L.langs)}` : tr("NONE")}`, true],
+        [tr("OUTPUT · {0} CH · VOLUME {1}", I.ch || 2, fb.Volume <= -100 ? tr("MUTED") : fmtDb(fb.Volume)), true],
+        [`${tr("NEXT")} · ${T.next}`, true],
     ];
 }
 
@@ -357,8 +357,8 @@ function drawLyrics(gr, g) {
         }
     }
     gr.PopClip();
-    const tr = TR.state ? `  ·  ${TR_STATE_TEXT[TR.state] || TR.state}` : T.lyrics.translated ? `  ·  TRANSLATED · ${T.lyrics.translated.toUpperCase()}` : "";
-    label(gr, `LYRICS / ${T.lyrics.source}  ·  LINE ${pad(i + 1, 2)} OF ${pad(L.length, 2)}${tr}`, st(ST.key, C["text-muted"]), cx, H - dp(46), 1);
+    const trNote = TR.state ? `  ·  ${tr(TR_STATE_TEXT[TR.state] || TR.state)}` : T.lyrics.translated ? `  ·  ${tr("TRANSLATED")} · ${tr(T.lyrics.translated.toUpperCase())}` : "";
+    label(gr, `${tr("LYRICS")} / ${tr(T.lyrics.source)}  ·  ${tr("LINE {0} OF {1}", pad(i + 1, 2), pad(L.length, 2))}${trNote}`, st(ST.key, C["text-muted"]), cx, H - dp(46), 1);
 }
 
 // a warning pop-up: a framed window with a filled title strip and a hatched drop shadow; inside, the triangle, the title

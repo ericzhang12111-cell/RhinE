@@ -33,7 +33,7 @@ const clock = Clock(() => {
 
 function load(animate) {
     const pl = plman.ActivePlaylist;
-    const name = pl >= 0 ? plman.GetPlaylistName(pl) : "NO PLAYLIST";
+    const name = pl >= 0 ? plman.GetPlaylistName(pl) : tr("NO PLAYLIST");
     if (pl !== P.pl || !P.name || P.name.text !== name) {
         P.name = animate ? Scramble(name) : { text: name, tw: Tween(0), seed: 0 };
         if (animate) setRoll(P.no, pad(pl + 1, 3)); else P.no = Roll(pad(pl + 1, 3));
@@ -53,14 +53,14 @@ function on_paint(gr) {
     const x0 = dp(20), x1 = W - dp(20), pl = P.pl;
     // row 1: bracketed head
     const y = dp(18), bh = dp(34), f = font(12, 700), cell = Math.ceil(gr.CalcTextWidth("0", f));
-    const lw = labelWidth("PLAYLIST NO.", hst(HST.head, 0)), bw = dp(14) + lw + dp(10) + cell * 3 + dp(14);
+    const lw = labelWidth(tr("PLAYLIST NO."), hst(HST.head, 0)), bw = dp(14) + lw + dp(10) + cell * 3 + dp(14);
     for (const [sx, sy] of [[x0, y], [x0 + bw - dp(6), y], [x0, y + bh - dp(6)], [x0 + bw - dp(6), y + bh - dp(6)]]) gr.FillSolidRect(sx, sy, dp(6), dp(6), C.fg);
-    label(gr, "PLAYLIST NO.", hst(HST.head, C.fg), x0 + dp(14), y + Math.round((bh - labelHeight(HST.head)) / 2));
+    label(gr, tr("PLAYLIST NO."), hst(HST.head, C.fg), x0 + dp(14), y + Math.round((bh - labelHeight(HST.head)) / 2));
     drawRoll(gr, P.no, f, C.fg, x0 + dp(14) + lw + dp(10), y, cell, bh);
     // stats, right-aligned: 041 TRACKS · 3:02:11 · 1.9 GB
     let sx = x1;
     if (pl >= 0) {
-        const s = plStats(pl), parts = [[pad(s.count, s.count > 999 ? 4 : 3), " TRACKS"], [fmtTime(s.length), ""], [fmtSize(s.size), ""]];
+        const s = plStats(pl), parts = [[pad(s.count, s.count > 999 ? 4 : 3), " " + tr("TRACKS")], [fmtTime(s.length), ""], [fmtSize(s.size), ""]];
         const sy = y + Math.round((bh - labelHeight(HST.stat)) / 2);
         for (let i = parts.length - 1; i >= 0; i--) {
             const [n, word] = parts[i];
@@ -80,10 +80,10 @@ function on_paint(gr) {
     let cx = x0;
     if (pl >= 0) {
         const loc = plman.GetPlayingItemLocation();
-        if (loc.IsValid && loc.PlaylistIndex === pl) cx += chip(gr, fb.IsPaused ? "PAUSED" : "PLAYING", cx, cy, ch, "acc", 9, C.bg) + dp(6);
-        if (plman.IsAutoPlaylist(pl)) cx += chip(gr, "AUTOPLAYLIST", cx, cy, ch, "", 9, C.bg) + dp(6);
-        else if (plman.IsPlaylistLocked(pl)) cx += chip(gr, "LOCKED", cx, cy, ch, "", 9, C.bg) + dp(6);
-        if (P.sel > 1) label(gr, `${pad(P.sel, 2)} SELECTED`, hst(HST.sel, C["text-muted"]), cx + dp(6), cy + Math.round((ch - labelHeight(HST.sel)) / 2));
+        if (loc.IsValid && loc.PlaylistIndex === pl) cx += chip(gr, tr(fb.IsPaused ? "PAUSED" : "PLAYING"), cx, cy, ch, "acc", 9, C.bg) + dp(6);
+        if (plman.IsAutoPlaylist(pl)) cx += chip(gr, tr("AUTOPLAYLIST"), cx, cy, ch, "", 9, C.bg) + dp(6);
+        else if (plman.IsPlaylistLocked(pl)) cx += chip(gr, tr("LOCKED"), cx, cy, ch, "", 9, C.bg) + dp(6);
+        if (P.sel > 1) label(gr, tr("{0} SELECTED", pad(P.sel, 2)), hst(HST.sel, C["text-muted"]), cx + dp(6), cy + Math.round((ch - labelHeight(HST.sel)) / 2));
     }
     drawLayoutToggle(gr, x1, cy, ch);
     // heavy rule, column titles, hairline
@@ -139,8 +139,8 @@ function drawColumns(gr, y, h) {
     for (const { c, x, w } of columnLayout(presetMeta())) {
         if (!c.title) continue;
         const hov = c.sort && hover && hover.id === "col" && hover.data === c.title, col = hov ? C.fg : C["text-muted"];
-        if (c.align === "right") label(gr, c.title, hst(HST.col, col), Math.round(x + w - dp(6)), ty, 2);
-        else label(gr, c.title, hst(HST.col, col), Math.round(x + dp(6)), ty);
+        if (c.align === "right") label(gr, tr(c.title), hst(HST.col, col), Math.round(x + w - dp(6)), ty, 2);
+        else label(gr, tr(c.title), hst(HST.col, col), Math.round(x + dp(6)), ty);
         if (x > dp(8)) vline(gr, Math.round(x), y + dp(6), h - dp(12), C.hair);
         if (c.sort && P.pl >= 0) hits.add("col", x, y, w, h, c.title);
     }
@@ -156,10 +156,10 @@ function sortBy(title) {
 
 // LAYOUT [■ ALBUM | □ INDEX]: the playlist preset (the P key and the playlist's context menu switch it too)
 function drawLayoutToggle(gr, xRight, y, hh) {
-    const items = [["album", "ALBUM"], ["index", "INDEX"]], s = hst(HST.tog, 0);
+    const items = [["album", tr("ALBUM")], ["index", tr("INDEX")]], s = hst(HST.tog, 0);
     const widths = items.map(([, t]) => dp(9) + dp(5) + dp(6) + labelWidth(t, s) + dp(9)), total = widths[0] + widths[1];
     let ix = xRight - total;
-    label(gr, "LAYOUT", hst(HST.tog, C["text-muted"]), ix - dp(12), y + Math.round((hh - labelHeight(HST.tog)) / 2), 2);
+    label(gr, tr("LAYOUT"), hst(HST.tog, C["text-muted"]), ix - dp(12), y + Math.round((hh - labelHeight(HST.tog)) / 2), 2);
     items.forEach(([p, t], i) => {
         const on = STATE.preset === p, hov = !on && hover && hover.id === "preset", col = on ? C.bg : hov ? C.fg : C["text-muted"];
         if (on) gr.FillSolidRect(ix, y, widths[i], hh, C.fg);
@@ -187,7 +187,7 @@ function on_mouse_lbtn_dblclk(x, y) {
     const a = hits.at(x, y);
     if (!a || a.id !== "name" || P.pl < 0) return;
     let name;
-    try { name = utils.InputBox(window.ID, "Playlist name", "Rename playlist", plman.GetPlaylistName(P.pl), true); } catch (e) { return; }
+    try { name = utils.InputBox(window.ID, tr("Playlist name"), tr("Rename playlist"), plman.GetPlaylistName(P.pl), true); } catch (e) { return; }
     if (name && name.trim()) plman.RenamePlaylist(P.pl, name.trim());
 }
 function on_char(code) { searchChar(code); }

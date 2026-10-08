@@ -89,8 +89,8 @@ function drawCard(gr, w, h, kind = "pager", ghost = "INFO") {
     let y = dp(14);
     // top row: ■ SIGNAL PROFILE ——— [FILE 003]
     gr.FillSolidRect(px, y + dp(5.5), dp(5), dp(5), C.fg);
-    const lw = label(gr, "SIGNAL PROFILE", npSt(NP_ST.lbl, C["text-muted"]), px + dp(15), y + dp(2));
-    const chipText = T.file ? `FILE ${pad(T.file, 3)}` : "FILE —";
+    const lw = label(gr, tr("SIGNAL PROFILE"), npSt(NP_ST.lbl, C["text-muted"]), px + dp(15), y + dp(2));
+    const chipText = `${tr("FILE")} ${T.file ? pad(T.file, 3) : "—"}`;
     const cw = labelWidth(chipText, { size: 8, weight: 600, track: .1, colour: 0, bg: 0 }) + dp(16);
     chip(gr, chipText, w - px - cw, y, dp(16), "inv", 8);
     hline(gr, px + dp(15) + lw + dp(10), y + dp(8), w - px - cw - dp(10) - (px + dp(15) + lw + dp(10)));
@@ -99,21 +99,21 @@ function drawCard(gr, w, h, kind = "pager", ghost = "INFO") {
     drawHeroCase(gr, 0, y, w, dp(250), T.handle ? cover(T.handle, () => npChanged(true, T.handle, "cover")) : null, clamp(heroClear.x, 0, 1), T.no);
     y += dp(250);
     // tags
-    const state = !fb.IsPlaying ? "STANDBY" : fb.IsPaused ? "PAUSED" : "NOW PLAYING";
+    const state = tr(!fb.IsPlaying ? "STANDBY" : fb.IsPaused ? "PAUSED" : "NOW PLAYING");
     let tx = px;
     tx += chip(gr, state, tx, y, dp(18), "inv", 9) + dp(6);
     if (I) {
         const hires = I.lossless && (I.bits > 16 || I.rate > 48000);
-        tx += chip(gr, hires ? "HI-RES" : I.lossless ? "LOSSLESS" : "LOSSY", tx, y, dp(18), "acc", 9) + dp(6);
+        tx += chip(gr, tr(hires ? "HI-RES" : I.lossless ? "LOSSLESS" : "LOSSY"), tx, y, dp(18), "acc", 9) + dp(6);
         if (I.track) chip(gr, `${I.track}${I.total ? " / " + I.total : ""}`, tx, y, dp(18), "", 9);
     }
     y += dp(18 + 10);
     // title (plain, up to two lines)
-    const title = I ? (T.title ? scrambleText(T.title) : I.title) : "NO SIGNAL";
+    const title = I ? (T.title ? scrambleText(T.title) : I.title) : tr("NO SIGNAL");
     gr.DrawText(title, fontFor(title, 19, 600), C.fg, px, y, iw, dp(54), 0x00000800 | 0x00000010 | 0x00008000 | 0x00040000);   // NOPREFIX | WORDBREAK | END_ELLIPSIS | EDITCONTROL
     y += dp(54 + 10);
     // track information loaded
-    label(gr, I ? "TRACK INFORMATION LOADED" : "AWAITING SIGNAL", npSt(NP_ST.loaded, C["fg-soft"]), px, y);
+    label(gr, tr(I ? "TRACK INFORMATION LOADED" : "AWAITING SIGNAL"), npSt(NP_ST.loaded, C["fg-soft"]), px, y);
     if (I) {
         gr.FillSolidRect(px, y + dp(17), dp(5), dp(5), C.accent);
         const line = [I.artist, I.album, I.year].filter(Boolean).join(" · ").toUpperCase();
@@ -123,11 +123,11 @@ function drawCard(gr, w, h, kind = "pager", ghost = "INFO") {
     // profile table
     gr.FillSolidRect(px, y, iw, dp(18), C.fg);
     const phy = y + Math.round((dp(18) - labelHeight(NP_ST.ph)) / 2);
-    label(gr, "PROFILE", npSt(NP_ST.ph, C.bg, C.fg), px + dp(8), phy);
+    label(gr, tr("PROFILE"), npSt(NP_ST.ph, C.bg, C.fg), px + dp(8), phy);
     label(gr, T.no ? `ARC-${pad(T.no, 4)}` : "ARC-—", npSt(NP_ST.ph, C.bg, C.fg), px + iw - dp(8), phy, 2);
     y += dp(18 + 11);
-    const cells = I ? [["FORMAT", I.codec], ["BITRATE", I.bitrate ? fmtCount(I.bitrate) : "—"], ["PLAYS", I.plays || "—"], ["GAIN", I.gain ? I.gain.replace("-", "−") : "—"]]
-                    : [["FORMAT", "—"], ["BITRATE", "—"], ["PLAYS", "—"], ["GAIN", "—"]];
+    const cells = I ? [[tr("FORMAT"), I.codec], [tr("BITRATE"), I.bitrate ? fmtCount(I.bitrate) : "—"], [tr("PLAYS"), I.plays || "—"], [tr("GAIN"), I.gain ? I.gain.replace("-", "−") : "—"]]
+                    : [[tr("FORMAT"), "—"], [tr("BITRATE"), "—"], [tr("PLAYS"), "—"], [tr("GAIN"), "—"]];
     const colW = (iw - dp(16)) / 2;
     cells.forEach(([k, v], i) => {
         const cx = px + dp(8) + (i % 2) * colW, cy = y + Math.floor(i / 2) * dp(20);
@@ -155,11 +155,11 @@ function drawQueue(gr, x, y, w, h) {
     const rowH = dp(24), n = Math.max(0, Math.floor((h - dp(22)) / rowH)), items = upNext(n);
     if (h < labelHeight(NP_ST.qh)) return;          // a short window: no room for the section at all
     const queued = items.length && items[0].queued;
-    label(gr, queued ? "QUEUE" : "QUEUE / NEXT", npSt(NP_ST.qh, C["text-muted"]), x, y);
+    label(gr, tr(queued ? "QUEUE" : "QUEUE / NEXT"), npSt(NP_ST.qh, C["text-muted"]), x, y);
     label(gr, pad(items.length, 2), npSt(NP_ST.qh, queued ? C.accent : C["text-muted"]), x + w, y, 2);
     y += dp(22);
     if (!items.length) {
-        if (dp(22 + 6) + labelHeight(NP_ST.key) <= h) label(gr, "END OF PLAYLIST", npSt(NP_ST.key, C["text-muted"]), x, y + dp(6));
+        if (dp(22 + 6) + labelHeight(NP_ST.key) <= h) label(gr, tr("END OF PLAYLIST"), npSt(NP_ST.key, C["text-muted"]), x, y + dp(6));
         return;
     }
     items.forEach(it => {

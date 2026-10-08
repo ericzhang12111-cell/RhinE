@@ -23,7 +23,7 @@ function signalGeom() {
 
 function drawSignal(gr) {
     if (Ring.mode === "classic") { drawClassic(gr); return; }
-    const g = signalGeom(), playing = fb.IsPlaying, state = !playing ? "STANDBY" : fb.IsPaused ? "PAUSED" : "LIVE";
+    const g = signalGeom(), playing = fb.IsPlaying, state = tr(!playing ? "STANDBY" : fb.IsPaused ? "PAUSED" : "LIVE");
     // registration crosses in the corners, corner brackets around the ring's field
     for (const [x, y] of [[dp(16), dp(16)], [W - dp(27), dp(16)], [dp(16), H - dp(27)], [W - dp(27), H - dp(27)]]) regCross(gr, x, y);
     // the ring's drawn box (ring.json bounds around its centre) plus a margin, down to below the spectrum strip
@@ -36,7 +36,7 @@ function drawSignal(gr) {
     }
     // ■ SIGNAL MONITOR · 04   [LIVE]
     gr.FillSolidRect(g.m, dp(30) + dp(2), dp(5), dp(5), C.fg);
-    const lw = label(gr, "SIGNAL MONITOR  ·  04", st(SG_ST.head, C.fg), g.m + dp(15), dp(30) - dp(2));
+    const lw = label(gr, tr("SIGNAL MONITOR  ·  04"), st(SG_ST.head, C.fg), g.m + dp(15), dp(30) - dp(2));
     chip(gr, state, g.m + dp(15) + lw + dp(14), dp(24), dp(18), playing && !fb.IsPaused ? "acc" : "inv", 8.5, C.bg);
     // MODEL 3D / 2D, top right
     drawModelToggle(gr, W - g.m, dp(22));
@@ -60,12 +60,12 @@ function drawSignal(gr) {
 // MODEL [■ 3D | □ 2D | □ CLASSIC], right-aligned at x
 const MODELS = ["3d", "2d", "classic"];
 function drawModelToggle(gr, xRight, y) {
-    const items = [["3d", "3D"], ["2d", "2D"], ["classic", "CLASSIC"]], hh = dp(22), s = st(SG_ST.tog, 0);
+    const items = [["3d", "3D"], ["2d", "2D"], ["classic", tr("CLASSIC")]], hh = dp(22), s = st(SG_ST.tog, 0);
     const widths = items.map(([, t]) => dp(9) + dp(5) + dp(6) + labelWidth(t, s) + dp(9)), total = widths.reduce((a, b) => a + b, 0);
     let ix = xRight - total;
-    const mw = labelWidth("MODEL", st(SG_ST.tog, 0));
+    const mw = labelWidth(tr("MODEL"), st(SG_ST.tog, 0));
     gr.FillSolidRect(ix - mw - dp(24), y - dp(6), total + mw + dp(30), hh + dp(12), C.bg);   // a plate (CLASSIC draws over a picture)
-    label(gr, "MODEL", st(SG_ST.tog, C["text-muted"]), ix - dp(14), y + Math.round((hh - labelHeight(SG_ST.tog)) / 2), 2);
+    label(gr, tr("MODEL"), st(SG_ST.tog, C["text-muted"]), ix - dp(14), y + Math.round((hh - labelHeight(SG_ST.tog)) / 2), 2);
     items.forEach(([m, t], i) => {
         const on = Ring.mode === m, col = on ? C.bg : C["text-muted"];
         if (on) gr.FillSolidRect(ix, y, widths[i], hh, C.fg);
@@ -80,7 +80,7 @@ function drawModelToggle(gr, xRight, y) {
 function drawTrace(gr, x, y, w, h) {
     const len = fb.PlaybackLength, playing = fb.IsPlaying && len > 0, prog = playing ? clamp(fb.PlaybackTime / len, 0, 1) : 0;
     const P = Wave.peaks, step = dp(2.7), n = Math.max(1, Math.floor(w / step)), bw = Math.max(1, step - dp(.8));
-    label(gr, "SIGNAL TRACE  ·  WHOLE TRACK", st(SG_ST.tiny, C["text-muted"]), x, y - dp(18));
+    label(gr, tr("SIGNAL TRACE  ·  WHOLE TRACK"), st(SG_ST.tiny, C["text-muted"]), x, y - dp(18));
     if (playing) label(gr, `${fmtTime(fb.PlaybackTime)} / ${fmtTime(len)}`, st(SG_ST.tiny, C["text-muted"]), x + w, y - dp(18), 2);
     const played = C.fg, rest = withAlpha(C["line-dim"], .7);
     for (let i = 0; i < n; i++) {
@@ -151,8 +151,8 @@ function drawClassic(gr) {
     for (const [x, y] of [[dp(16), dp(16)], [W - dp(27), dp(16)], [dp(16), H - dp(27)], [W - dp(27), H - dp(27)]]) regCross(gr, x, y);
     // ■ CLASSIC DISPLAY · 04  [LIVE]                                                 MODEL [3D | 2D | CLASSIC]
     gr.FillSolidRect(m, dp(32), dp(5), dp(5), C.fg);
-    const hw = tt("CLASSIC DISPLAY  ·  04", CL_ST.head, C.fg, m + dp(15), dp(28));
-    chip(gr, !playing ? "STANDBY" : fb.IsPaused ? "PAUSED" : "LIVE", Math.round(m + dp(15) + hw + dp(14)), dp(24), dp(18), live ? "acc" : "inv", 8.5, C.bg);
+    const hw = tt(tr("CLASSIC DISPLAY  ·  04"), CL_ST.head, C.fg, m + dp(15), dp(28));
+    chip(gr, tr(!playing ? "STANDBY" : fb.IsPaused ? "PAUSED" : "LIVE"), Math.round(m + dp(15) + hw + dp(14)), dp(24), dp(18), live ? "acc" : "inv", 8.5, C.bg);
     drawModelToggle(gr, W - m, dp(22));
     const top = dp(62);
     gr.FillSolidRect(m, top, W - 2 * m, HAIR, withAlpha(C.fg, .55));
@@ -164,7 +164,7 @@ function drawClassic(gr) {
     const cy = Math.round(top + dp(22) + R + qh / 2), x = cx - s / 2, y = cy - s / 2;
     // the cover, a hairline on its edge, crop brackets round it, the index tab on its top edge
     if (cov && cov.img) gr.DrawImage(cov.img, x, y, s, s, 0, 0, cov.img.Width, cov.img.Height);
-    else { gr.FillSolidRect(x, y, s, s, C.well); gr.DrawText("NO COVER", font(9, 500), muted, x, y, s, s, DT_CENTER_SINGLE); }
+    else { gr.FillSolidRect(x, y, s, s, C.well); gr.DrawText(tr("NO COVER"), fontFor(tr("NO COVER"), 9, 500), muted, x, y, s, s, DT_CENTER_SINGLE); }
     box(gr, Math.round(x), Math.round(y), s, s, withAlpha(C.fg, .25));
     const o = dp(12), M = dp(14);
     for (const [bx, by, sx, sy] of [[x - o, y - o, 1, 1], [x + s + o, y - o, -1, 1], [x - o, y + s + o, 1, -1], [x + s + o, y + s + o, -1, -1]]) {
@@ -213,10 +213,10 @@ function drawClassic(gr) {
     // left margin, above the axis: the file tag and its data
     if (I && side > dp(200)) {
         let ty = cy - dp(112);
-        chip(gr, T.file ? `FILE ${pad(T.file, 3)}` : "FILE —", m, ty, dp(18), "inv", 8.5);
+        chip(gr, `${tr("FILE")} ${T.file ? pad(T.file, 3) : "—"}`, m, ty, dp(18), "inv", 8.5);
         ty += dp(30);
         const rows = [
-            I.track ? `TRACK ${I.track}${I.total ? " / " + I.total : ""}` : "TRACK —",
+            `${tr("TRACK")} ${I.track ? I.track + (I.total ? " / " + I.total : "") : "—"}`,
             [I.codec, I.bitrate ? `${Number(I.bitrate).toLocaleString("en-US")} KBPS` : ""].filter(Boolean).join("  ·  "),
             I.rate ? `${+(I.rate / 1000).toFixed(1)} KHZ${I.bits ? " / " + I.bits + " BIT" : ""}` : "",
             T.no ? `ARC-${pad(T.no, 4)}` : "",
@@ -232,10 +232,10 @@ function drawClassic(gr) {
     if (side > dp(200)) {
         const next = upNext(3), nw = Math.min(side - dp(20), dp(300));
         let ny = cy + dp(22);
-        tt("NEXT", CL_ST.tag, muted, W - m, ny, 2);
+        tt(tr("NEXT"), CL_ST.tag, muted, W - m, ny, 2);
         gr.FillSolidRect(W - m - nw, ny + dp(18), nw, HAIR, withAlpha(C.fg, .3));
         ny += dp(26);
-        if (!next.length) tt("END OF PLAYLIST", CL_ST.data, muted, W - m, ny + dp(3), 2);
+        if (!next.length) tt(tr("END OF PLAYLIST"), CL_ST.data, muted, W - m, ny + dp(3), 2);
         for (const n of next) {
             const t = CL_TF.EvalWithMetadb(n.handle);
             tt(n.index >= 0 ? pad(n.index + 1, 3) : "Q", CL_ST.data, muted, W - m - nw, ny + dp(3));
@@ -247,12 +247,12 @@ function drawClassic(gr) {
     // the title block: a heavy rule with a tab on it; title and artist · album · year at the left, time at the right
     const ry = Math.round(cy + R + qh / 2 + dp(30));
     gr.FillSolidRect(m, ry, W - 2 * m, dp(3), C.fg);
-    const tabS = st(CL_ST.tag, C.bg, C.fg), tabW = labelWidth("NOW PLAYING", tabS) + dp(16);
+    const tabS = st(CL_ST.tag, C.bg, C.fg), tabW = labelWidth(tr("NOW PLAYING"), tabS) + dp(16);
     gr.FillSolidRect(m, ry - dp(18), tabW, dp(18), C.fg);
-    label(gr, "NOW PLAYING", tabS, m + dp(8), ry - dp(18) + Math.round((dp(18) - labelHeight(CL_ST.tag)) / 2));
-    const title = I ? I.title : "NO SIGNAL", tw = W - 2 * m - dp(240);
+    label(gr, tr("NOW PLAYING"), tabS, m + dp(8), ry - dp(18) + Math.round((dp(18) - labelHeight(CL_ST.tag)) / 2));
+    const title = I ? I.title : tr("NO SIGNAL"), tw = W - 2 * m - dp(240);
     gr.DrawText(title, fontFor(title, 30, 700), C.fg, m - dp(2), ry + dp(12), tw, dp(44), DT_SINGLE | DT_ELLIPSIS);
-    const meta = I ? [I.artist, I.album, I.year].filter(Boolean).join("  ·  ").toUpperCase() : "AWAITING SIGNAL";
+    const meta = I ? [I.artist, I.album, I.year].filter(Boolean).join("  ·  ").toUpperCase() : tr("AWAITING SIGNAL");
     gr.DrawText(meta, fontFor(meta, 11, 500), C["fg-soft"], m, ry + dp(58), tw, dp(20), DT_SINGLE | DT_ELLIPSIS);
     gr.DrawText(playing ? fmtTime(el) : "--:--", font(30, 300), C.fg, W - m - dp(240), ry + dp(12), dp(240), dp(44), DT_RIGHT_SINGLE);
     text(gr, playing && len > 0 ? `/ ${fmtTime(len)}` : "/ --:--", 11, 500, C["fg-soft"], W - m - dp(240), ry + dp(58), dp(240), dp(20), 2);
@@ -260,11 +260,11 @@ function drawClassic(gr) {
     // caption plate: the current lyric line with its own progress, else what plays next
     const L = T.lyrics, li = L && playing ? lyricIndex(L.lines, el) : -1, line = li >= 0 ? L.lines[li] : null;
     const nxt = line ? null : upNext(1)[0];
-    const caption = line ? (line.a || line.b) : nxt ? CL_TF.EvalWithMetadb(nxt.handle) : I ? "END OF PLAYLIST" : "";
+    const caption = line ? (line.a || line.b) : nxt ? CL_TF.EvalWithMetadb(nxt.handle) : I ? tr("END OF PLAYLIST") : "";
     const ph = dp(46), py = H - dp(36) - ph, pw = W - 2 * m;
     if (caption && py > ry + dp(96)) {
         chamfer(gr, m, py, pw, ph, dp(12), C.fg);
-        const tag = line ? `LRC  ${pad(li + 1, 2)} / ${pad(L.lines.length, 2)}` : nxt ? `NEXT  ${nxt.index >= 0 ? pad(nxt.index + 1, 3) : "Q"}` : "END", ts = st(CL_ST.tag, C["on-accent"], C.accent);
+        const tag = line ? `LRC  ${pad(li + 1, 2)} / ${pad(L.lines.length, 2)}` : nxt ? `${tr("NEXT")}  ${nxt.index >= 0 ? pad(nxt.index + 1, 3) : "Q"}` : tr("END"), ts = st(CL_ST.tag, C["on-accent"], C.accent);
         const tgw = labelWidth(tag, ts) + dp(20), lx = m + tgw + dp(28), lw = pw - tgw - dp(140);
         gr.FillSolidRect(m + dp(10), py + dp(10), tgw, ph - dp(20), C.accent);
         label(gr, tag, ts, m + dp(20), py + Math.round((ph - labelHeight(CL_ST.tag)) / 2));
@@ -280,7 +280,7 @@ function drawClassic(gr) {
     if (H > dp(420)) {
         CL_M[0] = 0; CL_M[1] = 1; CL_M[2] = -1; CL_M[3] = 0; CL_M[4] = W - dp(18); CL_M[5] = top + dp(24);
         gr.SetTransform(CL_M);
-        tt(`AUDIO ARCHIVE  /  SIGNAL SECTION  /  CLASSIC DISPLAY  /  ${T.no ? "ARC-" + pad(T.no, 4) : "ARC-—"}`, CL_ST.tiny, muted, 0, 0);
+        tt(`AUDIO ARCHIVE  /  ${tr("SIGNAL SECTION")}  /  ${tr("CLASSIC DISPLAY")}  /  ${T.no ? "ARC-" + pad(T.no, 4) : "ARC-—"}`, CL_ST.tiny, muted, 0, 0);
         gr.ResetTransform();
     }
 }

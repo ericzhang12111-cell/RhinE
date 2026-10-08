@@ -8,7 +8,7 @@ include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\emblem.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\translate.js");
 
 const VIEWS = ["archive", "playlists", "lyrics", "signal", "style"];
-const NAV = { archive: ["01", "ARCHIVE"], playlists: ["02", "PLAYLISTS"], lyrics: ["03", "LYRICS"], signal: ["04", "SIGNAL"], style: ["05", "STYLE"] };
+const NAV = { archive: ["01", tr("ARCHIVE")], playlists: ["02", tr("PLAYLISTS")], lyrics: ["03", tr("LYRICS")], signal: ["04", tr("SIGNAL")], style: ["05", tr("STYLE")] };
 const ST = {
     ident: { size: 18.5, weight: 700, track: -.02, fixed: true },   // the wordmark keeps its size at any text size
     spread: { size: 7.5, weight: 500, track: .04, fixed: true },
@@ -68,7 +68,9 @@ tickClock();
 
 // -------------------------------------------------------------------------------------------------------- state
 onMessage("state", () => { movePlate(plate.placed); window.Repaint(); });
-send("hello");
+// asked a moment after the script has run: a panel that reloads itself (a new language) misses an answer that comes
+// back while its own script is still running
+window.SetTimeout(() => send("hello"), 50);
 
 function movePlate(animate) {
     const r = navRects[STATE.view];
@@ -152,21 +154,21 @@ function drawNav(gr) {
 
 function drawRight(gr, navEnd) {
     // MENU (right edge): three-line icon + label; hover inverts
-    const mw = dp(14) + dp(8) + labelWidth("MENU", st(ST.menu, 0)), mx = W - dp(24) - mw, my = dp(22), mh = dp(28);
+    const mw = dp(14) + dp(8) + labelWidth(tr("MENU"), st(ST.menu, 0)), mx = W - dp(24) - mw, my = dp(22), mh = dp(28);
     const mHover = hover && hover.id === "menu";
     if (mHover) gr.FillSolidRect(mx - dp(8), my, mw + dp(16), mh, C.fg);
     const mc = mHover ? C.bg : C.fg, iy = my + Math.round(mh / 2) - dp(4.5);
     for (const k of [0, 4, 8]) gr.FillSolidRect(mx, iy + dp(k), dp(14), HAIR, mc);
-    label(gr, "MENU", st(ST.menu, mc, mHover ? C.fg : C.bg), mx + dp(22), my + Math.round((mh - labelHeight(ST.menu)) / 2));
+    label(gr, tr("MENU"), st(ST.menu, mc, mHover ? C.fg : C.bg), mx + dp(22), my + Math.round((mh - labelHeight(ST.menu)) / 2));
     hits.add("menu", mx - dp(8), my, mw + dp(16), mh);
 
     // clock: time over date
     const cx = W - dp(284), now = new Date();
-    const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"], months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const days = tr("SUN MON TUE WED THU FRI SAT").split(" "), months = tr("JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC").split(" ");
     const tw = label(gr, `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}:${pad(now.getSeconds(), 2)}`, st(ST.time, C.fg), cx, dp(18));
     // the date under the time, however large the text is set
     const dy = Math.max(dp(39), dp(18) + labelHeight(ST.time) - dp(2));
-    const dw = label(gr, `${days[now.getDay()]} · ${pad(now.getDate(), 2)} ${months[now.getMonth()]} ${now.getFullYear()}`, st(ST.date, C["text-muted"]), cx, dy);
+    const dw = label(gr, tr("{0} · {1} {2} {3}", days[now.getDay()], pad(now.getDate(), 2), months[now.getMonth()], now.getFullYear()), st(ST.date, C["text-muted"]), cx, dy);
     hits.add("clock", cx, dp(16), Math.max(tw, dw) + dp(4), dp(36));
 
     // search field between the navigation and the clock; it shrinks, then hides, on narrow windows
@@ -185,7 +187,7 @@ function drawRight(gr, navEnd) {
         if (focus && search.caret) gr.FillSolidRect(tx + off + width + dp(1), sy + dp(5), HAIR, sh - dp(10), C.accent);
         gr.PopClip();
     } else {
-        label(gr, "SEARCH ARCHIVE", st(ST.search, C["text-muted"]), sx, ly);
+        label(gr, tr("SEARCH ARCHIVE"), st(ST.search, C["text-muted"]), sx, ly);
     }
     // magnifier: ring + handle
     const gx = sx + sw - dp(10), gy = sy + sh / 2 - dp(1), r = dp(3.5), ic = focus ? C.fg : C["text-muted"];
@@ -311,52 +313,57 @@ function showMenu(a) {
     });
     root.AppendMenuSeparator();
     const theme = window.CreatePopupMenu();
-    ["Archive view\t1", "Playlists view\t2", "Lyrics view\t3", "Signal view\t4", "Style view\t5"].forEach((t, i) => theme.AppendMenuItem(0, 21 + i, t));
+    ["Archive view", "Playlists view", "Lyrics view", "Signal view", "Style view"].forEach((t, i) => theme.AppendMenuItem(0, 21 + i, `${tr(t)}\t${i + 1}`));
     theme.CheckMenuRadioItem(21, 25, 21 + VIEWS.indexOf(STATE.view));
     theme.AppendMenuSeparator();
-    theme.AppendMenuItem(0, 4, (MODE === "dark" ? "Light mode" : "Dark mode") + "\tT");
-    theme.AppendMenuItem(0, 5, `Playlist preset: ${STATE.preset === "album" ? "Index" : "Album"}\tP`);
-    theme.AppendMenuItem(STATE.reduce ? 0x8 : 0, 6, "Reduce motion");   // MF_CHECKED
-    theme.AppendMenuItem(STATE.grain ? 0x8 : 0, 9, "Grain texture");
-    theme.AppendMenuItem(STATE.lyricsOnline ? 0x8 : 0, 11, "Fetch lyrics online (LRCLIB)");
+    theme.AppendMenuItem(0, 4, tr(MODE === "dark" ? "Light mode" : "Dark mode") + "\tT");
+    theme.AppendMenuItem(0, 5, tr("Playlist preset: {0}", tr(STATE.preset === "album" ? "Index" : "Album")) + "\tP");
+    theme.AppendMenuItem(STATE.reduce ? 0x8 : 0, 6, tr("Reduce motion"));   // MF_CHECKED
+    theme.AppendMenuItem(STATE.grain ? 0x8 : 0, 9, tr("Grain texture"));
+    theme.AppendMenuItem(STATE.lyricsOnline ? 0x8 : 0, 11, tr("Fetch lyrics online (LRCLIB)"));
     // translate lyrics: off or a target language, the provider, the providers' keys
-    const tr = window.CreatePopupMenu(), trs = trSettings();
-    tr.AppendMenuItem(0, 400, "Off");
-    TR_TARGETS.forEach(([, name], i) => tr.AppendMenuItem(0, 401 + i, name));
-    tr.CheckMenuRadioItem(400, 400 + TR_TARGETS.length, trs.target === "off" ? 400 : 401 + TR_TARGETS.findIndex(t => t[0] === trs.target));
-    tr.AppendMenuSeparator();
-    tr.AppendMenuItem(trs.community ? 0x8 : 0, 410, "NetEase Cloud Music: community translations (Chinese) and lyrics");
-    tr.AppendMenuItem(trs.machine ? 0x8 : 0, 411, "Machine translation when there is none");
+    const trm = window.CreatePopupMenu(), trs = trSettings();
+    trm.AppendMenuItem(0, 400, tr("Off"));
+    TR_TARGETS.forEach(([, name], i) => trm.AppendMenuItem(0, 401 + i, name));
+    trm.CheckMenuRadioItem(400, 400 + TR_TARGETS.length, trs.target === "off" ? 400 : 401 + TR_TARGETS.findIndex(t => t[0] === trs.target));
+    trm.AppendMenuSeparator();
+    trm.AppendMenuItem(trs.community ? 0x8 : 0, 410, tr("NetEase Cloud Music: community translations (Chinese) and lyrics"));
+    trm.AppendMenuItem(trs.machine ? 0x8 : 0, 411, tr("Machine translation when there is none"));
     const prov = window.CreatePopupMenu();
-    TR_PROVIDERS.forEach(([, name], i) => prov.AppendMenuItem(0, 420 + i, name));
+    TR_PROVIDERS.forEach(([, name], i) => prov.AppendMenuItem(0, 420 + i, tr(name)));
     prov.CheckMenuRadioItem(420, 420 + TR_PROVIDERS.length - 1, 420 + TR_PROVIDERS.findIndex(p => p[0] === trs.provider));
     prov.AppendMenuSeparator();
-    prov.AppendMenuItem(0, 430, "Baidu Translate APP ID and key…");
-    prov.AppendMenuItem(0, 431, "DeepL API key…");
-    prov.AppendTo(tr, 0, "Machine translation service");
-    tr.AppendTo(theme, 0, "Translate lyrics");
-    theme.AppendMenuItem(STATE.boot ? 0x8 : 0, 7, "Intro film at start");
-    theme.AppendMenuItem(0, 8, "Play intro film\tB");
-    theme.AppendMenuItem(0, 10, "Shuffle entire library\tS");
+    prov.AppendMenuItem(0, 430, tr("Baidu Translate APP ID and key…"));
+    prov.AppendMenuItem(0, 431, tr("DeepL API key…"));
+    prov.AppendTo(trm, 0, tr("Machine translation service"));
+    trm.AppendTo(theme, 0, tr("Translate lyrics"));
+    theme.AppendMenuItem(STATE.boot ? 0x8 : 0, 7, tr("Intro film at start"));
+    theme.AppendMenuItem(0, 8, tr("Play intro film") + "\tB");
+    theme.AppendMenuItem(0, 10, tr("Shuffle entire library") + "\tS");
     theme.AppendMenuSeparator();
     const skins = appendSkinMenu(theme, 100);
     const schemes = Object.keys(TOKENS.schemes), sch = window.CreatePopupMenu();
     schemes.forEach((s, i) => sch.AppendMenuItem(0, 200 + i, TOKENS.schemes[s].name));
     sch.CheckMenuRadioItem(200, 200 + schemes.length - 1, 200 + Math.max(0, schemes.indexOf(SCHEME)));
-    sch.AppendTo(theme, 0, "Colour scheme");
+    sch.AppendTo(theme, 0, tr("Colour scheme"));
     // text size and Array scale, in per cent
     const pct = v => `${Math.round(v * 100)} %`;
     const ts = window.CreatePopupMenu(), as = window.CreatePopupMenu();
     TEXT_SCALES.forEach((v, i) => ts.AppendMenuItem(0, 300 + i, pct(v)));
     ts.CheckMenuRadioItem(300, 300 + TEXT_SCALES.length - 1, 300 + Math.max(0, TEXT_SCALES.indexOf(STATE.textScale)));
-    ts.AppendTo(theme, 0, "Text size");
+    ts.AppendTo(theme, 0, tr("Text size"));
     ARRAY_SCALES.forEach((v, i) => as.AppendMenuItem(0, 320 + i, pct(v)));
     as.CheckMenuRadioItem(320, 320 + ARRAY_SCALES.length - 1, 320 + Math.max(0, ARRAY_SCALES.indexOf(STATE.arrayScale)));
-    as.AppendTo(theme, 0, "Archive array scale");
+    as.AppendTo(theme, 0, tr("Archive array scale"));
     const is = window.CreatePopupMenu();
     INSPECT_SCALES.forEach((v, i) => is.AppendMenuItem(0, 340 + i, pct(v)));
     is.CheckMenuRadioItem(340, 340 + INSPECT_SCALES.length - 1, 340 + Math.max(0, INSPECT_SCALES.indexOf(STATE.inspectScale)));
-    is.AppendTo(theme, 0, "Inspection size");
+    is.AppendTo(theme, 0, tr("Inspection size"));
+    // interface language
+    const lm = window.CreatePopupMenu();
+    UI_LANGS.forEach(([, name], i) => lm.AppendMenuItem(0, 450 + i, name));
+    lm.CheckMenuRadioItem(450, 450 + UI_LANGS.length - 1, 450 + Math.max(0, UI_LANGS.findIndex(l => l[0] === UI_LANG)));
+    lm.AppendTo(theme, 0, "Language · 语言 · 言語");
     theme.AppendTo(root, 0, "Audio Archive");
     const id = root.TrackPopupMenu(a.x - dp(8), a.y + a.h, 0);
     const k = Math.floor(id / 1000) - 1;
@@ -368,13 +375,14 @@ function showMenu(a) {
     else if (id === 7) send("boot", !STATE.boot);
     else if (id === 9) send("grain", !STATE.grain);
     else if (id === 11) send("lyrics-online", !STATE.lyricsOnline);
+    else if (id >= 450 && id < 450 + UI_LANGS.length) { if (UI_LANGS[id - 450][0] !== UI_LANG) { setSetting("uiLang", UI_LANGS[id - 450][0]); send("ui-lang"); window.Reload(); } }
     else if (id === 400) { setSetting("lyricsTarget", "off"); send("lyrics-translate"); }
     else if (id > 400 && id <= 400 + TR_TARGETS.length) { setSetting("lyricsTarget", TR_TARGETS[id - 401][0]); send("lyrics-translate"); }
     else if (id === 410) { setSetting("lyricsNetease", !trSettings().community); send("lyrics-translate"); }
     else if (id === 411) { setSetting("lyricsTranslate", !trSettings().machine); send("lyrics-translate"); }
     else if (id >= 420 && id < 420 + TR_PROVIDERS.length) { setSetting("trProvider", TR_PROVIDERS[id - 420][0]); send("lyrics-translate"); }
-    else if (id === 430) askKeys("baidu", [["trBaiduId", "Baidu Translate APP ID (fanyi-api.baidu.com › 管理控制台 › APP ID)"], ["trBaiduKey", "Baidu Translate secret key (密钥)"]]);
-    else if (id === 431) askKeys("deepl", [["trDeeplKey", "DeepL API key (deepl.com › Account › API keys; a Free key ends in :fx)"]]);
+    else if (id === 430) askKeys("baidu", [["trBaiduId", tr("Baidu Translate APP ID (fanyi-api.baidu.com › 管理控制台 › APP ID)")], ["trBaiduKey", tr("Baidu Translate secret key (密钥)")]]);
+    else if (id === 431) askKeys("deepl", [["trDeeplKey", tr("DeepL API key (deepl.com › Account › API keys; a Free key ends in :fx)")]]);
     else if (id === 8) send("boot-play");
     else if (id === 10) shuffleLibrary();
     else if (id >= 340 && id < 340 + INSPECT_SCALES.length) send("inspect-scale", INSPECT_SCALES[id - 340]);
@@ -388,7 +396,7 @@ function showMenu(a) {
 function askKeys(provider, fields) {
     const values = [];
     try {
-        for (const [key, prompt] of fields) values.push(String(utils.InputBox(window.ID, prompt, "Audio Archive · Translate lyrics", String(getSetting(key, "")), true)).trim());
+        for (const [key, prompt] of fields) values.push(String(utils.InputBox(window.ID, prompt, `Audio Archive · ${tr("Translate lyrics")}`, String(getSetting(key, "")), true)).trim());
     } catch (e) { return; }   // cancelled
     fields.forEach(([key], i) => setSetting(key, values[i], true));
     setSetting("trProvider", provider);

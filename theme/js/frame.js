@@ -27,6 +27,7 @@ STATE.arrayScale = pickScale(+getSetting("arrayScale", 1), ARRAY_SCALES);
 setTextScale(STATE.textScale);   // the root panel's own copy: the Playlists view's column widths follow it
 STATE.inspectScale = pickScale(+getSetting("inspectScale", 1.3), INSPECT_SCALES);
 REDUCE_MOTION = STATE.reduce;
+RELOAD_ON_LANG = false;   // see lib/bus.js
 const P = {};          // child name -> PanelObject
 let ready = false;
 

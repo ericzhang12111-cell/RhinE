@@ -40,6 +40,6 @@ function appendSkinMenu(menu, base) {
     all.forEach((s, i) => sub.AppendMenuItem(0, base + i, s.name));
     const cur = all.findIndex(s => s.id === STATE.skin);
     if (all.length) sub.CheckMenuRadioItem(base, base + all.length - 1, base + Math.max(0, cur));
-    sub.AppendTo(menu, all.length ? 0 : 1, "Case skin");
+    sub.AppendTo(menu, all.length ? 0 : 1, tr("Case skin"));
     return all;
 }

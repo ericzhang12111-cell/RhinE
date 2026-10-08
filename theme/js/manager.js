@@ -75,7 +75,7 @@ function on_paint(gr) {
 function drawManager(gr) {
     const w = MW(), n = plman.PlaylistCount, active = plman.ActivePlaylist, x = dp(24);
     const loc = plman.GetPlayingItemLocation(), playingPl = loc.IsValid ? loc.PlaylistIndex : -1;
-    label(gr, "PLAYLISTS", mst(MST.head, C["text-muted"]), x, dp(24));
+    label(gr, tr("PLAYLISTS"), mst(MST.head, C["text-muted"]), x, dp(24));
     label(gr, pad(n, 2), mst(MST.head, C.fg), w - dp(24), dp(24), 2);
     const counts = [];
     for (let i = 0; i < n; i++) counts.push(plman.PlaylistItemCount(i));
@@ -104,10 +104,10 @@ function drawManager(gr) {
     gr.PopClip();
     // rows hidden above and below (the wheel scrolls)
     const hidden = n - Math.min(rows, n - scroll);
-    if (hidden > 0) label(gr, `+ ${hidden} MORE`, mst(MST.count, C["text-muted"]), w - dp(24), TOP() + rows * ROW() + dp(4), 2);
+    if (hidden > 0) label(gr, tr("+ {0} MORE", hidden), mst(MST.count, C["text-muted"]), w - dp(24), TOP() + rows * ROW() + dp(4), 2);
     // + NEW PLAYLIST
     const ay = H - dp(38), nh = hover && hover.id === "new";
-    const aw = label(gr, "+ NEW PLAYLIST", mst(MST.action, nh ? C.fg : C["text-muted"]), x, ay);
+    const aw = label(gr, tr("+ NEW PLAYLIST"), mst(MST.action, nh ? C.fg : C["text-muted"]), x, ay);
     hits.add("new", x - dp(6), ay - dp(6), aw + dp(12), labelHeight(MST.action) + dp(12));
     vline(gr, w - HAIR, 0, H, C.hair);
 }
@@ -115,7 +115,7 @@ const visibleRows = () => Math.max(1, Math.floor((H - TOP() - dp(64)) / ROW()));
 
 function drawRail(gr) {
     const m = RM || (RM = railModel()), x = MW() + dp(10);
-    label(gr, "INDEX", mst(MST.index, C["text-muted"]), x, dp(24));
+    label(gr, tr("INDEX"), mst(MST.index, C["text-muted"]), x, dp(24));
     label(gr, pad(m.count, m.count > 999 ? 4 : 3), mst(MST.index, C.fg), x, dp(24) + labelHeight(MST.index) + dp(1));
     while (lens.length < m.n) lens.push(Spring(15, 16));
     for (let k = 0; k < m.n; k++) {
@@ -146,8 +146,8 @@ function showTip(k) {
     const w = dp(300), h = dp(78), y = clamp(Math.round(TOP() + k * PITCH() + PITCH() / 2 - dp(30)), dp(8), H - h - dp(8));
     sendTip({
         x: W + dp(6), y, w, h,
-        file: `FILE ${pad(i + 1, 3)}${album ? " · " + album.toUpperCase() : ""}`,
-        title, meta: [artist.toUpperCase(), len].filter(Boolean).join(" · ") + (share > 1 ? `  ·  + ${share - 1} MORE` : ""),
+        file: `${tr("FILE")} ${pad(i + 1, 3)}${album ? " · " + album.toUpperCase() : ""}`,
+        title, meta: [artist.toUpperCase(), len].filter(Boolean).join(" · ") + (share > 1 ? `  ·  ${tr("+ {0} MORE", share - 1)}` : ""),
         playing: i === m.playing,
     });
 }
@@ -158,7 +158,7 @@ function newPlaylist() { const i = plman.CreatePlaylist(plman.PlaylistCount, "")
 function renamePlaylist(i) {
     if (i < 0) return;
     let name;
-    try { name = utils.InputBox(window.ID, "Playlist name", "Rename playlist", plman.GetPlaylistName(i), true); } catch (e) { return; }
+    try { name = utils.InputBox(window.ID, tr("Playlist name"), tr("Rename playlist"), plman.GetPlaylistName(i), true); } catch (e) { return; }
     if (name && name.trim()) plman.RenamePlaylist(i, name.trim());
 }
 function removePlaylist(i) { if (i >= 0) plman.RemovePlaylistSwitch(i); }
@@ -175,13 +175,13 @@ function railJump(k, play) {
 
 function playlistMenu(x, y, i) {
     const menu = window.CreatePopupMenu();
-    menu.AppendMenuItem(0, 1, "New playlist");
+    menu.AppendMenuItem(0, 1, tr("New playlist"));
     if (i >= 0) {
-        menu.AppendMenuItem(0, 2, "Rename…");
-        menu.AppendMenuItem(0, 3, "Duplicate");
-        if (plman.IsAutoPlaylist(i)) menu.AppendMenuItem(0, 5, "Edit autoplaylist…");
+        menu.AppendMenuItem(0, 2, tr("Rename…"));
+        menu.AppendMenuItem(0, 3, tr("Duplicate"));
+        if (plman.IsAutoPlaylist(i)) menu.AppendMenuItem(0, 5, tr("Edit autoplaylist…"));
         menu.AppendMenuSeparator();
-        menu.AppendMenuItem(0, 4, "Remove");
+        menu.AppendMenuItem(0, 4, tr("Remove"));
     }
     const id = menu.TrackPopupMenu(x, y);
     if (id === 1) newPlaylist();

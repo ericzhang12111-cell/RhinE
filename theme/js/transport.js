@@ -16,7 +16,7 @@ const ST = {
     sigB: { size: 10, weight: 700, track: .06 },
 };
 const st = (s, colour, bg = C.bg) => Object.assign({ colour, bg }, s);
-const ORDERS = ["DEFAULT", "REPEAT PLAYLIST", "REPEAT TRACK", "RANDOM", "SHUFFLE TRACKS", "SHUFFLE ALBUMS", "SHUFFLE FOLDERS"];
+const ORDERS = ["DEFAULT", "REPEAT PLAYLIST", "REPEAT TRACK", "RANDOM", "SHUFFLE TRACKS", "SHUFFLE ALBUMS", "SHUFFLE FOLDERS"].map(s => tr(s));
 const ORDER_NAMES = ["Default", "Repeat (playlist)", "Repeat (track)", "Random", "Shuffle (tracks)", "Shuffle (albums)", "Shuffle (folders)"];
 
 let W = 0, H = 0;
@@ -70,12 +70,12 @@ send("library?");
 
 // ------------------------------------------------------------------------------------------------- section label
 function sectionText() {
-    if (STATE.view === "archive") return "ARCHIVE SECTION · BROWSE";
-    if (STATE.view === "lyrics") return "LYRICS SECTION · PLAYBACK";
-    if (STATE.view === "signal") return "SIGNAL SECTION · MONITOR";
-    if (STATE.view === "style") return "STYLE SECTION · APPEARANCE";
+    if (STATE.view === "archive") return tr("ARCHIVE SECTION · BROWSE");
+    if (STATE.view === "lyrics") return tr("LYRICS SECTION · PLAYBACK");
+    if (STATE.view === "signal") return tr("SIGNAL SECTION · MONITOR");
+    if (STATE.view === "style") return tr("STYLE SECTION · APPEARANCE");
     const ap = plman.ActivePlaylist;
-    return ap < 0 ? "PLAYLIST SECTION" : `PLAYLIST SECTION · ${pad(ap + 1, 3)} ${plman.GetPlaylistName(ap).toUpperCase()}`;
+    return ap < 0 ? tr("PLAYLIST SECTION") : `${tr("PLAYLIST SECTION")} · ${pad(ap + 1, 3)} ${plman.GetPlaylistName(ap).toUpperCase()}`;
 }
 function updateSection(animate) {
     const t = sectionText();
@@ -180,12 +180,12 @@ function drawRuler(gr, left, right) {
     // START marker (orange once passed); chapter and cue markers join it when a track has them
     const mc = playing ? C.accent : C["line-dim"];
     gr.FillSolidRect(x0, y - dp(14), HAIR, dp(12), mc);
-    label(gr, "START", st(ST.marker, mc), x0 + dp(4), y - dp(15));
+    label(gr, tr("START"), st(ST.marker, mc), x0 + dp(4), y - dp(15));
     // the playhead: a plain orange line
     if (playing) gr.FillSolidRect(Math.round(cur - dp(.75)), y - dp(10), Math.max(HAIR, dp(1.5)), dp(20), C.accent);
     // NOW PLAYING  title · artist, under the line
     if (fb.IsPlaying && NOW.title) {
-        const ny = y + dp(9), kw = label(gr, "NOW PLAYING", st(ST.marker, C.accent), x0, ny + dp(2));
+        const ny = y + dp(9), kw = label(gr, tr("NOW PLAYING"), st(ST.marker, C.accent), x0, ny + dp(2));
         const t = NOW.title + (NOW.artist ? "  ·  " + NOW.artist : "");
         text(gr, t, 9.5, 500, C["fg-soft"], x0 + kw + dp(10), ny - dp(1), x1 - x0 - kw - dp(10), dp(16));
     }
@@ -200,7 +200,7 @@ const pos2vol = p => p <= 0 ? -100 : 50 * Math.log10(0.99 * p + 0.01);
 function drawRight(gr) {
     const cy = dp(ROW_Y), keyH = labelHeight(ST.key), ky = cy - Math.round(keyH / 2);
     // toggle
-    const items = [["light", "LIGHT"], ["dark", "DARK"]];
+    const items = [["light", tr("LIGHT")], ["dark", tr("DARK")]];
     const iw = items.map(([, t]) => dp(10) + dp(5) + dp(7) + labelWidth(t, st(ST.key, 0)) + dp(10));
     const th = dp(26), ty = cy - th / 2, tw = iw[0] + iw[1], tx = W - dp(24) - tw;
     if (!togRects.light) { togRects.light = [tx, iw[0]]; togRects.dark = [tx + iw[0], iw[1]]; placeToggle(false); }
@@ -225,16 +225,16 @@ function drawRight(gr) {
     const ow = labelWidth(ORDERS[order], st(ST.val, 0));
     x -= ow;
     label(gr, ORDERS[order], st(ST.val, ohov ? C.accent : C.fg), x, ky);
-    const okw = labelWidth("ORDER", st(ST.key, 0));
-    label(gr, "ORDER", st(ST.key, C["text-muted"]), x - dp(8) - okw, ky);
+    const okw = labelWidth(tr("ORDER"), st(ST.key, 0));
+    label(gr, tr("ORDER"), st(ST.key, C["text-muted"]), x - dp(8) - okw, ky);
     hits.add("order", x - dp(8) - okw, ty, okw + dp(8) + ow, th);
     x -= dp(8) + okw + dp(18);
     // SHUFFLE ALL: the whole library in a random order
-    const shov = hover && hover.id === "shuffle", sw = labelWidth("SHUFFLE ALL", st(ST.key, 0)) + dp(20) + dp(9);
+    const shov = hover && hover.id === "shuffle", sw = labelWidth(tr("SHUFFLE ALL"), st(ST.key, 0)) + dp(20) + dp(9);
     x -= sw;
     box(gr, x, ty, sw, th, shov ? C.accent : C["line-faint"]);
     gr.FillSolidRect(x + dp(9), cy - dp(2), dp(5), dp(5), shov ? C.accent : C.fg);
-    label(gr, "SHUFFLE ALL", st(ST.key, shov ? C.fg : C["fg-soft"]), x + dp(20), ky);
+    label(gr, tr("SHUFFLE ALL"), st(ST.key, shov ? C.fg : C["fg-soft"]), x + dp(20), ky);
     hits.add("shuffle", x, ty, sw, th);
     x -= dp(18);
     // VOL
@@ -247,8 +247,8 @@ function drawRight(gr) {
     gr.FillSolidRect(lx, cy - HAIR, Math.round(lw * p), HEAVY, C.fg);
     gr.FillSolidRect(Math.round(lx + lw * p - dp(3)), cy - dp(3), dp(6), dp(6), C.accent);
     hits.add("vol", lx - dp(4), ty, lw + dp(8), th, { x0: lx, w: lw });
-    const vkw = labelWidth("VOL", st(ST.key, 0));
-    label(gr, "VOL", st(ST.key, C["text-muted"]), lx - dp(8) - vkw, ky);
+    const vkw = labelWidth(tr("VOL"), st(ST.key, 0));
+    label(gr, tr("VOL"), st(ST.key, C["text-muted"]), lx - dp(8) - vkw, ky);
     return lx - dp(8) - vkw;
 }
 
@@ -273,7 +273,7 @@ function drawStatus(gr) {
     gr.FillSolidRect(x, cy - dp(2), dp(16), dp(4), C.fg);
     x -= dp(10);
     x -= label(gr, "AUDIO ARCHIVE", st(ST.sigB, C.fg), x, by, 2);
-    if (counts.files >= 0) label(gr, `${fmtCount(counts.files)} FILES · ${fmtCount(counts.albums)} ALBUMS`, st(ST.sig, C["text-muted"]), x - dp(10), by, 2);
+    if (counts.files >= 0) label(gr, tr("{0} FILES · {1} ALBUMS", fmtCount(counts.files), fmtCount(counts.albums)), st(ST.sig, C["text-muted"]), x - dp(10), by, 2);
 }
 
 // ------------------------------------------------------------------------------------------------------- mouse
@@ -334,10 +334,10 @@ function on_mouse_wheel(step) {
 
 function orderMenu(a) {
     const m = window.CreatePopupMenu();
-    ORDER_NAMES.forEach((n, i) => m.AppendMenuItem(0, i + 1, n));
+    ORDER_NAMES.forEach((n, i) => m.AppendMenuItem(0, i + 1, tr(n)));
     m.CheckMenuRadioItem(1, ORDER_NAMES.length, plman.PlaybackOrder + 1);
     m.AppendMenuSeparator();
-    m.AppendMenuItem(0, 99, "Shuffle entire library\tS");
+    m.AppendMenuItem(0, 99, tr("Shuffle entire library") + "\tS");
     const id = m.TrackPopupMenu(a.x, a.y + a.h, 0);
     if (id === 99) shuffleLibrary();
     else if (id > 0) plman.PlaybackOrder = id - 1;

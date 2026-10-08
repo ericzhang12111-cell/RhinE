@@ -134,7 +134,7 @@ function drawGrid(gr) {
         if (hy + G.headH > G.top) {
             const ly = hy + dp(14);
             gr.FillSolidRect(G.padX, ly + dp(3), dp(5), dp(5), s.gi === AR.group ? C.accent : C.fg);
-            const t = LIB.groupBy === "none" ? g.name : `${GROUP_LABEL[LIB.groupBy]} ${pad(s.gi + 1, 2)}  ·  ${g.name}`.toUpperCase();
+            const t = LIB.groupBy === "none" ? groupName(g.name) : `${tr(GROUP_LABEL[LIB.groupBy])} ${pad(s.gi + 1, 2)}  ·  ${groupName(g.name)}`.toUpperCase();
             const lw = label(gr, fitLabel(t, st(GRID_ST.head, C.fg), aw - dp(260)), st(GRID_ST.head, C.fg), G.padX + dp(14), ly);
             const c = unitWord(g.albums.length), cw = labelWidth(c, st(GRID_ST.count, C["text-muted"]));
             label(gr, c, st(GRID_ST.count, C["text-muted"]), aw - G.padX, ly + dp(1), 2);
@@ -163,7 +163,7 @@ function drawGrid(gr) {
             for (const [px, py] of [[x, y], [x + c, y], [x, y + c], [x + c, y + c]]) gr.FillSolidRect(Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), dp(6), C.accent);
         }
         if (G.lab) {
-            text(gr, a.title || "UNTITLED", 10, sel ? 700 : 600, C.fg, x, y + c + dp(6), c, dp(18));
+            text(gr, a.title || tr("UNTITLED"), 10, sel ? 700 : 600, C.fg, x, y + c + dp(6), c, dp(18));
             text(gr, a.artist || "—", 9, 500, C["text-muted"], x, y + c + dp(23), c, dp(16));
         }
     }
@@ -200,7 +200,7 @@ function drawArchiveBar(gr) {
     lx = segToggle(gr, lx - dp(24), y1, "SHOW", [["albums", "ALBUMS"], ["tracks", "TRACKS"]], showTracks() ? "tracks" : "albums", "ar-unit");
     if (grid) {   // the title in the room left of the toggles: with the grouping when it fits, shortened when even that does not
         const room = lx - dp(32) - (x0 + dp(14)), hs = st(GRID_ST.head, C.fg), n = filteredCount();
-        const base = `${showTracks() ? "TRACK" : "ALBUM"} GRID  ·  ${unitWord(n)}`, full = LIB.groupBy === "none" ? base : `${base}  ·  BY ${GROUP_LABEL[LIB.groupBy]}`;
+        const base = `${tr(showTracks() ? "TRACK GRID" : "ALBUM GRID")}  ·  ${unitWord(n)}`, full = LIB.groupBy === "none" ? base : `${base}  ·  ${tr("BY {0}", tr(GROUP_LABEL[LIB.groupBy]))}`;
         if (room > dp(40)) {
             gr.FillSolidRect(x0, y1 + dp(10), dp(5), dp(5), C.fg);
             const t = [full, base, unitWord(n)].find(v => labelWidth(v, hs) <= room) || unitWord(n);
@@ -215,6 +215,7 @@ function drawArchiveBar(gr) {
 // Returns the left edge (of the title).
 function segToggle(gr, xr, y, title, items, cur, hitId, marks = false) {
     const hh = dp(22), s = st(GRID_ST.count, 0), ty = y + Math.round((hh - labelHeight(GRID_ST.count)) / 2);
+    title = tr(title); items = items.map(([v, t]) => [v, tr(t)]);
     const widths = items.map(([, t]) => (marks ? dp(20) : dp(9)) + labelWidth(t, s) + dp(9)), total = widths.reduce((a, b) => a + b, 0);
     const tw = labelWidth(title, s), left = xr - total - dp(12) - tw;
     gr.FillSolidRect(left - dp(8), y - dp(4), xr - left + dp(12), hh + dp(8), C.bg);

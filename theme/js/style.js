@@ -114,15 +114,15 @@ function drawStyle(gr) {
     for (const [x, y] of [[dp(16), dp(16)], [W - dp(27), dp(16)], [dp(16), H - dp(27)], [W - dp(27), H - dp(27)]]) regCross(gr, x, y);
     // ■ STYLE · 05   [MARBLE · ARCHIVE]          TEXT [90% … 120%]   ARRAY [80% … 130%]   ▶ PLAY INTRO   MODE [LIGHT | DARK]
     gr.FillSolidRect(g.m, dp(32), dp(5), dp(5), C.fg);
-    const hw = label(gr, "STYLE  ·  05", st(STY_ST.head, C.fg), g.m + dp(15), dp(28));
-    const cur = skins.find(s => s.id === STATE.skin), now = `${cur ? cur.name : "—"}  ·  ${TOKENS.schemes[SCHEME].name}  ·  ${MODE.toUpperCase()}`;
+    const hw = label(gr, tr("STYLE  ·  05"), st(STY_ST.head, C.fg), g.m + dp(15), dp(28));
+    const cur = skins.find(s => s.id === STATE.skin), now = `${cur ? cur.name : "—"}  ·  ${TOKENS.schemes[SCHEME].name}  ·  ${tr(MODE.toUpperCase())}`;
     chip(gr, now, g.m + dp(15) + hw + dp(14), dp(24), dp(18), "acc", 8.5, C.bg);
     const mx = drawModeToggle(gr, W - g.m, dp(22));
     drawIntroButton(gr, mx - dp(28), dp(22));
     gr.FillSolidRect(g.m, g.top, W - 2 * g.m, HAIR, withAlpha(C.fg, .55));
     // CASE SKIN
     let y = g.top + dp(24);
-    label(gr, `CASE SKIN  ·  ${pad(skins.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
+    label(gr, `${tr("CASE SKIN")}  ·  ${pad(skins.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
     y += dp(30);
     skins.forEach((s, i) => {
         const x = g.m + (i % g.cols) * (g.cw + g.gap), cy = y + Math.floor(i / g.cols) * (g.skinH + g.gap);
@@ -130,12 +130,12 @@ function drawStyle(gr) {
     });
     y += Math.ceil(skins.length / g.cols) * (g.skinH + g.gap) + dp(10);
     // COLOUR SCHEME
-    label(gr, `COLOUR SCHEME  ·  ${pad(ids.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
+    label(gr, `${tr("COLOUR SCHEME")}  ·  ${pad(ids.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
     y += dp(30);
     ids.forEach((id, i) => drawSchemeCard(gr, id, i, g.m + (i % g.cols) * (g.cw + g.gap), y + Math.floor(i / g.cols) * (g.schemeH + g.gap), g.cw, g.schemeH));
     y += Math.ceil(ids.length / g.cols) * (g.schemeH + g.gap) + dp(10);
     // DISPLAY: text size, Archive array scale, inspection size
-    label(gr, "DISPLAY  ·  03", st(STY_ST.sec, C.fg), g.m, y);
+    label(gr, tr("DISPLAY  ·  03"), st(STY_ST.sec, C.fg), g.m, y);
     drawScaleRow(gr, g.m, y + dp(30), g.lx1);
     drawStylePreview(gr, g, skins);
 }
@@ -169,7 +169,7 @@ function drawSkinCard(gr, s, i, x, y, w, h) {
     const nx = cardNameX(s.name, w), ns = nx.st;
     if (nx.num) label(gr, pad(i + 1, 2), st(STY_ST.tiny, C["text-muted"], C.panel), x + dp(10), y + ih + dp(14));
     label(gr, fitLabel(s.name, st(ns, C.fg, C.panel), w - nx.x - dp(8)), st(ns, C.fg, C.panel), x + nx.x, y + ih + Math.round((dp(40) - labelHeight(ns)) / 2));
-    if (inUse) chip(gr, "IN USE", x + w - dp(8) - labelWidth("IN USE", st(STY_ST.tiny, 0)) - dp(16), y + dp(8), dp(16), "inv", 8);
+    if (inUse) chip(gr, tr("IN USE"), x + w - dp(8) - labelWidth(tr("IN USE"), st(STY_ST.tiny, 0)) - dp(16), y + dp(8), dp(16), "inv", 8);
     cardFrame(gr, x, y, w, h, inUse, hov);
     hits.add("sty-skin", x, y, w, h, s.id);
 }
@@ -184,17 +184,17 @@ function drawSchemeCard(gr, id, i, x, y, w, h) {
     gr.FillSolidRect(x + dp(10), y + mh + dp(15), dp(7), dp(7), argb(sc.light.accent === "#ffffff" ? sc.dark.accent : sc.light.accent));
     const ns = labelWidth(sc.name, st(STY_ST.name, 0)) <= w - dp(34) ? STY_ST.name : STY_ST.nameS;
     label(gr, fitLabel(sc.name, st(ns, C.fg, C.panel), w - dp(34)), st(ns, C.fg, C.panel), x + dp(24), y + mh + Math.round((dp(40) - labelHeight(ns)) / 2));
-    if (inUse) chip(gr, "IN USE", x + w - dp(8) - labelWidth("IN USE", st(STY_ST.tiny, 0)) - dp(16), y + dp(8), dp(16), "inv", 8);
+    if (inUse) chip(gr, tr("IN USE"), x + w - dp(8) - labelWidth(tr("IN USE"), st(STY_ST.tiny, 0)) - dp(16), y + dp(8), dp(16), "inv", 8);
     cardFrame(gr, x, y, w, h, inUse, hov);
     hits.add("sty-scheme", x, y, w, h, id);
 }
 
 // MODE [■ LIGHT | □ DARK], right-aligned at x
 function drawModeToggle(gr, xr, y) {
-    const items = [["light", "LIGHT"], ["dark", "DARK"]], hh = dp(22), s = st(STY_ST.tog, 0);
+    const items = [["light", tr("LIGHT")], ["dark", tr("DARK")]], hh = dp(22), s = st(STY_ST.tog, 0);
     const widths = items.map(([, t]) => dp(9) + dp(5) + dp(6) + labelWidth(t, s) + dp(9)), total = widths[0] + widths[1];
     let x = xr - total;
-    label(gr, "MODE", st(STY_ST.tog, C["text-muted"]), x - dp(14), y + Math.round((hh - labelHeight(STY_ST.tog)) / 2), 2);
+    label(gr, tr("MODE"), st(STY_ST.tog, C["text-muted"]), x - dp(14), y + Math.round((hh - labelHeight(STY_ST.tog)) / 2), 2);
     items.forEach(([m, t], i) => {
         const on = MODE === m, col = on ? C.bg : C["text-muted"];
         if (on) gr.FillSolidRect(x, y, widths[i], hh, C.fg);
@@ -204,12 +204,12 @@ function drawModeToggle(gr, xr, y) {
         x += widths[i];
     });
     box(gr, xr - total, y, total, hh, C["line-faint"]);
-    return xr - total - labelWidth("MODE", st(STY_ST.tog, 0)) - dp(14);
+    return xr - total - labelWidth(tr("MODE"), st(STY_ST.tog, 0)) - dp(14);
 }
 
 // ▶ PLAY INTRO, right-aligned at xr
 function drawIntroButton(gr, xr, y) {
-    const hh = dp(22), t = "PLAY INTRO", s = st(STY_ST.tog, 0), w = labelWidth(t, s) + dp(34), x = xr - w;
+    const hh = dp(22), t = tr("PLAY INTRO"), s = st(STY_ST.tog, 0), w = labelWidth(t, s) + dp(34), x = xr - w;
     const hov = STY.hover && STY.hover.kind === "intro";
     gr.FillSolidRect(x, y, w, hh, hov ? C.accent : C.fg);
     icon(gr, "play", x + dp(13), y + hh / 2, 8, hov ? C["on-accent"] : C.bg);
@@ -225,7 +225,7 @@ function drawScaleRow(gr, x, y, x1) {
                     ["INSPECT", INSPECT_SCALES, STATE.inspectScale, "sty-inspect"]];
     let xl = x;
     for (const [title, list, cur, id] of groups) {
-        const s = st(GRID_ST.count, 0), need = list.reduce((n, v) => n + dp(18) + labelWidth(pct(v), s), 0) + dp(12) + labelWidth(title, s);
+        const s = st(GRID_ST.count, 0), need = list.reduce((n, v) => n + dp(18) + labelWidth(pct(v), s), 0) + dp(12) + labelWidth(tr(title), s);
         if (xl > x && xl + need > x1) { xl = x; y += dp(34); }
         segToggle(gr, xl + need, y, title, list.map(v => [v, pct(v)]), cur, id);
         xl += need + dp(28);
@@ -238,7 +238,7 @@ function drawStylePreview(gr, g, skins) {
     if (w < dp(200)) return;
     gr.FillSolidRect(x0 - dp(20), g.top + dp(12), HAIR, y1 - g.top - dp(12), C["line-faint"]);
     const hv = STY.hover && STY.hover.kind !== "intro" ? STY.hover : null;
-    label(gr, hv ? "PREVIEW" : "IN USE", st(STY_ST.sec, hv ? C.accent : C["text-muted"]), x0, y0);
+    label(gr, tr(hv ? "PREVIEW" : "IN USE"), st(STY_ST.sec, hv ? C.accent : C["text-muted"]), x0, y0);
     if (hv && hv.kind === "scheme") {
         const sc = TOKENS.schemes[hv.id], mh = Math.min(Math.round(w * .56), Math.round((y1 - y0 - dp(170)) / 2));
         drawMock(gr, x0, y0 + dp(30), w, mh, sc.light);
@@ -246,7 +246,7 @@ function drawStylePreview(gr, g, skins) {
         box(gr, x0, y0 + dp(30), w, mh * 2 + dp(10), C["line-faint"]);
         let y = y0 + dp(30) + mh * 2 + dp(26);
         label(gr, sc.name, st(STY_ST.big, C.fg), x0, y);
-        text(gr, SCHEME_ABOUT[hv.id] || "", 10, 500, C["fg-soft"], x0, y + dp(34), w, dp(18));
+        text(gr, tr(SCHEME_ABOUT[hv.id] || ""), 10, 500, C["fg-soft"], x0, y + dp(34), w, dp(18));
         y += dp(64);
         for (const [mi, m] of [[0, "light"], [1, "dark"]]) {
             const t = sc[m], keys = ["bg", "fg", "fg-soft", "text-muted", "line-dim", "accent"], sw = Math.floor((w - dp(40)) / keys.length);
@@ -278,8 +278,8 @@ function drawStylePreview(gr, g, skins) {
     // name, line and index stacked by their heights, so a larger text size does not overlap them
     label(gr, s.name, st(STY_ST.big, C.fg), x0, ty + dp(14));
     const ay = ty + dp(14) + labelHeight(STY_ST.big) + dp(6);
-    text(gr, SKIN_ABOUT[s.id] || "", 10, 500, C["fg-soft"], x0, ay, w, Math.round(dp(18) * TEXT_SCALE));
-    label(gr, `CASE SKIN  ${pad(skins.indexOf(s) + 1, 2)} / ${pad(skins.length, 2)}`, st(STY_ST.tiny, C["text-muted"]), x0, ay + Math.round(dp(26) * TEXT_SCALE));
+    text(gr, tr(SKIN_ABOUT[s.id] || ""), 10, 500, C["fg-soft"], x0, ay, w, Math.round(dp(18) * TEXT_SCALE));
+    label(gr, `${tr("CASE SKIN")}  ${pad(skins.indexOf(s) + 1, 2)} / ${pad(skins.length, 2)}`, st(STY_ST.tiny, C["text-muted"]), x0, ay + Math.round(dp(26) * TEXT_SCALE));
 }
 
 // ------------------------------------------------------------------------------------------------------- input

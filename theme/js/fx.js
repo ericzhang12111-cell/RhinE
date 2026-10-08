@@ -114,14 +114,14 @@ function bootSteps() {
     try { files = fb.GetLibraryItems().Count; } catch (e) { /* no library */ }
     const land = LAND / FPS * 1000;
     return [
-        ["SYS-01", "OUTPUT DEVICE", 300, 1000],
-        ["SYS-02", "DECODER CHAIN", 800, 1700],
-        ["SYS-03", files ? `LIBRARY INDEX  ·  ${fmtCount(files)}` : "LIBRARY INDEX  ·  EMPTY", 1400, 2500],
-        ["SYS-04", "ARTWORK CACHE", 2200, 2900],
-        ["SYS-05", "LYRICS ENGINE", 2600, 3300],
-        ["SYS-06", "SIGNAL PATH  ·  48 BANDS", 3000, 3700],
-        ["SYS-07", "RAIL 02  ·  SLOT 01  ·  LOCK", 2300, land],
-        ["SYS-08", "SESSION LINK", land + 300, FILM_MS - 700],
+        ["SYS-01", tr("OUTPUT DEVICE"), 300, 1000],
+        ["SYS-02", tr("DECODER CHAIN"), 800, 1700],
+        ["SYS-03", `${tr("LIBRARY INDEX")}  ·  ${files ? fmtCount(files) : tr("EMPTY")}`, 1400, 2500],
+        ["SYS-04", tr("ARTWORK CACHE"), 2200, 2900],
+        ["SYS-05", tr("LYRICS ENGINE"), 2600, 3300],
+        ["SYS-06", tr("SIGNAL PATH  ·  48 BANDS"), 3000, 3700],
+        ["SYS-07", tr("RAIL 02  ·  SLOT 01  ·  LOCK"), 2300, land],
+        ["SYS-08", tr("SESSION LINK"), land + 300, FILM_MS - 700],
     ].map(([code, name, t0, t1]) => ({ code, name, t0, t1 }));
 }
 
@@ -181,13 +181,13 @@ function drawBoot(gr, ms) {
     const bh = dp(52), m = dp(40);
     // machine vision and callouts on tracked points
     if (INTRO) {
-        const tr = INTRO.track[f], at = p => [fx0 + p[0] * fw, fy0 + p[1] * fh, p[2]];
-        if (g < 124) drawVision(gr, tr, g, ms, fx0, fy0, fw, fh, bh, m);
+        const trk = INTRO.track[f], at = p => [fx0 + p[0] * fw, fy0 + p[1] * fh, p[2]];
+        if (g < 124) drawVision(gr, trk, g, ms, fx0, fy0, fw, fh, bh, m);
         const lit = clamp(Math.round((g - 8) / 36 * 13), 0, 13);
-        callout(gr, at(tr.front), "IGNITION", `RAIL 02  ·  ${pad(lit, 2)} / 13`, clamp((g - 8) / 4, 0, 1) * clamp((44 - g) / 4, 0, 1), 1, bh);
-        callout(gr, at(tr.nose), "ROW 02", "RAIL ONLINE", clamp((g - 58) / 4, 0, 1) * clamp((100 - g) / 4, 0, 1), -1, bh);
+        callout(gr, at(trk.front), tr("IGNITION"), `RAIL 02  ·  ${pad(lit, 2)} / 13`, clamp((g - 8) / 4, 0, 1) * clamp((44 - g) / 4, 0, 1), 1, bh);
+        callout(gr, at(trk.nose), "ROW 02", tr("RAIL ONLINE"), clamp((g - 58) / 4, 0, 1) * clamp((100 - g) / 4, 0, 1), -1, bh);
         const locked = g >= LAND24, flash = locked && g < LAND24 + 6;
-        callout(gr, at(tr.case), locked ? "LOCKED" : "ARC-0001", locked ? "SPECIMEN  ·  SLOT 01" : "SPECIMEN  ·  LOWERING",
+        callout(gr, at(trk.case), locked ? tr("LOCKED") : "ARC-0001", tr(locked ? "SPECIMEN  ·  SLOT 01" : "SPECIMEN  ·  LOWERING"),
                 clamp((g - 72) / 4, 0, 1) * clamp((124 - g) / 4, 0, 1), 1, bh, flash);
     }
     // the window's glow taken to the theme's orange as the camera enters it
@@ -200,7 +200,7 @@ function drawBoot(gr, ms) {
     const ty = Math.round((bh - labelHeight(BT.bar)) / 2);
     gr.FillSolidRect(m, ty + dp(4), dp(5), dp(5), BK.accent);
     const lw = bl("AUDIO ARCHIVE", BT.bar, BK.fg, BK.bg, m + dp(15), ty);
-    bl("·  LISTENING TERMINAL  ·  DEPLOYMENT SEQUENCE", BT.barSoft, BK["text-muted"], BK.bg, m + dp(15) + lw + dp(10), ty);
+    bl(`·  LISTENING TERMINAL  ·  ${tr("DEPLOYMENT SEQUENCE")}`, BT.barSoft, BK["text-muted"], BK.bg, m + dp(15) + lw + dp(10), ty);
     const secs = (ms / 1000).toFixed(2).padStart(5, "0");
     bl(`T+${secs}   ·   FRAME ${pad(f + 1, 3)} / ${NF}`, BT.barSoft, BK["fg-soft"], BK.bg, W - m, ty, 2);
     if (Math.floor(ms / 500) % 2 === 0) gr.FillSolidRect(W - m - dp(14) - labelWidth(`T+${secs}   ·   FRAME ${pad(f + 1, 3)} / ${NF}`, Object.assign({ colour: BK["fg-soft"], bg: BK.bg }, BT.barSoft)), ty + dp(4), dp(5), dp(5), BK.accent);
@@ -228,7 +228,7 @@ function brackets(gr, x0, y0, x1, y1, L, colour, t = HAIR) {
 const VIS = { seen: new Map() };
 function conf(id) { let h = 7; for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0; return .86 + (h % 1300) / 10000; }
 // f: the film's time in frames of the 24 fps cut (see F24)
-function drawVision(gr, tr, f, ms, fx0, fy0, fw, fh, bh, m) {
+function drawVision(gr, trk, f, ms, fx0, fy0, fw, fh, bh, m) {
     const top = bh, bot = H - bh, faint = withAlpha(BK.fg, .5);
     if (f === 0) VIS.seen.clear();
     // viewfinder corners and the scan line
@@ -253,7 +253,7 @@ function drawVision(gr, tr, f, ms, fx0, fy0, fw, fh, bh, m) {
     };
     const kept = [], near = [];
     let target = null;
-    for (const b of tr.boxes || []) {
+    for (const b of trk.boxes || []) {
         const r = [fx0 + b[1] * fw, Math.max(top + dp(4), fy0 + b[2] * fh), fx0 + b[3] * fw, Math.min(bot - dp(4), fy0 + b[4] * fh), b[0], b[5]];
         const hidden = near.some(k => inside(r, k) > .6);
         near.push(r);
@@ -287,15 +287,15 @@ function drawVision(gr, tr, f, ms, fx0, fy0, fw, fh, bh, m) {
         gr.FillSolidRect(Math.round(x1 + dp(8)), Math.round(my), Math.max(0, Math.round(W - x1 - dp(8))), HAIR, lc);
         gr.FillSolidRect(Math.round(mx), top, HAIR, Math.max(0, Math.round(y0 - dp(8) - top)), lc);
         gr.FillSolidRect(Math.round(mx), Math.round(y1 + dp(8)), HAIR, Math.max(0, Math.round(bot - y1 - dp(8))), lc);
-        const rng = `RNG ${target[5].toFixed(2)} M   ·   ${locked ? "LOCK CONFIRMED" : "TRACKING"}`, rw = textW(rng, BT.coSub) + dp(16);
+        const rng = `RNG ${target[5].toFixed(2)} M   ·   ${tr(locked ? "LOCK CONFIRMED" : "TRACKING")}`, rw = textW(rng, BT.coSub) + dp(16);
         gr.FillSolidRect(Math.round(x1 - rw), Math.round(y1 + dp(6)), Math.round(rw), dp(22), locked ? BK.accent : withAlpha(BK.bg, .8));
         tx(rng, BT.coSub, locked ? BK["on-accent"] : BK.accent, x1 - rw + dp(8), y1 + dp(11));
     }
     // status line under the top bar, telemetry above the bottom bar
     const n = kept.length + (aimed ? 1 : 0);
     if (Math.floor(ms / 400) % 2) gr.FillSolidRect(m, top + dp(31), dp(6), dp(6), BK.accent);
-    tx(`VISION  ·  CAM-01  ·  OBJ ${pad(n, 2)}  ·  ${aimed ? (f >= LAND24 ? "TARGET LOCKED" : "TARGET ACQUIRED") : "SCANNING"}`, BT.tag, BK.fg, m + dp(14), top + dp(26));
-    const c = tr.cam;
+    tx(`VISION  ·  CAM-01  ·  OBJ ${pad(n, 2)}  ·  ${tr(aimed ? (f >= LAND24 ? "TARGET LOCKED" : "TARGET ACQUIRED") : "SCANNING")}`, BT.tag, BK.fg, m + dp(14), top + dp(26));
+    const c = trk.cam;
     if (c) {
         const sg = v => (v >= 0 ? "+" : "-") + Math.abs(v).toFixed(2).padStart(5, "0");
         const rows = [`POS   X ${sg(c[0])}   Y ${sg(c[1])}   Z ${sg(c[2])}`, `HDG   ${c[3].toFixed(1).padStart(5, "0")}°   PITCH ${sg(c[4])}°`,
@@ -303,7 +303,7 @@ function drawVision(gr, tr, f, ms, fx0, fy0, fw, fh, bh, m) {
         const pw = dp(310), ph = dp(30) + rows.length * dp(16), px = m, py = bot - dp(34) - ph;
         gr.FillSolidRect(px, py, pw, ph, withAlpha(BK.bg, .7));
         gr.FillSolidRect(px, py, dp(3), ph, BK.accent);
-        tx("TELEMETRY", BT.tag, BK.fg, px + dp(14), py + dp(9));
+        tx(tr("TELEMETRY"), BT.tag, BK.fg, px + dp(14), py + dp(9));
         rows.forEach((t, i) => tx(t, BT.tiny, BK["fg-soft"], px + dp(14), py + dp(29) + i * dp(16)));
         // the speed as a ten-cell meter
         const v = clamp(c[6] / 9, 0, 1);
@@ -343,8 +343,8 @@ function drawManifest(gr, ms, k, bh) {
     box(gr, px, py, pw, ph, withAlpha(BK.fg, .35 * a));
     hazardStrip(gr, px, py, pw, dp(6), ms);
     const done = steps.filter(s => ms >= s.t1).length;
-    tx("DEPLOYMENT MANIFEST", BT.tag, BK.fg, px + dp(16), py + dp(22));
-    tx("SELF-CHECK  ·  TTY0", BT.tiny, BK["text-muted"], px + dp(16), py + dp(40));
+    tx(tr("DEPLOYMENT MANIFEST"), BT.tag, BK.fg, px + dp(16), py + dp(22));
+    tx(tr("SELF-CHECK  ·  TTY0"), BT.tiny, BK["text-muted"], px + dp(16), py + dp(40));
     gr.DrawText(`${pad(done, 2)}`, font(40, 300), BK.fg, px, py + dp(16), pw - dp(56), dp(52), DT_RIGHT_SINGLE);
     tx(`/ ${pad(steps.length, 2)}`, BT.tag, BK["text-muted"], px + pw - dp(16), py + dp(44), 2);
     let y = py + dp(84);
@@ -369,7 +369,7 @@ function drawManifest(gr, ms, k, bh) {
         } else if (run) {
             box(gr, sx - dp(54), sy, dp(54), dp(18), BK.accent);
             tx(`RUN ${"|/-\\"[Math.floor(ms / 80) % 4]}`, BT.tiny, BK.accent, sx - dp(27), sy + dp(4), 1);
-        } else tx("QUEUED", BT.tiny, withAlpha(BK["text-muted"], .7), sx, sy + dp(4), 2);
+        } else tx(tr("QUEUED"), BT.tiny, withAlpha(BK["text-muted"], .7), sx, sy + dp(4), 2);
         y += rh;
     }
 }
@@ -384,7 +384,7 @@ function hazardStrip(gr, x, y, w, h, ms) {
 }
 
 // the bottom bar: the film's chapters along a line, the current one bright, an orange playhead
-const CHAPTERS = [[0, "IGNITION"], [40, "TRANSFER"], [70, "DEPLOY"], [94, "LOCK"], [118, "LINK"]];   // frames of the 24 fps cut
+const CHAPTERS = [[0, "IGNITION"], [40, "TRANSFER"], [70, "DEPLOY"], [94, "LOCK"], [118, "LINK"]].map(([f, n]) => [f, tr(n)]);   // frames of the 24 fps cut
 function drawChapters(gr, f, m, y0, bh) {
     const x0 = m, x1 = W - m, ly = y0 + Math.round(bh / 2), w = x1 - x0, at = fr => x0 + w * fr / NF;
     gr.FillSolidRect(x0, ly, w, HAIR, withAlpha(BK.fg, .25));
@@ -404,17 +404,17 @@ function drawVerdict(gr, ms, k) {
     const t1 = FILM_MS - 1000;
     if (ms < t1) return;
     const pk = easeOut(k(t1, t1 + 360)), big = { size: 22, weight: 700, track: .04 };
-    const s = Object.assign({ colour: BK.fg, bg: BK.bg }, big), lw = labelWidth("SESSION AUTHORIZED", s);
+    const s = Object.assign({ colour: BK.fg, bg: BK.bg }, big), lw = labelWidth(tr("SESSION AUTHORIZED"), s);
     const pw = lw + dp(48), ph = dp(52), px = Math.round((W - pw) / 2), py = Math.round(H / 2 - ph / 2);
     gr.FillSolidRect(px, py, Math.round(pw * pk), ph, BK.bg);
     gr.FillSolidRect(px + Math.round(pw * pk), py, dp(4), ph, BK.accent);
     if (pk > .3) {
         gr.PushClip(px, py, pw * pk, ph);
-        label(gr, "SESSION AUTHORIZED", s, px + dp(24), py + Math.round((ph - labelHeight(big)) / 2));
+        label(gr, tr("SESSION AUTHORIZED"), s, px + dp(24), py + Math.round((ph - labelHeight(big)) / 2));
         gr.PopClip();
     }
     if (pk >= 1) {
-        const sub = "ACCESS GRANTED  ·  ARC-0001  ·  ROW 02 / SLOT 01", ss = Object.assign({ colour: BK["on-accent"] }, BT.tag);
+        const sub = `${tr("ACCESS GRANTED")}  ·  ARC-0001  ·  ROW 02 / SLOT 01`, ss = Object.assign({ colour: BK["on-accent"] }, BT.tag);
         trackedText(gr, sub, ss, W / 2, py + ph + dp(14), 1);
     }
 }

@@ -166,7 +166,7 @@ function selectionChanged(animate = true) {
     const sel = pad(r ? r.sel + 1 : 0, w), gno = pad(AR.group + 1, 2), no = pad(a ? a.no : 0, 4);
     if (animate) { setRoll(AR.selRoll, sel); setRoll(AR.groupRoll, gno); setRoll(AR.noRoll, no); }
     else { AR.selRoll = Roll(sel); AR.groupRoll = Roll(gno); AR.noRoll = Roll(no); }
-    AR.title = a && animate ? Scramble(a.title || "UNTITLED") : null;
+    AR.title = a && animate ? Scramble(a.title || tr("UNTITLED")) : null;
     AR.dirtyInfo = true;
     if (AR.layout === "grid") GRID.reveal = true;   // the grid scrolls to a selection made elsewhere (keys, catalog)
     if (ARCHIVE_ON) { requestVisibleThumbs(); clock.wake(); }
@@ -573,8 +573,8 @@ ${pad(gi + 1, 2)}`, LABEL_FONTS.lipS, tone(0xFFF2F1EC), -84, 10 + ph * .52, 76, 
     row.segs.forEach((g, j) => {
         const ux = g.slot * 100 + 6, next = j + 1 < row.segs.length ? row.segs[j + 1].slot - 1 : n, w = (next - g.slot) * 100 - 16;
         gr.FillSolidRect(ux, 16, 8, 8, tone(C.accent));
-        gr.DrawText(g.name, isCJK(g.name) ? LABEL_FONTS.lipC : LABEL_FONTS.lip, tone(LIP_INK), ux + 16, 4, Math.max(40, w - 16), 36, DT_SINGLE | DT_ELLIPSIS);
-        const meta = `${LIB.groupBy === "none" ? "" : GROUP_LABEL[LIB.groupBy] + " " + pad(g.gi + 1, 2) + "  ·  "}${unitWord(g.total)}${g.parts > 1 ? `  ·  ${g.part} / ${g.parts}` : ""}`;
+        gr.DrawText(groupName(g.name), isCJK(groupName(g.name)) ? LABEL_FONTS.lipC : LABEL_FONTS.lip, tone(LIP_INK), ux + 16, 4, Math.max(40, w - 16), 36, DT_SINGLE | DT_ELLIPSIS);
+        const meta = `${LIB.groupBy === "none" ? "" : tr(GROUP_LABEL[LIB.groupBy]) + " " + pad(g.gi + 1, 2) + "  ·  "}${unitWord(g.total)}${g.parts > 1 ? `  ·  ${g.part} / ${g.parts}` : ""}`;
         gr.DrawText(meta, LABEL_FONTS.lipS, tone(LIP_SOFT), ux + 16, 42, Math.max(40, w - 16), 18, DT_SINGLE | DT_ELLIPSIS);
     });
     // slot numbers and ticks along the bottom of the panel
@@ -591,7 +591,7 @@ ${pad(gi + 1, 2)}`, LABEL_FONTS.lipS, tone(0xFFF2F1EC), -84, 10 + ph * .52, 76, 
 }
 
 function drawArchiveEmpty(gr) {
-    const t = LIB.filter ? `NOTHING MATCHES "${LIB.filter.toUpperCase()}"` : LIB.live ? "NO ALBUMS · THE MEDIA LIBRARY AND THE PLAYLISTS ARE EMPTY" : "INDEXING LIBRARY …";
+    const t = LIB.filter ? tr("NOTHING MATCHES \"{0}\"", LIB.filter.toUpperCase()) : tr(LIB.live ? "NO ALBUMS · THE MEDIA LIBRARY AND THE PLAYLISTS ARE EMPTY" : "INDEXING LIBRARY …");
     label(gr, t, st(AR_ST.meta, C["text-muted"]), arrayW() / 2, H / 2 - dp(6), 1);
     drawArchiveBar(gr);
 }
@@ -600,7 +600,7 @@ function drawArchiveEmpty(gr) {
 function drawFilterChip(gr, x = dp(32), y = dp(22)) {
     if (!LIB.filter) return 0;
     const h = dp(22);
-    const s = st(AR_ST.key, C.bg, C.fg), t = `FILTER  ·  "${LIB.filter.toUpperCase()}"  ·  ${unitWord(filteredCount())}`;
+    const s = st(AR_ST.key, C.bg, C.fg), t = `${tr("FILTER")}  ·  "${LIB.filter.toUpperCase()}"  ·  ${unitWord(filteredCount())}`;
     const w = labelWidth(t, s) + dp(20);
     gr.FillSolidRect(x, y, w, h, C.fg);
     gr.FillSolidRect(x, y, dp(4), h, C.accent);
@@ -615,7 +615,7 @@ function drawFilterChip(gr, x = dp(32), y = dp(22)) {
 // ALBUM / SELECT 05 / 12
 function drawSelectNumeral(gr) {
     const g = curGroup(), x = dp(24), y = H - dp(150);
-    label(gr, showTracks() ? "TRACK / SELECT" : "ALBUM / SELECT", st(AR_ST.sel, C["text-muted"]), x, y);
+    label(gr, tr(showTracks() ? "TRACK / SELECT" : "ALBUM / SELECT"), st(AR_ST.sel, C["text-muted"]), x, y);
     const f = font(56, 300), cell = Math.round(gr.CalcTextWidth("0", f, true)), h = Math.ceil(f.Height);
     const w = drawRoll(gr, AR.selRoll, f, C.fg, x - dp(3), y + dp(14), cell, h);
     gr.DrawText(`/ ${pad(g.albums.length, AR.selRoll.to.length)}`, font(16, 400), C["text-muted"], x + w + dp(12), y + dp(14) + h - dp(34), dp(120), dp(24), DT_SINGLE);
@@ -644,13 +644,13 @@ function drawRuler(gr) {
 // ← SHELF 01 / 08  AMBIENT →
 function drawGroupSwitch(gr) {
     const g = curGroup(), cx = Math.round(arrayW() * .774), y = H - dp(82);
-    const lbl = "SHELF ", tail = ` / ${pad(arRows().length, 2)}`, s = st(AR_ST.sel, C["text-muted"]);
+    const lbl = tr("SHELF") + " ", tail = ` / ${pad(arRows().length, 2)}`, s = st(AR_ST.sel, C["text-muted"]);
     const f = font(9, 500), cell = Math.round(gr.CalcTextWidth("0", f, true) + .14 * dp(9));
     const w = labelWidth(lbl, s) + cell * 2 + labelWidth(tail, s), x = cx - w / 2;
     label(gr, lbl, s, x, y);
     drawRoll(gr, AR.groupRoll, f, C["text-muted"], x + labelWidth(lbl, s), y, cell, labelHeight(AR_ST.sel));
     label(gr, tail, s, x + labelWidth(lbl, s) + cell * 2, y);
-    label(gr, fitLabel(g.name, st(AR_ST.group, 0), dp(180)), st(AR_ST.group, C.fg), cx, y + dp(16), 1);
+    label(gr, fitLabel(groupName(g.name), st(AR_ST.group, 0), dp(180)), st(AR_ST.group, C.fg), cx, y + dp(16), 1);
     const can = d => AR.group + d >= 0 && AR.group + d < arRows().length;
     gr.DrawText("←", font(16, 400), can(-1) ? C.fg : C["line-dim"], cx - dp(110), y + dp(2), dp(24), dp(24), DT_CENTER_SINGLE);
     gr.DrawText("→", font(16, 400), can(1) ? C.fg : C["line-dim"], cx + dp(86), y + dp(2), dp(24), dp(24), DT_CENTER_SINGLE);
@@ -698,8 +698,8 @@ function drawInspection(gr, e) {
             const c = M1.crop, left = Math.round(c ? ox + c[0] * k : q[0][0]);
             const top = c ? oy + c[1] * k : q[0][1] - dp(40), bottom = c ? oy + (c[1] + c[3]) * k : q[3][1] + dp(20);
             const y2 = Math.round(top - dp(16) - labelHeight(AR_ST.inspM)), y1 = y2 - dp(6) - labelHeight(AR_ST.insp);
-            label(gr, `INSPECTION  ·  ARC-${pad(a.no, 4)}`, st(AR_ST.insp, C.fg), left, y1);
-            const sub = a.album ? (albumOf(a) || {}).title || "" : `${pad(a.tracks, 2)} TRACKS`;
+            label(gr, `${tr("INSPECTION")}  ·  ARC-${pad(a.no, 4)}`, st(AR_ST.insp, C.fg), left, y1);
+            const sub = a.album ? (albumOf(a) || {}).title || "" : tr("{0} TRACKS", pad(a.tracks, 2));
             label(gr, `${fmtChip(a)}  ·  ${sub}  ·  ${a.grp || ""}`, st(AR_ST.inspM, C["text-muted"]), left, y2);
             // ← RETURN TO ARCHIVE
             const bx = left, by = Math.round(bottom + dp(16)), bs = st(AR_ST.btn, C.fg), bw = labelWidth("←  RETURN TO ARCHIVE", bs) + dp(22), bh = dp(26);
@@ -720,7 +720,7 @@ function drawInfo(gr, w, h) {
     INFO_HITS.length = 0;
     const a = curAlbum();
     if (!a) return;
-    const x = dp(20), iw = dp(INFO_W), gname = a.grp || "";
+    const x = dp(20), iw = dp(INFO_W), gname = groupName(a.grp || "");
     // ghost group name, low behind the actions
     const gf = font(132, 700), gw = gr.CalcTextWidth(gname, gf);
     gr.DrawStrokedText(gname, gf, withAlpha(C["line-faint"], .45), HAIR, 0, 0, h - dp(150), gw + dp(20), dp(170));
@@ -731,11 +731,11 @@ function drawInfo(gr, w, h) {
     label(gr, fitLabel(gname, st(AR_ST.eyebrowB, 0), iw - (ex - x)), st(AR_ST.eyebrowB, C.fg), ex, y);
     y += dp(24);
     // bracketed ALBUM NO. 0269 + format chip
-    const hh = dp(34), hs = st(AR_ST.head, C.fg), lw = labelWidth("ALBUM NO. ", hs);
+    const hh = dp(34), hs = st(AR_ST.head, C.fg), lw = labelWidth(tr("ALBUM NO.") + " ", hs);
     const f = font(13, 600), cell = Math.round(gr.CalcTextWidth("0", f, true) + .12 * dp(13)), bw = dp(20) + lw + cell * 4 + dp(16);
     for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) gr.FillSolidRect(x + cx * (bw - dp(5)), y + cy * (hh - dp(5)), dp(5), dp(5), C.fg);
     const ty = y + Math.round((hh - labelHeight(AR_ST.head)) / 2);
-    label(gr, "ALBUM NO. ", hs, x + dp(20), ty);
+    label(gr, tr("ALBUM NO.") + " ", hs, x + dp(20), ty);
     drawRoll(gr, AR.noRoll, f, C.fg, x + dp(20) + lw, ty, cell, labelHeight(AR_ST.head));
     // the format chip keeps clear of the bracket: the short form when the full one does not fit, none when neither does
     const chipW = t => labelWidth(t, { size: 9.5, weight: 600, track: .1, colour: 0, bg: 0 }) + dp(8) * 2 + dp(12);
@@ -746,7 +746,7 @@ function drawInfo(gr, w, h) {
     y += HEAVY + dp(20);
     // title plate (wraps, two lines at most): the album's title, or the track's
     const al = albumOf(a) || a, isTrack = al !== a;
-    const title = AR.title ? scrambleText(AR.title) : (a.title || "UNTITLED"), tf = fontFor(a.title || "U", 25, 600);
+    const title = AR.title ? scrambleText(AR.title) : (a.title || tr("UNTITLED")), tf = fontFor(a.title || "U", 25, 600);
     const lines = gr.EstimateLineWrap(title, tf, iw - dp(24)), lh = dp(42);
     for (let i = 0, ly = y; i < Math.min(4, lines.length); i += 2, ly += lh + dp(2)) {
         let s = lines[i];
@@ -757,21 +757,21 @@ function drawInfo(gr, w, h) {
     }
     y += dp(104);
     // artist, year / tracks / length
-    label(gr, fitLabel((a.artist || "UNKNOWN ARTIST").toUpperCase(), st(AR_ST.artist, 0), iw), st(AR_ST.artist, C.fg), x, y);
+    label(gr, fitLabel((a.artist || tr("UNKNOWN ARTIST")).toUpperCase(), st(AR_ST.artist, 0), iw), st(AR_ST.artist, C.fg), x, y);
     y += dp(22);
-    const meta = isTrack ? `${(al.title || "UNTITLED").toUpperCase()} / ${a.year || "—"} / ${fmtTime(a.length)}`
-                         : `${a.year || "—"} / ${pad(a.tracks, 2)} TRACKS / ${fmtTime(a.length)}`;
+    const meta = isTrack ? `${(al.title || tr("UNTITLED")).toUpperCase()} / ${a.year || "—"} / ${fmtTime(a.length)}`
+                         : `${a.year || "—"} / ${tr("{0} TRACKS", pad(a.tracks, 2))} / ${fmtTime(a.length)}`;
     label(gr, fitLabel(meta, st(AR_ST.meta, 0), iw), st(AR_ST.meta, C["text-muted"]), x, y);
     y += dp(28);
     // profile table
     gr.FillSolidRect(x, y, iw, dp(18), C.fg);
     const phy = y + Math.round((dp(18) - labelHeight(ST.ph)) / 2);
-    label(gr, "PROFILE", st(ST.ph, C.bg, C.fg), x + dp(8), phy);
+    label(gr, tr("PROFILE"), st(ST.ph, C.bg, C.fg), x + dp(8), phy);
     label(gr, `ARC-${pad(a.no, 4)}`, st(ST.ph, C.bg, C.fg), x + iw - dp(8), phy, 2);
     y += dp(18 + 10);
     const res = a.lossless && a.bits ? `${a.bits} / ${+(a.rate / 1000).toFixed(1)}` : a.kbps ? `${a.kbps} KBPS` : "—";
-    const cells = [["FORMAT", (a.codec || "—").toUpperCase()], ["RES", res], ["GENRE", (a.genre || "—").toUpperCase()], ["DISCS", String(a.discs)],
-                   ["ADDED", a.added ? a.added.slice(0, 10) : "—"], ["PLAYS", a.plays ? String(a.plays) : "—"]];
+    const cells = [[tr("FORMAT"), (a.codec || "—").toUpperCase()], [tr("RES"), res], [tr("GENRE"), (a.genre || "—").toUpperCase()], [tr("DISCS"), String(a.discs)],
+                   [tr("ADDED"), a.added ? a.added.slice(0, 10) : "—"], [tr("PLAYS"), a.plays ? String(a.plays) : "—"]];
     const colW = iw / 2;
     cells.forEach(([kk, v], i) => {
         const cx = x + dp(8) + (i % 2) * colW, cy = y + Math.floor(i / 2) * dp(20);
@@ -784,7 +784,7 @@ function drawInfo(gr, w, h) {
     // (below the list: the "+ N MORE" row, the buttons and a margin, more with the source note)
     const below = dp(24 + 18 + 40) + dp(LIB.source === "playlists" ? 56 : 28);
     const rowH = dp(24), fit = clamp(Math.floor((h - y - below) / rowH), 1, 40), TL = albumTracks(a, fit);
-    if (!TL.rows.length) label(gr, LIB.live ? "NO TRACKS" : "INDEXING …", st(AR_ST.more, C["text-muted"]), x + dp(34), y + dp(6));
+    if (!TL.rows.length) label(gr, tr(LIB.live ? "NO TRACKS" : "INDEXING …"), st(AR_ST.more, C["text-muted"]), x + dp(34), y + dp(6));
     TL.rows.forEach((t, k) => {
         const ry = y + k * rowH, hov = AR.infoHover === t.i;
         if (t.own || hov) gr.FillSolidRect(x - dp(8), ry, iw + dp(16), rowH, t.own ? C.panel : withAlpha(C.fg, .06));
@@ -797,27 +797,27 @@ function drawInfo(gr, w, h) {
     y += Math.max(1, TL.rows.length) * rowH;
     const more = TL.total - TL.first - TL.rows.length;
     if (more > 0 && TL.rows.length) {
-        const mw = label(gr, `+ ${more} MORE  ·  OPEN ALBUM`, st(AR_ST.more, C["text-muted"]), x + dp(34), y + dp(6));
+        const mw = label(gr, tr("+ {0} MORE  ·  OPEN ALBUM", more), st(AR_ST.more, C["text-muted"]), x + dp(34), y + dp(6));
         INFO_HITS.push(["ar-open", x + dp(30), y, mw + dp(8), rowH]);
     }
     y += dp(24 + 18);
     // ▶ PLAY ALBUM / PLAY TRACK (inverse) · OPEN ALBUM ↗ (orange focus frame)
-    const bh = dp(40), bs = st(AR_ST.btn, C.bg, C.fg), playTxt = isTrack ? "PLAY TRACK" : "PLAY ALBUM";
+    const bh = dp(40), bs = st(AR_ST.btn, C.bg, C.fg), playTxt = tr(isTrack ? "PLAY TRACK" : "PLAY ALBUM");
     const pw = dp(14) + dp(10) + dp(10) + labelWidth(playTxt, bs) + dp(16);
     gr.FillSolidRect(x, y, pw, bh, C.fg);
     icon(gr, "play", x + dp(19), y + bh / 2, 9, C.bg);
     label(gr, playTxt, bs, x + dp(34), y + Math.round((bh - labelHeight(AR_ST.btn)) / 2));
     INFO_HITS.push(["ar-play", x, y, pw, bh]);
-    const ox2 = x + pw + dp(10), os = st(AR_ST.btn, C.fg), ow = dp(14) + labelWidth("OPEN ALBUM", os) + dp(40) + dp(26);
+    const ox2 = x + pw + dp(10), os = st(AR_ST.btn, C.fg), ow = dp(14) + labelWidth(tr("OPEN ALBUM"), os) + dp(40) + dp(26);
     box(gr, ox2, y, ow, bh, C.fg);
     box(gr, ox2 - dp(4), y - dp(4), ow + dp(8), bh + dp(8), C.accent);
-    label(gr, "OPEN ALBUM", os, ox2 + dp(14), y + Math.round((bh - labelHeight(AR_ST.btn)) / 2));
+    label(gr, tr("OPEN ALBUM"), os, ox2 + dp(14), y + Math.round((bh - labelHeight(AR_ST.btn)) / 2));
     const ax0 = ox2 + ow - dp(24), ay0 = y + bh / 2 + dp(5), aL = dp(9), sw = Math.max(HAIR, dp(1.5));
     gr.DrawLine(ax0, ay0, ax0 + aL, ay0 - aL, sw, C.accent);
     gr.DrawLine(ax0 + dp(2.5), ay0 - aL, ax0 + aL, ay0 - aL, sw, C.accent);
     gr.DrawLine(ax0 + aL, ay0 - aL, ax0 + aL, ay0 - dp(2.5), sw, C.accent);
     INFO_HITS.push(["ar-open", ox2, y, ow, bh]);
-    if (LIB.source === "playlists") label(gr, "SOURCE · ALL PLAYLISTS (NO MEDIA LIBRARY FOLDERS)", st(AR_ST.key, C["text-muted"]), x, y + bh + dp(16));
+    if (LIB.source === "playlists") label(gr, tr("SOURCE · ALL PLAYLISTS (NO MEDIA LIBRARY FOLDERS)"), st(AR_ST.key, C["text-muted"]), x, y + bh + dp(16));
 }
 
 // ------------------------------------------------------------------------------------------------------ actions
@@ -970,27 +970,27 @@ function archiveKey(vk) {
 }
 function archiveMenu(x, y) {
     const m = window.CreatePopupMenu(), by = ["genre", "decade", "artist", "none"], sorts = SORT_BY.map(([k]) => k);
-    ["Group by genre", "Group by decade", "Group by artist initial", "No groups"].forEach((t, i) => m.AppendMenuItem(0, 1 + i, t));
+    ["Group by genre", "Group by decade", "Group by artist initial", "No groups"].forEach((t, i) => m.AppendMenuItem(0, 1 + i, tr(t)));
     m.CheckMenuRadioItem(1, 4, 1 + Math.max(0, by.indexOf(LIB.groupBy)));
     const so = window.CreatePopupMenu();
-    ["Artist", "Album title", "Year", "Date added (newest first)"].forEach((t, i) => so.AppendMenuItem(0, 400 + i, t));
+    ["Artist", "Album title", "Year", "Date added (newest first)"].forEach((t, i) => so.AppendMenuItem(0, 400 + i, tr(t)));
     so.CheckMenuRadioItem(400, 403, 400 + Math.max(0, sorts.indexOf(LIB.sortBy)));
-    so.AppendTo(m, 0, "Sort by");
-    m.AppendMenuItem(showTracks() ? 0x8 : 0, 10, "Show every track as its own item");
+    so.AppendTo(m, 0, tr("Sort by"));
+    m.AppendMenuItem(showTracks() ? 0x8 : 0, 10, tr("Show every track as its own item"));
     m.AppendMenuSeparator();
-    m.AppendMenuItem(0, 7, "Case array\tG");
-    m.AppendMenuItem(0, 8, "Cover grid\tG");
+    m.AppendMenuItem(0, 7, tr("Case array") + "\tG");
+    m.AppendMenuItem(0, 8, tr("Cover grid") + "\tG");
     m.CheckMenuRadioItem(7, 8, AR.layout === "grid" ? 8 : 7);
     const per = window.CreatePopupMenu();
-    PER_PAGE.forEach((n, i) => per.AppendMenuItem(0, 300 + i, `${n} covers`));
+    PER_PAGE.forEach((n, i) => per.AppendMenuItem(0, 300 + i, tr("{0} covers", n)));
     per.CheckMenuRadioItem(300, 300 + PER_PAGE.length - 1, 300 + Math.max(0, PER_PAGE.indexOf(GRID.per)));
-    per.AppendTo(m, 0, "Grid: covers per page");
+    per.AppendTo(m, 0, tr("Grid: covers per page"));
     m.AppendMenuSeparator();
-    m.AppendMenuItem(curAlbum() ? 0 : 1, 9, "Play album");
-    m.AppendMenuItem(curAlbum() ? 0 : 1, 5, "Open album in playlist");
+    m.AppendMenuItem(curAlbum() ? 0 : 1, 9, tr("Play album"));
+    m.AppendMenuItem(curAlbum() ? 0 : 1, 5, tr("Open album in playlist"));
     m.AppendMenuSeparator();
     const skins = appendSkinMenu(m, 100);
-    m.AppendMenuItem(0, 6, "Re-index library");
+    m.AppendMenuItem(0, 6, tr("Re-index library"));
     const id = m.TrackPopupMenu(x, y);
     if (id >= 1 && id <= 4) setGroupBy(by[id - 1]);
     else if (id >= 400 && sorts[id - 400]) setSortBy(sorts[id - 400]);

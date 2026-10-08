@@ -92,6 +92,8 @@ function setAlbums(albums, items = []) {
 const GROUP_BY = [["genre", "GENRE"], ["decade", "DECADE"], ["artist", "A–Z"], ["none", "NONE"]];
 const SORT_BY = [["artist", "ARTIST"], ["title", "TITLE"], ["year", "YEAR"], ["added", "ADDED"]];
 const GROUP_LABEL = { genre: "GENRE", decade: "DECADE", artist: "ARTIST", none: "ALL" };
+// a group's name as shown: the fixed ones and decades translated, genres as they are tagged
+const groupName = g => /^\d{3}0S$/.test(g) ? tr("{0}S", g.slice(0, 4)) : tr(g);
 function setGroupBy(by) {
     if (by === LIB.groupBy || !GROUP_LABEL[by]) return;
     LIB.groupBy = by;
@@ -106,7 +108,7 @@ function setUnit(u) {
     groupAlbums();
 }
 const showTracks = () => LIB.unit === "tracks" && LIB.items.length > 0;
-const unitWord = n => `${fmtCount(n)} ${showTracks() ? (n === 1 ? "TRACK" : "TRACKS") : n === 1 ? "ALBUM" : "ALBUMS"}`;
+const unitWord = n => tr(showTracks() ? (n === 1 ? "{0} TRACK" : "{0} TRACKS") : n === 1 ? "{0} ALBUM" : "{0} ALBUMS", fmtCount(n));
 // the album a track item belongs to (an album is its own)
 const albumOf = a => a && a.album ? LIB.albumMap.get(a.album) || null : a;
 function setSortBy(by) {

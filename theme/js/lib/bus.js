@@ -17,6 +17,10 @@ const pickScale = (v, list) => list.reduce((a, b) => Math.abs(b - v) < Math.abs(
 
 function send(type, data = null) { window.NotifyOthers(BUS, JSON.stringify({ type, data })); }
 function onMessage(type, fn) { (BUS_HANDLERS[type] = BUS_HANDLERS[type] || []).push(fn); }
+// a new interface language (lib/i18n.js): each panel reloads its script, which reads the language again. The root
+// panel (frame.js) has no text of its own on screen and stays, so the layout and the intro are not restarted.
+let RELOAD_ON_LANG = true;
+onMessage("ui-lang", () => { if (RELOAD_ON_LANG) window.Reload(); });
 
 function on_notify_data(name, info) {
     if (name !== BUS) return;
