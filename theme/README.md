@@ -5,11 +5,14 @@
 An archive terminal for listening: Swiss typography, a monochrome palette with one orange accent, and a sci-fi layer
 (a Möbius signal ring, rendered album cases, profile cards). Windows only, light and dark.
 
-**Version 1.0.** Five views: **Archive** (every album, or every track, as a rendered specimen case on shelves, or as a
+**Version 1.2.** Five views: **Archive** (every album, or every track, as a rendered specimen case on shelves, or as a
 cover grid), **Playlists** (playlist manager, track rail, the native playlist in two presets, profile card with the
 queue), **Lyrics** (synced lyrics, from your files or fetched from LRCLIB), **Signal** (a rendered ∞ ring with live
 pulses, spectrum and the whole-track signal trace, or a Classic player screen) and **Style** (ten case skins and five
-colour schemes, each in light and dark). A pre-rendered intro film, scan transitions, grain and Reduce motion.
+colour schemes, each in light and dark). A pre-rendered intro film, scan transitions, grain and Reduce motion. The
+interface is in English, Simplified Chinese or Japanese, and lyrics in another language can show a translation.
+
+What changed in each version: [CHANGELOG.md](../CHANGELOG.md) (in the release zip: `CHANGELOG.md`).
 
 ![Archive view, dark](screenshots/v1/archive.jpg)
 
@@ -90,8 +93,14 @@ powershell -ExecutionPolicy Bypass -File install.ps1 -Foobar "C:\Program Files\f
 | Colour scheme (ARCHIVE, HAZARD, FLARE, FIELD, COLD FRONT) | `MENU › Audio Archive › Colour scheme` | — |
 | Style: see and switch skins and schemes | the `05 STYLE` view: hover a card for its preview, click to apply | `5` |
 | Text size (90 – 150 %), Archive array scale (80 – 130 %), inspection size (100 – 150 %) | `TEXT`, `ARRAY` and `INSPECT` at the top of the `05 STYLE` view, or `MENU › Audio Archive › Text size` / `Archive array scale` / `Inspection size` | — |
+| Interface language: English, 简体中文, 日本語 (default: Windows' display language) | `MENU › Audio Archive › Language · 语言 · 言語` | — |
+| Lyrics: read ahead or back | the wheel over the lyrics; the view returns to the sung line 5 s later | — |
+| Lyrics: play from a line | click the line | — |
+| Lyrics translation: language, sources, keys | `MENU › Audio Archive › Translate lyrics` (see *Translated lyrics* below) | — |
 
-The theme starts dark, with the ARCHIVE colour scheme and the WHITE case skin. Keys reach the theme when one of its scripted panels has keyboard
+The theme starts dark, with the ARCHIVE colour scheme and the WHITE case skin. Its settings are kept in
+`<profile>\audio-archive-settings.json` as well as in the layout, so running a newer `install.ps1` keeps them
+(from 1.2 on). Keys reach the theme when one of its scripted panels has keyboard
 focus (click an empty spot in it first); the native playlist keeps foobar2000's own keys.
 
 **Playlists view.** The manager lists every playlist with a rail line as long as the log of its track count; the
