@@ -2,7 +2,7 @@
 
 *A foobar2000 theme.*
 
-**English** · [中文：安装指南](安装指南.md) · [中文：其他信息](其他信息.md)
+**English** · [Jump to Installation](#installation) · [中文：安装指南](安装指南.md) · [中文：其他信息](其他信息.md)
 
 An archive terminal for listening: Swiss typography, a monochrome palette with one accent colour, and a sci-fi layer —
 your albums as rendered specimen cases on shelves, a Möbius signal ring that pulses with the music, synced lyrics
@@ -31,7 +31,7 @@ foobar2000 v2 with Columns UI and JSplitter.
 <img width="3412" height="1606" alt="162b47adff8e2d2c7f9ca23ff9757cc3" src="https://github.com/user-attachments/assets/aec4c0a3-d1f3-4503-9a76-5632f00b5246" />
 
 
-## Install
+### Installation
 
 **→ [INSTALL.md](INSTALL.md)** (中文：**[安装指南.md](安装指南.md)**). In short: download the portable bundle and
 double-click `Setup 一键安装.cmd`, or download the theme and double-click `install.cmd`.
