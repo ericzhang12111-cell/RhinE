@@ -129,4 +129,13 @@ I18N["zh-CN"] = {
     "DSP Manager…": "DSP 管理器…",
     "Light / dark did not switch.\n\nThe theme follows Columns UI's mode. Switch it in MENU › View › Mode, or in Preferences › Display › Columns UI › Colours and fonts. When it is set to “Use system setting”, Windows' own light / dark setting decides.": "浅色 / 深色没有切换。\n\n主题跟随 Columns UI 的模式。请在 菜单 › View › Mode（汉化版：视图 › 模式）中切换，或在 Preferences › Display › Columns UI › Colours and fonts 中设置。设为“Use system setting”（使用系统设置）时，由 Windows 自己的浅色 / 深色设置决定。",
     "+ ADD MUSIC FOLDER": "+ 添加音乐文件夹",
+    // 1.3: updates
+    "UPDATE {0}": "更新 {0}",
+    "Update to {0} now (foobar2000 restarts)": "立即更新到 {0}（foobar2000 会重新启动）",
+    "What's new in {0}…": "{0} 的更新内容…",
+    "Skip this version": "跳过此版本",
+    "Check for updates daily": "每天检查更新",
+    "Check for updates…": "检查更新…",
+    "RhinE {0} is the latest version.": "RhinE {0} 已是最新版本。",
+    "Could not check for updates: GitHub and jsDelivr did not answer. The releases are at {0}": "无法检查更新：GitHub 和 jsDelivr 都没有响应。发布页：{0}",
 };

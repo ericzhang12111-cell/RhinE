@@ -41,9 +41,13 @@ music folder. The albums appear in the Archive as the library is read.
 
 ## Update
 
-Download the new version and do the same steps again. You do not need to remove the old version first, and your
-settings (skin, colours, sizes, language, …) are kept. With the portable bundle, unzip the new bundle and copy its
-`audio-archive-…` folder into your RhinE folder, then double-click `Setup 一键安装.cmd` there.
+**From 1.3 on, in one click:** when a new version is out, an orange **`UPDATE`** chip appears in the bottom bar. Click it,
+then *Update to … now*. foobar2000 closes, the new version is put in, and foobar2000 starts again with your settings
+(skin, colours, sizes, language, …). `MENU › Audio Archive › Check for updates…` checks at once.
+
+**From 1.2 or older, once by hand:** download the new version and do the same steps as above. You do not need to remove
+the old version first. With the portable bundle, unzip the new bundle and copy its `audio-archive-…` folder into your
+RhinE folder, then double-click `Setup 一键安装.cmd` there.
 
 Coming from another foobar2000 theme? Nothing to remove first: the installer backs up your current setup, and
 uninstalling brings it back.

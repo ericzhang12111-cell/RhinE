@@ -7,6 +7,7 @@
 // with library counts.
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
+include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\update.js");
 
 const ST = {
     marker: { size: 7.5, weight: 600, track: .06 },
@@ -204,6 +205,19 @@ function readDsp() {
     return true;
 }
 readDsp();
+// updates: a check a day at most, a few seconds after the start; MENU › Audio Archive › Check for updates asks now and
+// says what it found
+window.SetTimeout(() => { if (updateDue()) checkUpdate(j => { if (j) window.Repaint(); }); }, 8000);
+onMessage("update-state", () => { refreshUpdate(); window.Repaint(); });
+onMessage("update-check", () => checkUpdate(j => {
+    if (!j) { fb.ShowPopupMessage(tr("Could not check for updates: GitHub and jsDelivr did not answer. The releases are at {0}", releasePage()), "Audio Archive"); return; }
+    if (cmpVersion(j.version, themeVersion()) <= 0) { fb.ShowPopupMessage(tr("RhinE {0} is the latest version.", themeVersion()), "Audio Archive"); return; }
+    if (getSetting("updateSkip", "") === j.version) setSetting("updateSkip", "", true);   // asked for: show it even if skipped
+    refreshUpdate();
+    window.Repaint();
+    window.SetTimeout(() => { const a = hits.get("update"); if (a) updateMenu(a.x, a.y); }, 300);
+}));
+
 function on_dsp_preset_changed() { if (readDsp()) window.Repaint(); }
 
 // volume (dB) <-> position 0..1 on a perceptual curve
@@ -295,7 +309,17 @@ function drawStatus(gr) {
     gr.FillSolidRect(x, cy - dp(2), dp(16), dp(4), C.fg);
     x -= dp(10);
     x -= label(gr, "AUDIO ARCHIVE", st(ST.sigB, C.fg), x, by, 2);
-    if (counts.files >= 0) label(gr, tr("{0} FILES · {1} ALBUMS", fmtCount(counts.files), fmtCount(counts.albums)), st(ST.sig, C["text-muted"]), x - dp(10), by, 2);
+    x -= dp(10);
+    if (counts.files >= 0) x -= label(gr, tr("{0} FILES · {1} ALBUMS", fmtCount(counts.files), fmtCount(counts.albums)), st(ST.sig, C["text-muted"]), x, by, 2);
+    // a newer release: an orange chip; its menu tells what is new and updates (lib/update.js)
+    if (UPD.available) {
+        const t = tr("UPDATE {0}", UPD.latest.version), uw = labelWidth(t, st(ST.sec, 0)) + dp(30), uh = dp(20), ux = x - dp(20) - uw;
+        const uy = cy - uh / 2, uhov = hover && hover.id === "update";
+        gr.FillSolidRect(ux, uy, uw, uh, uhov ? C.fg : C.accent);
+        gr.FillSolidRect(ux + dp(9), cy - dp(2.5), dp(5), dp(5), C.bg);
+        label(gr, t, st(ST.sec, C.bg, uhov ? C.fg : C.accent), ux + dp(20), cy - Math.round(labelHeight(ST.sec) / 2));
+        hits.add("update", ux, uy, uw, uh);
+    }
 }
 
 // ------------------------------------------------------------------------------------------------------- mouse
@@ -344,6 +368,7 @@ function on_mouse_lbtn_up(x, y) {
     if (a.id === "btn") [() => fb.Prev(), () => fb.PlayOrPause(), () => fb.Next(), () => fb.Stop()][a.data]();
     else if (a.id === "mode" && a.data !== MODE) send("mode");
     else if (a.id === "order") orderMenu(a);
+    else if (a.id === "update") updateMenu(a.x, a.y);
     else if (a.id === "dsp") { dspMenu(a.x, a.y + a.h); if (readDsp()) window.Repaint(); }
     else if (a.id === "shuffle") shuffleLibrary();
     else if (a.id === "cover") send("inspect");

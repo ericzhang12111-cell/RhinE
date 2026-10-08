@@ -253,7 +253,12 @@ if ($linked) {
     }
     New-Item -ItemType Directory -Force $target | Out-Null
     foreach ($part in 'js', 'tokens', 'columns', 'assets') { Copy-Item (Join-Path $source $part) $target -Recurse }
-    foreach ($file in 'README.md', 'LICENSE') { if (Test-Path (Join-Path $source $file)) { Copy-Item (Join-Path $source $file) $target } }
+    foreach ($file in 'README.md', 'LICENSE', 'VERSION') { if (Test-Path (Join-Path $source $file)) { Copy-Item (Join-Path $source $file) $target } }
+    # the updater, which the theme starts from its UPDATE chip
+    if (Test-Path (Join-Path $source 'tools\update.ps1')) {
+        New-Item -ItemType Directory -Force (Join-Path $target 'tools') | Out-Null
+        Copy-Item (Join-Path $source 'tools\update.ps1') (Join-Path $target 'tools')
+    }
     Say (T "copied the theme to $target" "已复制主题到 $target")
 }
 

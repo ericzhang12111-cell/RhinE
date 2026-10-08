@@ -225,6 +225,27 @@ format and track count on the right), disc track numbers and a running position.
 playlist position, artist, album and year on every row, for mixed playlists and search results. The playing track is
 marked orange in both.
 
+## Updates
+
+From 1.3 on the theme updates itself:
+
+- **Check.** The theme reads the latest version from this repository (`theme/update/latest.json`, from GitHub, else
+  through [jsDelivr](https://www.jsdelivr.com), which mirrors GitHub and is usually reachable from mainland China). It
+  checks at most once a day, a few seconds after foobar2000 starts. Nothing about you or your music is sent. Switch it
+  off with `MENU › Audio Archive › Check for updates daily`; `Check for updates…` beside it checks at once.
+- **Offer.** A newer version shows an orange `UPDATE` chip in the bottom bar. Its menu lists what is new and offers
+  *Update now*, the release page, or *Skip this version*.
+- **Update.** *Update now* runs `tools\update.ps1` in a console window:
+  1. It reads the release's file list (`theme/update/files.json` at the release's tag): every file with its SHA-256.
+  2. It copies the files that did not change from the installed theme and downloads the others from the repository at
+     that tag (GitHub, else jsDelivr). Most updates change a few scripts, so a few hundred KB are downloaded. When most of
+     the theme changed, or a download fails, it downloads the release zip instead.
+  3. It checks every file against its SHA-256, then runs the new version's `install.ps1`. That closes foobar2000, backs
+     up its configuration, replaces the theme and starts it again; your settings are kept.
+
+The updater can also be run by hand: `powershell -ExecutionPolicy Bypass -File update.ps1 -Foobar "<folder>"`
+(`-Full` downloads the whole zip). Versions before 1.3 have no updater: install 1.3 once by hand.
+
 ## Uninstall in detail
 
 `uninstall.cmd` runs `uninstall.ps1`. It finds the foobar2000 that has the theme (or takes `-Foobar "<folder>"`) and asks

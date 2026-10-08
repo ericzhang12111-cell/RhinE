@@ -130,4 +130,13 @@ I18N["ja"] = {
     "DSP Manager…": "DSP マネージャー…",
     "Light / dark did not switch.\n\nThe theme follows Columns UI's mode. Switch it in MENU › View › Mode, or in Preferences › Display › Columns UI › Colours and fonts. When it is set to “Use system setting”, Windows' own light / dark setting decides.": "ライト / ダークが切り替わりませんでした。\n\nテーマは Columns UI のモードに従います。メニュー › View › Mode で切り替えるか、Preferences › Display › Columns UI › Colours and fonts で設定してください。「Use system setting」のときは、Windows のライト / ダーク設定に従います。",
     "+ ADD MUSIC FOLDER": "+ 音楽フォルダーを追加",
+    // 1.3: updates
+    "UPDATE {0}": "アップデート {0}",
+    "Update to {0} now (foobar2000 restarts)": "今すぐ {0} に更新（foobar2000 が再起動します）",
+    "What's new in {0}…": "{0} の新機能…",
+    "Skip this version": "このバージョンをスキップ",
+    "Check for updates daily": "毎日アップデートを確認",
+    "Check for updates…": "アップデートを確認…",
+    "RhinE {0} is the latest version.": "RhinE {0} は最新バージョンです。",
+    "Could not check for updates: GitHub and jsDelivr did not answer. The releases are at {0}": "アップデートを確認できませんでした：GitHub と jsDelivr が応答しません。リリース：{0}",
 };

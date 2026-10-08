@@ -6,6 +6,7 @@
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\emblem.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\translate.js");
+include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\update.js");
 
 const VIEWS = ["archive", "playlists", "lyrics", "signal", "style"];
 const NAV = { archive: ["01", tr("ARCHIVE")], playlists: ["02", tr("PLAYLISTS")], lyrics: ["03", tr("LYRICS")], signal: ["04", tr("SIGNAL")], style: ["05", tr("STYLE")] };
@@ -384,6 +385,9 @@ function showMenu(a) {
     UI_LANGS.forEach(([, name], i) => lm.AppendMenuItem(0, 450 + i, name));
     lm.CheckMenuRadioItem(450, 450 + UI_LANGS.length - 1, 450 + Math.max(0, UI_LANGS.findIndex(l => l[0] === UI_LANG)));
     lm.AppendTo(theme, 0, "Language · 语言 · 言語");
+    theme.AppendMenuSeparator();
+    theme.AppendMenuItem(0, 12, `${tr("Check for updates…")}\tRhinE ${themeVersion()}`);
+    theme.AppendMenuItem(getSetting("updateCheck", true) !== false ? 0x8 : 0, 13, tr("Check for updates daily"));
     theme.AppendTo(root, 0, "Audio Archive");
     const id = root.TrackPopupMenu(a.x - dp(8), a.y + a.h, 0);
     const k = Math.floor(id / 1000) - 1;
@@ -395,6 +399,8 @@ function showMenu(a) {
     else if (id === 7) send("boot", !STATE.boot);
     else if (id === 9) send("grain", !STATE.grain);
     else if (id === 11) send("lyrics-online", !STATE.lyricsOnline);
+    else if (id === 12) send("update-check");
+    else if (id === 13) setSetting("updateCheck", getSetting("updateCheck", true) === false, true);
     else if (id >= 450 && id < 450 + UI_LANGS.length) { if (UI_LANGS[id - 450][0] !== UI_LANG) { setSetting("uiLang", UI_LANGS[id - 450][0]); send("ui-lang"); window.Reload(); } }
     else if (id === 400) { setSetting("lyricsTarget", "off"); send("lyrics-translate"); }
     else if (id > 400 && id <= 400 + TR_TARGETS.length) { setSetting("lyricsTarget", TR_TARGETS[id - 401][0]); send("lyrics-translate"); }

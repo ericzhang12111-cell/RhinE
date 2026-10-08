@@ -18,6 +18,9 @@ Newest version first. Download any version from [Releases](https://github.com/er
 - `VISUALIZATIONS` in the Signal view opens foobar2000's visualizations and those of installed components.
   信号视图新增 `可视化`：打开 foobar2000 自带及已安装组件提供的可视化。
 - `+ ADD MUSIC FOLDER` in the empty Archive. 档案为空时显示 `+ 添加音乐文件夹`。
+- One-click updates from now on: an `UPDATE` chip in the bottom bar when a new version is out; it downloads only what
+  changed (GitHub, else jsDelivr), checks it and restarts foobar2000 with your settings.
+  从此可以一键更新：有新版本时底栏显示 `更新` 标签，只下载有变化的文件（GitHub，失败时 jsDelivr），校验后重启 foobar2000，设置保留。
 
 **Changed · 改进**
 - Installation guides are now separate and short: `INSTALL.md` / `安装指南.md`. Everything else is in `README.md` /
