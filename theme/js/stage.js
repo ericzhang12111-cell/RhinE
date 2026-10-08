@@ -38,7 +38,7 @@ const CARD_W = 328, LEFT_W = CARD_W + 48;
 let W = 0, H = 0;
 const hits = Hits();
 let hover = null;
-Ring.mode = window.GetProperty("ringMode", "3d");
+Ring.mode = getSetting("ringMode", "3d");
 
 // ------------------------------------------------------------------------------------------------- track state
 // (lib/nowplaying.js reads the track; this view adds its lyrics and the signal trace)
@@ -434,7 +434,7 @@ function on_mouse_lbtn_up(x, y) {
     if (STATE.view === "archive") { archiveClick(x, y, a); return; }
     if (STATE.view === "style") { styleClick(a); return; }
     if (!a) return;
-    if (a.id === "model" && a.data !== Ring.mode) { Ring.mode = a.data; window.SetProperty("ringMode", a.data); window.Repaint(); }
+    if (a.id === "model" && a.data !== Ring.mode) { Ring.mode = a.data; setSetting("ringMode", a.data); window.Repaint(); }
     else if (a.id === "profile") inspectRequest();
     else if (a.id === "pager") { if (a.data === 0) fb.Prev(); else if (a.data === 2) fb.Next(); }
     else if (a.id === "queue") plman.ExecutePlaylistDefaultAction(a.data.pl, a.data.index);
@@ -446,7 +446,7 @@ function on_download_file_done(path, success) { if (lyricsDownloaded(path, succe
 function on_key_down(vk) {
     if (searchKey(vk)) return;
     if (STATE.view === "archive" && archiveKey(vk)) return;
-    if (STATE.view === "signal" && vk === 0x52) { Ring.mode = MODELS[(MODELS.indexOf(Ring.mode) + 1) % MODELS.length]; window.SetProperty("ringMode", Ring.mode); window.Repaint(); return; }   // R
+    if (STATE.view === "signal" && vk === 0x52) { Ring.mode = MODELS[(MODELS.indexOf(Ring.mode) + 1) % MODELS.length]; setSetting("ringMode", Ring.mode); window.Repaint(); return; }   // R
     if ((STATE.view === "signal" || STATE.view === "lyrics") && (vk === 0x25 || vk === 0x27) && fb.IsPlaying) {
         fb.PlaybackTime = clamp(fb.PlaybackTime + (vk === 0x27 ? 5 : -5), 0, fb.PlaybackLength - 1);
         return;

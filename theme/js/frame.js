@@ -15,17 +15,17 @@ const CHILDREN = ["header", "transport", "stage", "manager", "head", "playlist",
 const PRESETS = ["album", "index"];
 
 let W = 0, H = 0;
-STATE.view = window.GetProperty("view", "playlists");
-STATE.preset = window.GetProperty("preset", "album");
-STATE.reduce = window.GetProperty("reduceMotion", false);
-STATE.boot = window.GetProperty("bootSelfTest", true);
-STATE.skin = window.GetProperty("caseSkin", SKIN_DEFAULT);
-STATE.grain = window.GetProperty("grain", true);
-STATE.lyricsOnline = window.GetProperty("lyricsOnline", true);
-STATE.textScale = pickScale(+window.GetProperty("textScale", 1), TEXT_SCALES);
-STATE.arrayScale = pickScale(+window.GetProperty("arrayScale", 1), ARRAY_SCALES);
+STATE.view = getSetting("view", "playlists");
+STATE.preset = getSetting("preset", "album");
+STATE.reduce = getSetting("reduceMotion", false);
+STATE.boot = getSetting("bootSelfTest", true);
+STATE.skin = getSetting("caseSkin", SKIN_DEFAULT);
+STATE.grain = getSetting("grain", true);
+STATE.lyricsOnline = getSetting("lyricsOnline", true);
+STATE.textScale = pickScale(+getSetting("textScale", 1), TEXT_SCALES);
+STATE.arrayScale = pickScale(+getSetting("arrayScale", 1), ARRAY_SCALES);
 setTextScale(STATE.textScale);   // the root panel's own copy: the Playlists view's column widths follow it
-STATE.inspectScale = pickScale(+window.GetProperty("inspectScale", 1.3), INSPECT_SCALES);
+STATE.inspectScale = pickScale(+getSetting("inspectScale", 1.3), INSPECT_SCALES);
 REDUCE_MOTION = STATE.reduce;
 const P = {};          // child name -> PanelObject
 let ready = false;
@@ -50,6 +50,7 @@ function findPanels(attempt = 0) {
     P.fx.TopMost = true;
     P.tip.Show(false);
     ready = true;
+    restoreLook();
     // the boot covers the window before anything else is laid out (the panels have already drawn once by now: foobar2000
     // shows its window before any script runs, and JSplitter does not keep a child panel's visibility across restarts)
     if (STATE.boot && !REDUCE_MOTION) startBoot(); else P.fx.Show(false);
@@ -137,7 +138,7 @@ function startFx(kind, swap = switchMode) {
 function setView(v) {
     if (!VIEWS.includes(v) || v === STATE.view) return;
     STATE.view = v;
-    window.SetProperty("view", v);
+    setSetting("view", v);
     P.tip.Show(false);
     layout();
     startFx("view");
@@ -159,7 +160,7 @@ const importLayout = (preset, scheme) =>
     utils.Run(fb.FoobarPath + "foobar2000.exe", `/columnsui:import-quiet "${THEME_ROOT}columns\\preset-${preset}-${scheme}-${MODE}.fcl"`, "", "", 0, false);
 function setPreset(name) {
     STATE.preset = name;
-    window.SetProperty("preset", name);
+    setSetting("preset", name);
     importLayout(name, SCHEME);
     broadcast();
 }
@@ -173,7 +174,7 @@ const togglePreset = () => setPreset(STATE.preset === "album" ? "index" : "album
 
 function setReduce(on) {
     STATE.reduce = REDUCE_MOTION = !!on;
-    window.SetProperty("reduceMotion", STATE.reduce);
+    setSetting("reduceMotion", STATE.reduce);
     broadcast();
 }
 
@@ -192,13 +193,13 @@ onMessage("scheme", setScheme);
 onMessage("preset", togglePreset);
 onMessage("reduce", setReduce);
 onMessage("boot-play", () => { if (ready && !fx) startBoot(); });
-onMessage("skin", id => { if (id && id !== STATE.skin) { STATE.skin = String(id); window.SetProperty("caseSkin", STATE.skin); broadcast(); } });
-onMessage("boot", on => { STATE.boot = !!on; window.SetProperty("bootSelfTest", STATE.boot); broadcast(); });
-onMessage("lyrics-online", on => { STATE.lyricsOnline = !!on; window.SetProperty("lyricsOnline", STATE.lyricsOnline); broadcast(); });
-onMessage("text-scale", v => { STATE.textScale = pickScale(+v, TEXT_SCALES); window.SetProperty("textScale", STATE.textScale); setTextScale(STATE.textScale); broadcast(); layout(); });
-onMessage("inspect-scale", v => { STATE.inspectScale = pickScale(+v, INSPECT_SCALES); window.SetProperty("inspectScale", STATE.inspectScale); broadcast(); });
-onMessage("array-scale", v => { STATE.arrayScale = pickScale(+v, ARRAY_SCALES); window.SetProperty("arrayScale", STATE.arrayScale); broadcast(); });
-onMessage("grain", on => { STATE.grain = !!on; window.SetProperty("grain", STATE.grain); broadcast(); window.Repaint(); });
+onMessage("skin", id => { if (id && id !== STATE.skin) { STATE.skin = String(id); setSetting("caseSkin", STATE.skin); broadcast(); } });
+onMessage("boot", on => { STATE.boot = !!on; setSetting("bootSelfTest", STATE.boot); broadcast(); });
+onMessage("lyrics-online", on => { STATE.lyricsOnline = !!on; setSetting("lyricsOnline", STATE.lyricsOnline); broadcast(); });
+onMessage("text-scale", v => { STATE.textScale = pickScale(+v, TEXT_SCALES); setSetting("textScale", STATE.textScale); setTextScale(STATE.textScale); broadcast(); layout(); });
+onMessage("inspect-scale", v => { STATE.inspectScale = pickScale(+v, INSPECT_SCALES); setSetting("inspectScale", STATE.inspectScale); broadcast(); });
+onMessage("array-scale", v => { STATE.arrayScale = pickScale(+v, ARRAY_SCALES); setSetting("arrayScale", STATE.arrayScale); broadcast(); });
+onMessage("grain", on => { STATE.grain = !!on; setSetting("grain", STATE.grain); broadcast(); window.Repaint(); });
 
 const COMMANDS = [["Archive view", () => setView("archive")], ["Playlists view", () => setView("playlists")],
                   ["Lyrics view", () => setView("lyrics")], ["Signal view", () => setView("signal")], ["Toggle light / dark", toggleMode],
@@ -221,4 +222,29 @@ function on_size(w, h) {
 
 // only the gaps between panels show the root
 function on_paint(gr) { gr.FillSolidRect(0, 0, W, H, C.bg); drawGrain(gr, 0, 0, W, H); }
-function on_colours_changed() { refreshTokens(); window.Repaint(); }
+function on_colours_changed() { refreshTokens(); saveLook(); window.Repaint(); }
+
+// The scheme, mode and preset after a layout import. An import (install.ps1 runs one on every update) brings back the
+// layout's own colours and resets the panels' properties; "layoutSeen" is such a property, so its absence means the
+// layout is new. The look recorded in the settings file (lib/settings.js) is then put back: the mode first, then the
+// scheme's preset file, which carries the colours for the mode in use.
+let restoring = false;
+function saveLook() {
+    if (restoring) return;
+    setSetting("scheme", SCHEME);
+    setSetting("mode", MODE);
+}
+function restoreLook() {
+    if (window.GetProperty("layoutSeen", false)) { saveLook(); return; }
+    window.SetProperty("layoutSeen", true);
+    const s = readSettings();
+    const scheme = TOKENS.schemes[s.scheme] ? s.scheme : SCHEME, mode = s.mode === "light" || s.mode === "dark" ? s.mode : MODE;
+    if (!s.scheme || (scheme === SCHEME && mode === MODE && STATE.preset === "album")) { saveLook(); return; }   // nothing to put back
+    restoring = true;
+    if (mode !== MODE) switchMode();
+    // the preset file name follows MODE, which on_colours_changed updates once the mode switch has gone through
+    window.SetTimeout(() => {
+        if (scheme !== SCHEME || STATE.preset !== "album" || mode !== MODE) importLayout(STATE.preset, scheme);
+        window.SetTimeout(() => { restoring = false; saveLook(); }, 1500);
+    }, 700);
+}

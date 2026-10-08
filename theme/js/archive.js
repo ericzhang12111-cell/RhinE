@@ -50,7 +50,7 @@ const AR = {
     dirtyInfo: true, info: null,
 };
 let ARCHIVE_ON = false;
-try { AR.selAlbum = String(JSON.parse(window.GetProperty("archiveSel", "{}")).key || ""); } catch (e) { /* none */ }
+try { AR.selAlbum = String(JSON.parse(getSetting("archiveSel", "{}")).key || ""); } catch (e) { /* none */ }
 
 // ------------------------------------------------------------------------------------------------------ shelves
 // The array's rows are shelves of SHELF_SLOTS slots. The groups follow one another along them: a group that fits
@@ -161,7 +161,7 @@ function selectionChanged(animate = true) {
     if (animate) AR.wantKey = "";   // chosen by hand
     AR.groupName = g ? g.name : "";
     if (g && a) { AR.selKey.set(g.name, a.key); AR.selAlbum = a.key; }
-    window.SetProperty("archiveSel", JSON.stringify({ key: AR.selAlbum }));
+    setSetting("archiveSel", JSON.stringify({ key: AR.selAlbum }));
     const r = AR.rows.get(AR.group), n = g ? g.albums.length : 0, w = Math.max(2, String(n).length);
     const sel = pad(r ? r.sel + 1 : 0, w), gno = pad(AR.group + 1, 2), no = pad(a ? a.no : 0, 4);
     if (animate) { setRoll(AR.selRoll, sel); setRoll(AR.groupRoll, gno); setRoll(AR.noRoll, no); }

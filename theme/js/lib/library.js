@@ -12,8 +12,8 @@
 // kept in memory (least recently drawn go first).
 
 const LIB = { albums: [], groups: [], live: false, gen: 0, tracks: 0, ms: null, source: "library",
-              groupBy: window.GetProperty("archiveGroup", "genre"), sortBy: window.GetProperty("archiveSort", "artist"),
-              unit: window.GetProperty("archiveUnit", "albums"), items: [], albumMap: new Map() };
+              groupBy: getSetting("archiveGroup", "genre"), sortBy: getSetting("archiveSort", "artist"),
+              unit: getSetting("archiveUnit", "albums"), items: [], albumMap: new Map() };
 const LIB_LISTENERS = [];   // fn(kind): "catalog" when the albums or groups changed, "cover" when a thumbnail arrived
 const LIB_DB = fb.ProfilePath + "audio-archive-cache\\library.db";
 let libHandles = null, libWorker = null, libTimer = 0;
@@ -95,14 +95,14 @@ const GROUP_LABEL = { genre: "GENRE", decade: "DECADE", artist: "ARTIST", none: 
 function setGroupBy(by) {
     if (by === LIB.groupBy || !GROUP_LABEL[by]) return;
     LIB.groupBy = by;
-    window.SetProperty("archiveGroup", by);
+    setSetting("archiveGroup", by);
     groupAlbums();
 }
 // ALBUMS or TRACKS: what the archive's cases and tiles stand for
 function setUnit(u) {
     if (u === LIB.unit || (u !== "albums" && u !== "tracks")) return;
     LIB.unit = u;
-    window.SetProperty("archiveUnit", u);
+    setSetting("archiveUnit", u);
     groupAlbums();
 }
 const showTracks = () => LIB.unit === "tracks" && LIB.items.length > 0;
@@ -112,7 +112,7 @@ const albumOf = a => a && a.album ? LIB.albumMap.get(a.album) || null : a;
 function setSortBy(by) {
     if (by === LIB.sortBy || !SORT_BY.some(([k]) => k === by)) return;
     LIB.sortBy = by;
-    window.SetProperty("archiveSort", by);
+    setSetting("archiveSort", by);
     groupAlbums();
 }
 // album order within a group; ties fall back to artist, then title

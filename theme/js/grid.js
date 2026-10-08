@@ -8,13 +8,13 @@
 // Only the covers on screen (and a row around them) are drawn and asked for; thumbnails come from the library worker's
 // disk cache (lib/library.js), so a few thousand albums scroll as easily as a few dozen.
 
-AR.layout = window.GetProperty("archiveLayout", "array");
-const GRID = { scroll: Spring(0, 10), geo: null, hover: null, reveal: true, per: window.GetProperty("gridPerPage", 36) };
+AR.layout = getSetting("archiveLayout", "array");
+const GRID = { scroll: Spring(0, 10), geo: null, hover: null, reveal: true, per: getSetting("gridPerPage", 36) };
 const PER_PAGE = [10, 36, 50, 75, 100, 200];
 function setPerPage(n) {
     if (n === GRID.per) return;
     GRID.per = n;
-    window.SetProperty("gridPerPage", n);
+    setSetting("gridPerPage", n);
     GRID.geo = null; GRID.reveal = true;   // reveal: jump to the selection at the next paint
     clock.wake(); window.Repaint();
 }
@@ -28,7 +28,7 @@ function setLayout(l) {
     if (l === AR.layout) return;
     const key = curAlbum() ? curAlbum().key : AR.selAlbum;
     AR.layout = l;
-    window.SetProperty("archiveLayout", l);
+    setSetting("archiveLayout", l);
     if (l === "grid") { GRID.geo = null; GRID.reveal = true; }
     placeSelection(key);   // the array's rows are shelves, the grid's sections are groups: find the album again
     requestVisibleThumbs();
