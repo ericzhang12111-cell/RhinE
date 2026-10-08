@@ -77,7 +77,7 @@ I18N["zh-CN"] = {
     "LYRICS TAG · NOT FOUND": "歌词标签 · 未找到", "PLAYBACK CONTINUES": "播放继续",
     "LYRICS MONITOR  ·  03": "歌词监视  ·  03", "FAULT": "故障", "SYNCED": "同步", "TR": "译", "MT": "机译",
     "LRC": "LRC", "TAG": "标签", "LRCLIB": "LRCLIB", "NETEASE": "网易云",
-    "{0} LINES  ·  {1} LANG": "{0} 行  ·  {1} 种语言", "LINE": "行", "LINE {0} OF {1}": "第 {0} / {1} 行",
+    "{0} LINES  ·  {1} LANG": "{0} 行  ·  {1} 种语言", "LINE": "行", "CLICK A LINE TO PLAY FROM IT": "点击任意一行从该处播放", "LINE {0} OF {1}": "第 {0} / {1} 行",
     "TRANSLATED": "已翻译", "MYMEMORY": "MYMEMORY", "BAIDU": "百度翻译", "DEEPL": "DEEPL",
     "TRANSLATING…": "翻译中…", "TRANSLATION QUOTA USED UP": "翻译额度已用完", "TRANSLATION KEY MISSING OR WRONG": "翻译密钥缺失或错误",
     "TRANSLATION OFFLINE": "翻译服务无法连接", "TRANSLATION FAILED": "翻译失败",

@@ -43,7 +43,11 @@ Ring.mode = getSetting("ringMode", "3d");
 // ------------------------------------------------------------------------------------------------- track state
 // (lib/nowplaying.js reads the track; this view adds its lyrics and the signal trace)
 const lyrOff = Spring(0, 9);
-let lyrIdx = -1;
+let lyrIdx = -1;            // the line last drawn in the middle
+// scrolling the lyrics: the wheel moves the middle `n` lines away from the sung one; five seconds after the last turn
+// it glides back. A click on a line plays from it.
+const LYR_SCROLL = { n: 0, until: 0 };
+const LYR_BACK_MS = 5000;
 const sameHandle = h => !!(T.handle && h && T.handle.RawPath === h.RawPath && T.handle.SubSong === h.SubSong);
 // the current lyrics translated (lib/translate.js), when that is on and they have one language
 function trLyrics(h) {
@@ -61,7 +65,7 @@ function npChanged(same, h, what) {
         const found = L => { if (sameHandle(h) && !T.lyrics) { T.lyrics = L; lyrIdx = -1; dirty.left = true; trLyrics(h); clock.wake(); window.Repaint(); } };
         // LRCLIB first; when it has none, NetEase (lib/translate.js; only when that source is on)
         if (!T.lyrics) lyricsOnline(h, found, () => neteaseLyrics(h, L => { if (sameHandle(h)) { LYR.state = ""; found(L); } }));
-        lyrIdx = -1;
+        lyrIdx = -1; LYR_SCROLL.n = 0;
         waveLoad(h, () => { if (STATE.view === "signal") window.Repaint(); });
         clock.wake();
     }
@@ -98,13 +102,14 @@ const clock = Clock((dt, now) => {
     if (STATE.view === "signal") { ringUpdate(dt, playing); window.Repaint(); return playing; }
     // lyrics: every frame while something moves, otherwise ten times a second while playing (line changes, read-outs)
     // or while a pop-up's dots cycle; the karaoke rule alone is repainted every frame
+    if (LYR_SCROLL.n && now > LYR_SCROLL.until) { LYR_SCROLL.n = 0; window.Repaint(); }
     let anim = stepSpring(lyrOff, dt);
     if (stepSpring(heroClear, dt)) { anim = true; dirty.card = true; }
     if (T.title && !scrambleDone(T.title)) { anim = true; dirty.card = true; }
     if (playing && now - lastLeft > 250) { lastLeft = now; dirty.left = true; }
     if (anim || ((playing || alertShown) && now - lastPaint > 100)) { lastPaint = now; window.Repaint(); }
     else if (playing && (lyrBar || specRect)) { if (lyrBar) window.RepaintRect(...lyrBar); if (specRect) window.RepaintRect(...specRect); }
-    return anim || playing || alertShown;
+    return anim || playing || alertShown || LYR_SCROLL.n !== 0;
 });
 let arrayScaleWas = STATE.arrayScale;
 onMessage("state", () => {
@@ -318,9 +323,11 @@ function analysisLines() {
 // with distance; the block slides up by one line when the next line starts
 function drawLyrics(gr, g) {
     const L = T.lyrics.lines, el = fb.IsPlaying ? fb.PlaybackTime : 0, pitch = dp(58);
-    const i = Math.max(0, lyricIndex(L, el));
+    const sung = Math.max(0, lyricIndex(L, el));
+    LYR_SCROLL.n = clamp(LYR_SCROLL.n, -sung, L.length - 1 - sung);
+    const i = sung + LYR_SCROLL.n, scrolled = LYR_SCROLL.n !== 0;
     if (i !== lyrIdx) {
-        if (lyrIdx >= 0 && !REDUCE_MOTION && Math.abs(i - lyrIdx) <= 3) { lyrOff.x += pitch * (i - lyrIdx); clock.wake(); }
+        if (lyrIdx >= 0 && !REDUCE_MOTION && Math.abs(i - lyrIdx) <= 6) { lyrOff.x += pitch * (i - lyrIdx); clock.wake(); }
         lyrIdx = i;
     }
     const o = lyrOff.x, cx = g.cx, cy = g.cy, cur = L[i], hasTr = !!(cur && cur.a && cur.b), left = cx - g.cw / 2;
@@ -330,11 +337,17 @@ function drawLyrics(gr, g) {
         const line = L[i + k];
         if (!line) continue;
         const off = k * pitch + (k > 0 ? dp(hasTr ? 34 : 8) : 0), y = cy + off + o, a = line.a || line.b;
+        if (y > dp(60) && y < H - dp(90)) hits.add("lyric", left, Math.round(y - pitch / 2), g.cw, pitch, i + k);   // a whole row each
+        // the sung line, when scrolled away from the middle: an orange mark to its left
+        if (scrolled && i + k === sung && k !== 0) {
+            const tw = Math.min(g.cw, gr.CalcTextWidth(a, fontFor(a, 17, 500)));
+            gr.FillSolidRect(Math.round(cx - tw / 2 - dp(22)), Math.round(y - dp(3)), dp(6), dp(6), C.accent);
+        }
         if (k === 0) {
             // the line shrinks (down to 18 dp) rather than being cut short when it is wider than the column
             let size = 30, fa = fontFor(a, size, 700);
             while (size > 18 && gr.CalcTextWidth(a, fa) > g.cw) fa = fontFor(a, size -= 2, 700);
-            gr.DrawText(a, fa, C.fg, left, y - dp(24), g.cw, dp(46), DT_CENTER_SINGLE | DT_ELLIPSIS);
+            gr.DrawText(a, fa, scrolled ? C["fg-soft"] : C.fg, left, y - dp(24), g.cw, dp(46), DT_CENTER_SINGLE | DT_ELLIPSIS);
             if (hasTr) gr.DrawText(line.b.toUpperCase(), fontFor(line.b, 13, 500), C["fg-soft"], left, y + dp(22), g.cw, dp(22), DT_CENTER_SINGLE | DT_ELLIPSIS);
             const wa = Math.min(g.cw, gr.CalcTextWidth(a, fa));
             // karaoke rule under the line (and its translation): a hairline, filled in orange through the line's time
@@ -342,10 +355,12 @@ function drawLyrics(gr, g) {
             const rw = Math.min(g.cw - dp(40), Math.max(wa, wb)), ry = Math.round(y + dp(hasTr ? 52 : 30));
             const next = L[i + 1] ? L[i + 1].t : line.t + 8, prog = clamp((el - line.t) / Math.max(.1, next - line.t), 0, 1);
             gr.FillSolidRect(cx - rw / 2, ry, rw, HAIR, C.hair);
-            gr.FillSolidRect(cx - rw / 2, ry - dp(1), rw * prog, dp(3), C.accent);
-            lyrBar = [Math.floor(cx - rw / 2) - 1, Math.floor(ry - dp(2)), Math.ceil(rw) + 2, Math.ceil(dp(5)) + 1];
+            if (!scrolled) {
+                gr.FillSolidRect(cx - rw / 2, ry - dp(1), rw * prog, dp(3), C.accent);
+                lyrBar = [Math.floor(cx - rw / 2) - 1, Math.floor(ry - dp(2)), Math.ceil(rw) + 2, Math.ceil(dp(5)) + 1];
+            }
             // the line's time stamp and marker to its left, when there is room for them in the column
-            if (cx - wa / 2 - dp(40) > g.x0 + dp(8)) gr.FillSolidRect(cx - wa / 2 - dp(40), y - dp(3), dp(6), dp(6), C.accent);
+            if (cx - wa / 2 - dp(40) > g.x0 + dp(8)) gr.FillSolidRect(cx - wa / 2 - dp(40), y - dp(3), dp(6), dp(6), scrolled ? C["text-muted"] : C.accent);
             if (cx - wa / 2 - dp(170) > g.x0 + dp(8))
                 gr.DrawText(`${fmtTime(line.t)}.${pad(Math.floor(line.t % 1 * 100), 2)}`, font(9, 500), C["text-muted"], cx - wa / 2 - dp(170), y - dp(9), dp(118), dp(16), DT_RIGHT_SINGLE);
         } else {
@@ -358,7 +373,8 @@ function drawLyrics(gr, g) {
     }
     gr.PopClip();
     const trNote = TR.state ? `  ·  ${tr(TR_STATE_TEXT[TR.state] || TR.state)}` : T.lyrics.translated ? `  ·  ${tr("TRANSLATED")} · ${tr(T.lyrics.translated.toUpperCase())}` : "";
-    label(gr, `${tr("LYRICS")} / ${tr(T.lyrics.source)}  ·  ${tr("LINE {0} OF {1}", pad(i + 1, 2), pad(L.length, 2))}${trNote}`, st(ST.key, C["text-muted"]), cx, H - dp(46), 1);
+    const where = scrolled ? `  ·  ${tr("CLICK A LINE TO PLAY FROM IT")}` : "";
+    label(gr, `${tr("LYRICS")} / ${tr(T.lyrics.source)}  ·  ${tr("LINE {0} OF {1}", pad(i + 1, 2), pad(L.length, 2))}${scrolled ? where : trNote}`, st(ST.key, C["text-muted"]), cx, H - dp(46), 1);
 }
 
 // a warning pop-up: a framed window with a filled title strip and a hatched drop shadow; inside, the triangle, the title
@@ -434,7 +450,14 @@ function on_mouse_leave() {
     if (hover) { hover = null; if (STATE.view === "lyrics") window.Repaint(); }
 }
 function on_mouse_lbtn_dblclk(x, y) { if (STATE.view === "archive" && AR.layout === "grid" && !hits.at(x, y)) gridDblClick(x, y); }
-function on_mouse_wheel(step) { if (STATE.view === "archive") archiveWheel(step); }
+function on_mouse_wheel(step) {
+    if (STATE.view === "archive") { archiveWheel(step); return; }
+    if (STATE.view === "lyrics" && T.lyrics) {
+        LYR_SCROLL.n -= step;
+        LYR_SCROLL.until = performance.now() + LYR_BACK_MS;
+        clock.wake(); window.Repaint();
+    }
+}
 function on_mouse_rbtn_up(x, y, mask) {
     if (STATE.view !== "archive" || (mask & 0x0004)) return false;   // Shift: JSplitter's own menu
     archiveMenu(x, y);
@@ -450,6 +473,7 @@ function on_mouse_lbtn_up(x, y) {
     else if (a.id === "profile") inspectRequest();
     else if (a.id === "pager") { if (a.data === 0) fb.Prev(); else if (a.data === 2) fb.Next(); }
     else if (a.id === "queue") plman.ExecutePlaylistDefaultAction(a.data.pl, a.data.index);
+    else if (a.id === "lyric" && T.lyrics && T.lyrics.lines[a.data] && fb.IsPlaying) { LYR_SCROLL.n = 0; fb.PlaybackTime = T.lyrics.lines[a.data].t; }
     else if (a.id === "trace" && fb.IsPlaying && fb.PlaybackLength > 0) fb.PlaybackTime = clamp((x - a.x) / a.w, 0, 1) * fb.PlaybackLength;
 }
 function on_char(code) { searchChar(code); }

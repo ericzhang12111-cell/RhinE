@@ -78,7 +78,7 @@ I18N["ja"] = {
     "LYRICS TAG · NOT FOUND": "歌詞タグ · なし", "PLAYBACK CONTINUES": "再生は続きます",
     "LYRICS MONITOR  ·  03": "歌詞モニター  ·  03", "FAULT": "障害", "SYNCED": "同期", "TR": "訳", "MT": "機械訳",
     "LRC": "LRC", "TAG": "タグ", "LRCLIB": "LRCLIB", "NETEASE": "NETEASE",
-    "{0} LINES  ·  {1} LANG": "{0} 行  ·  {1} 言語", "LINE": "行", "LINE {0} OF {1}": "{0} / {1} 行",
+    "{0} LINES  ·  {1} LANG": "{0} 行  ·  {1} 言語", "LINE": "行", "CLICK A LINE TO PLAY FROM IT": "行をクリックするとそこから再生", "LINE {0} OF {1}": "{0} / {1} 行",
     "TRANSLATED": "翻訳済み", "MYMEMORY": "MYMEMORY", "BAIDU": "BAIDU", "DEEPL": "DEEPL",
     "TRANSLATING…": "翻訳中…", "TRANSLATION QUOTA USED UP": "翻訳の上限に達しました", "TRANSLATION KEY MISSING OR WRONG": "翻訳キーがないか正しくありません",
     "TRANSLATION OFFLINE": "翻訳サービスに接続できません", "TRANSLATION FAILED": "翻訳に失敗しました",
