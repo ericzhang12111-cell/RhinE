@@ -57,6 +57,8 @@ if (-not $item) {
 } elseif (Test-Path (Join-Path $target 'tokens\tokens.json')) {
     Remove-Item $target -Recurse -Force
     Write-Host "removed $target"
+    $settings = Join-Path $profileDir "$Name-settings.json"
+    if (Test-Path $settings) { Remove-Item $settings -Force; Write-Host "removed $settings" }
 } else {
     Write-Host "'$target' does not look like this theme, left in place"
 }
