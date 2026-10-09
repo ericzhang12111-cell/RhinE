@@ -374,7 +374,7 @@ function floorImages() {
         FLOOR.img = { plate: d2d.Image(dir + "plate.jpg") };
         for (const k of ["mid", "front", "back"]) for (const part of ["", "-far"]) {
             FLOOR.img[`shade-${k}${part}`] = d2d.Image(dir + `shade-${k}${part}.png`);
-            FLOOR.img[`glow-${k}${part}`] = d2d.Image(dir + `glow-${k}${part}.png`);
+            if (FLOOR.meta.glow !== false) FLOOR.img[`glow-${k}${part}`] = d2d.Image(dir + `glow-${k}${part}.png`);
         }
     }
     // an image that could not be read leaves the floor plain (rather than failing the whole paint)
@@ -391,7 +391,8 @@ function drawFloor(gr, rows, G, Ox, Oy, k, toScreen) {
     // over all its slots (one image, no seams between slots); the ends are drawn as they are
     const ax = CASE_META.axes.x, ay = CASE_META.axes.y, az = CASE_META.axes.z, fz = -F.meta.floor_z, det = ax[0] * ay[1] - ay[0] * ax[1];
     const zx = fz * az[0], zy = fz * az[1];   // the floor lies fz below the sprites' origin plane
-    for (const layer of ["shade-", "glow-"]) for (const [gi, r] of rows) for (const part of ["", "-far"]) {
+    // "glow": false in floor.json: shade only (no reflections of the cases and strips in the floor)
+    for (const layer of F.meta.glow === false ? ["shade-"] : ["shade-", "glow-"]) for (const [gi, r] of rows) for (const part of ["", "-far"]) {
         const row = G[gi], pos = r.pos.x, x = -pos * ROWP, n = slotCount(row);
         const alpha = Math.round(rowAlpha(pos) * (1 - rowTint(pos)) * (part ? clamp(1 - pos, 0, 1) : 1));
         if (alpha <= 0) continue;

@@ -1,6 +1,6 @@
 {
  "floor": "real",
- "light": "warm sun from the top right (4, -3, 9), cool rim (-6, -1, 4), warm sky",
+ "light": "warm sun from the front (camera side) (4.1, -5.7, 7.1), cool rim (4, 6, 5), warm sky; no reflections",
  "ppu": 98.0,
  "floor_z": -0.51,
  "plate": {
@@ -23,6 +23,7 @@
    588.0
   ]
  },
- "fade": "#2f1500",
- "tint": 0.4
+ "fade": "#2b1300",
+ "tint": 0.4,
+ "glow": false
 }
