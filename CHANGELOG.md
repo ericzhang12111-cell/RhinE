@@ -3,6 +3,13 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
+## Unreleased
+
+**Fixed · 修复**
+- The update check's jsDelivr fallback (for when GitHub cannot be reached) asks for the latest release rather than
+  the main branch, which jsDelivr can serve hours out of date. 检查更新时的 jsDelivr 备用地址改为读取最新发布版本，而不是
+  main 分支（jsDelivr 对分支的缓存可能滞后数小时）。
+
 ## 1.3.0 — 2026-10-08
 
 **Added · 新增**

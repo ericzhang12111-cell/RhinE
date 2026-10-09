@@ -37,7 +37,8 @@ function updGet(url, onDone) {
 // done(latest or null when neither source answered)
 function checkUpdate(done) {
     const raw = updEnv("RHINE_RAW", "https://raw.githubusercontent.com"), cdn = updEnv("RHINE_CDN", "https://cdn.jsdelivr.net/gh");
-    const urls = [`${raw}/${UPD_REPO}/main/theme/update/latest.json`, `${cdn}/${UPD_REPO}@main/theme/update/latest.json`];
+    // jsDelivr: @latest (the newest release's tag) rather than @main, whose lookup it caches for up to 12 hours
+    const urls = [`${raw}/${UPD_REPO}/main/theme/update/latest.json`, `${cdn}/${UPD_REPO}@latest/theme/update/latest.json`];
     const next = i => {
         if (i >= urls.length) { done(null); return; }
         updGet(urls[i], (st, txt) => {

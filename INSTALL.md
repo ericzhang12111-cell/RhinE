@@ -2,6 +2,8 @@
 
 [中文安装指南](安装指南.md) · Everything else (features, controls, how it works): [README.md](README.md)
 
+Video guides: [YouTube playlist](https://www.youtube.com/playlist?list=PLYhA3n8CTLnA)
+
 There are two ways to install it. Pick **A** if you are new to foobar2000, or if you want RhinE in a folder of its own.
 Pick **B** if you already use foobar2000 and want the theme in that copy. Both need **Windows 10 or 11, 64-bit**.
 

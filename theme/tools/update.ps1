@@ -55,7 +55,8 @@ $wc.Headers['User-Agent'] = 'RhinE-updater'
 $wc.Encoding = [Text.Encoding]::UTF8
 $enc = { param($p) ($p -split '/' | ForEach-Object { [Uri]::EscapeDataString($_) }) -join '/' }
 # a repository file at a ref: GitHub first, then jsDelivr
-function Get-RepoUrls($path, $ref) { @("$raw/$Repo/$ref/$(& $enc $path)", "$cdn/$Repo@$ref/$(& $enc $path)") }
+# (jsDelivr: main is asked for as @latest, the newest release's tag: it caches what @main points to for up to 12 hours)
+function Get-RepoUrls($path, $ref) { $c = if ($ref -eq 'main') { 'latest' } else { $ref }; @("$raw/$Repo/$ref/$(& $enc $path)", "$cdn/$Repo@$c/$(& $enc $path)") }
 function Get-RepoText($path, $ref) {
     foreach ($u in Get-RepoUrls $path $ref) { try { return $wc.DownloadString($u) } catch { } }
     $null
