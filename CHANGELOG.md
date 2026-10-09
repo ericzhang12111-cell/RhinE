@@ -14,6 +14,12 @@ Newest version first. Download any version from [Releases](https://github.com/er
   light, each case shaded by its neighbours. It always uses the FROST case. `地面 › 写实风格`：档案呈现为一个渲染场景——
   磨砂外壳立在胡桃木桌面上的导轨里，暖光照明，每个外壳都带有相邻外壳的阴影；此模式固定使用 FROST 外壳。
 
+**Changed · 改进**
+- The case skins are lit from the right: in the Archive the cases' tops and spine sides catch the light and the gaps
+  between them are no longer in shade, so every case stands out and the covers behind the front one stay visible
+  (array and inspection; the profile card is unchanged). 外壳改为从右侧打光：档案中外壳的顶面和书脊侧被照亮，外壳之间的空隙
+  不再处于阴影中，每个外壳更立体，前排之后的封面也更清楚（阵列与查看动画；资料卡不变）。
+
 **Fixed · 修复**
 - The update check's jsDelivr fallback (for when GitHub cannot be reached) asks for the latest release rather than
   the main branch, which jsDelivr can serve hours out of date. 检查更新时的 jsDelivr 备用地址改为读取最新发布版本，而不是
