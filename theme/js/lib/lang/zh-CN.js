@@ -94,7 +94,7 @@ I18N["zh-CN"] = {
     // style
     "STYLE  ·  05": "外观  ·  05", "CASE SKIN": "外壳", "COLOUR SCHEME": "配色方案", "DISPLAY  ·  04": "显示  ·  04",
     "IN USE": "使用中", "MODE": "模式", "PLAY INTRO": "播放开场", "PREVIEW": "预览", "TEXT": "文字", "INSPECT": "查看",
-    "FLOOR": "地面", "PLAIN": "纯色", "LAB DECK": "实验甲板", "Archive floor": "档案地面", "Plain": "纯色", "Lab deck": "实验甲板",
+    "FLOOR": "地面", "PLAIN": "纯色", "LAB DECK": "实验甲板", "Archive floor": "档案地面", "Plain": "纯色", "Lab deck": "实验甲板", "REAL STYLE": "写实风格", "Real style": "写实风格",
     "White marble specimen case, frosted polymer edges, orange index tab": "白色大理石标本盒，磨砂聚合物边框，橙色索引标签",
     "Carbon body, black rubber edges, yellow-and-black stripe band, signal yellow tab": "碳纤维机身，黑色橡胶边框，黄黑警示条纹，信号黄标签",
     "Soft matte white plastics and white metal, frosted silver tab": "柔和的哑光白色塑料与白色金属，磨砂银色标签",

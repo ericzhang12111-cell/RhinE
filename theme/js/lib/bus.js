@@ -14,7 +14,11 @@ const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, s
 // text size, Array scale and inspection size: the choices offered in MENU › Audio Archive and the Style view (frame.js keeps the value)
 const TEXT_SCALES = [.9, 1, 1.1, 1.2, 1.35, 1.5], ARRAY_SCALES = [.8, .9, 1, 1.15, 1.3], INSPECT_SCALES = [1, 1.15, 1.3, 1.5];
 // the floor under the Archive array: "plain" (the page colour) or a rendered one in assets/render/floor/<id>-<mode>/
-const FLOORS = [["plain", "PLAIN"], ["deck", "LAB DECK"]], FLOOR_NAMES = ["Plain", "Lab deck"];
+const FLOORS = [["plain", "PLAIN"], ["deck", "LAB DECK"], ["real", "REAL STYLE"]], FLOOR_NAMES = ["Plain", "Lab deck", "Real style"];
+// REAL STYLE is one scene: a walnut desk lit like the cases on it, with the one case skin it was rendered for, which
+// the Archive (and the stage's other views) use while it is on, whatever the chosen skin
+const FLOOR_SKIN = { real: "frost" };
+const stageSkin = () => FLOOR_SKIN[STATE.floor] || STATE.skin;
 const pickFloor = v => FLOORS.some(f => f[0] === v) ? v : "plain";
 const pickScale = (v, list) => list.reduce((a, b) => Math.abs(b - v) < Math.abs(a - v) ? b : a, 1);
 

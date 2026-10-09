@@ -113,7 +113,7 @@ const clock = Clock((dt, now) => {
 });
 let arrayScaleWas = STATE.arrayScale;
 onMessage("state", () => {
-    if (STATE.skin !== CASE_SKIN && loadSkin(STATE.skin)) dirty.card = true;
+    if (stageSkin() !== CASE_SKIN && loadSkin(stageSkin())) dirty.card = true;
     const on = STATE.view === "archive";
     if (on !== ARCHIVE_ON) { ARCHIVE_ON = on; if (on) requestVisibleThumbs(); else archiveHidden(); }
     if (on) inspectPending();

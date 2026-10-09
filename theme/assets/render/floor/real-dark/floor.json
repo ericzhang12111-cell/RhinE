@@ -1,0 +1,28 @@
+{
+ "floor": "real",
+ "light": "warm sun from the top right (4, -3, 9), cool rim (-6, -1, 4), warm sky",
+ "ppu": 98.0,
+ "floor_z": -0.51,
+ "plate": {
+  "res": [
+   4800,
+   3600
+  ],
+  "origin": [
+   1800.0,
+   3300.0
+  ]
+ },
+ "shade": {
+  "res": [
+   1400,
+   1400
+  ],
+  "origin": [
+   420.0,
+   588.0
+  ]
+ },
+ "fade": "#2f1500",
+ "tint": 0.4
+}

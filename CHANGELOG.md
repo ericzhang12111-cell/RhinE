@@ -10,6 +10,9 @@ Newest version first. Download any version from [Releases](https://github.com/er
   floor`) stands the shelves on a rendered lab deck, with their shadows on it, in light and dark. `PLAIN` keeps the
   page colour. 档案阵列可选地面：在 `05 外观` 视图中选择 `地面 › 实验甲板`（或 `菜单 › Audio Archive › 档案地面`），货架立在渲染的
   实验甲板上并投下阴影，浅色与深色均可；`纯色` 保持原来的背景色。
+- `FLOOR › REAL STYLE`: the Archive as one rendered scene, frosted cases in their rails on a walnut desk in warm
+  light, each case shaded by its neighbours. It always uses the FROST case. `地面 › 写实风格`：档案呈现为一个渲染场景——
+  磨砂外壳立在胡桃木桌面上的导轨里，暖光照明，每个外壳都带有相邻外壳的阴影；此模式固定使用 FROST 外壳。
 
 **Fixed · 修复**
 - The update check's jsDelivr fallback (for when GitHub cannot be reached) asks for the latest release rather than

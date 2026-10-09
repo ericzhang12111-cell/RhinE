@@ -95,7 +95,7 @@ I18N["ja"] = {
     // style
     "STYLE  ·  05": "スタイル  ·  05", "CASE SKIN": "ケース", "COLOUR SCHEME": "カラースキーム", "DISPLAY  ·  04": "表示  ·  04",
     "IN USE": "使用中", "MODE": "モード", "PLAY INTRO": "イントロ再生", "PREVIEW": "プレビュー", "TEXT": "文字", "INSPECT": "詳細",
-    "FLOOR": "床", "PLAIN": "無地", "LAB DECK": "ラボデッキ", "Archive floor": "アーカイブの床", "Plain": "無地", "Lab deck": "ラボデッキ",
+    "FLOOR": "床", "PLAIN": "無地", "LAB DECK": "ラボデッキ", "Archive floor": "アーカイブの床", "Plain": "無地", "Lab deck": "ラボデッキ", "REAL STYLE": "リアルスタイル", "Real style": "リアルスタイル",
     "White marble specimen case, frosted polymer edges, orange index tab": "白い大理石の標本ケース、すりガラス調の縁、オレンジのインデックスタブ",
     "Carbon body, black rubber edges, yellow-and-black stripe band, signal yellow tab": "カーボンのボディ、黒いラバーの縁、黄と黒のストライプ、シグナルイエローのタブ",
     "Soft matte white plastics and white metal, frosted silver tab": "やわらかなマットの白い樹脂と白い金属、すりガラス調のシルバータブ",

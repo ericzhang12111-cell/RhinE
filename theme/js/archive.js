@@ -332,7 +332,7 @@ function railImages() {
     if (!ARIMG.rail && RAIL_META) {
         ARIMG.rail = {};
         for (const k of ["mid", "front", "back"]) {
-            ARIMG.rail[k] = d2d.Image(RAIL_DIR + `rail-${k}.png`);
+            ARIMG.rail[k] = d2d.Image(floorOwn(`rail${BS}rail-${k}.png`) || RAIL_DIR + `rail-${k}.png`);
             if (RAIL_META.lip) ARIMG.rail["lip-" + k] = d2d.Image(RAIL_DIR + `lip-${k}.png`);
         }
     }
@@ -348,12 +348,27 @@ CASE_LISTENERS.push(() => {   // another case skin
 // row's first slot); shade-/glow-<piece>.png, the shadow and the light a rail piece (mid, front, back) and the cases on
 // it throw onto the floor, so the shelves stand on it. "-far" pieces are the floor in front of a row, which the next
 // row covers except in front of the front one.
+// A floor may also bring the cases and rails rendered in its own light (REAL STYLE: case\<skin>\array-*.png, rail\),
+// set the colour rows behind fade into ("fade") and how much they fade ("tint", 1 = as on the plain page), and have
+// one set for both modes (the other mode's folder is used when this one's is missing).
 const FLOOR = { key: null, meta: null, img: null };   // key: the folder loaded ("" plain); null: look again
+const BS = "\\";
+function floorDir() {
+    if (!STATE.floor || STATE.floor === "plain") return "";
+    const at = m => THEME_ROOT + `assets${BS}render${BS}floor${BS}${STATE.floor}-${m}${BS}`;
+    const own = at(MODE), other = at(MODE === "dark" ? "light" : "dark");
+    return utils.IsFile(own + "floor.json") || !utils.IsFile(other + "floor.json") ? own : other;
+}
+// a file the floor brings for itself, else ""
+const floorOwn = f => FLOOR.key && utils.IsFile(FLOOR.key + f) ? FLOOR.key + f : "";
+const fadeBg = () => FLOOR.meta && FLOOR.meta.fade ? argb(FLOOR.meta.fade) : C.bg;
 function floorImages() {
-    const dir = STATE.floor && STATE.floor !== "plain" ? THEME_ROOT + `assets\\render\\floor\\${STATE.floor}-${MODE}\\` : "";
+    const dir = floorDir();
     if (FLOOR.key !== dir) {
         FLOOR.key = dir; FLOOR.img = null;
         FLOOR.meta = dir && utils.IsFile(dir + "floor.json") ? JSON.parse(utils.ReadTextFile(dir + "floor.json", 65001)) : null;
+        // the case and rail sprites may come from the floor now (or no longer)
+        ARIMG.clear = ARIMG.frost = ARIMG.rail = null; ARIMG.faded.clear();
     }
     if (FLOOR.meta && !FLOOR.img) {
         FLOOR.img = { plate: d2d.Image(dir + "plate.jpg") };
@@ -398,7 +413,8 @@ function drawFloor(gr, rows, G, Ox, Oy, k, toScreen) {
 }
 
 function arrayImages() {
-    if (!ARIMG.clear) { ARIMG.clear = d2d.Image(CASE_DIR + "array-clear.png"); ARIMG.frost = d2d.Image(CASE_DIR + "array-frost.png"); }
+    floorImages();   // a new floor may bring its own case sprites
+    if (!ARIMG.clear) for (const k of ["clear", "frost"]) ARIMG[k] = d2d.Image(floorOwn(`case${BS}${CASE_SKIN}${BS}array-${k}.png`) || CASE_DIR + `array-${k}.png`);
     return ARIMG;
 }
 // the frost sprite tinted towards the background by f (0.1 steps), alpha kept: Direct2D colour matrix, made once
@@ -408,7 +424,7 @@ function tinted(src, f, name) {
     let img = ARIMG.faded.get(key);
     if (img) return img;
     const fx = d2d.Effect("{921F03D6-641C-47DF-852D-B4BB6153AE11}");
-    const bg = C.bg, r = ((bg >>> 16) & 255) / 255, g = ((bg >>> 8) & 255) / 255, b = (bg & 255) / 255, k = 1 - f;
+    const bg = fadeBg(), r = ((bg >>> 16) & 255) / 255, g = ((bg >>> 8) & 255) / 255, b = (bg & 255) / 255, k = 1 - f;
     fx.SetInput(0, src);
     fx.SetValue(0, new Float32Array([k, 0, 0, 0, 0, k, 0, 0, 0, 0, k, 0, 0, 0, 0, 1, r * f, g * f, b * f, 0]));
     img = d2d.CreateImage(src.Width, src.Height);
@@ -566,7 +582,7 @@ function drawArrayCase(gr, it, sx, sy, k, aw, I) {
     if (t) quadImage(gr, t.blur, meta.cover, ox, oy, k, alpha);
     else gr.FillPolygon(withAlpha(C.well, alpha / 255), 0, quadPts(meta.cover, ox, oy, k));
     if (f > 0) {
-        gr.FillPolygon(withAlpha(C.bg, f * alpha / 255), 0, quadPts(meta.cover, ox, oy, k));
+        gr.FillPolygon(withAlpha(fadeBg(), f * alpha / 255), 0, quadPts(meta.cover, ox, oy, k));
         gr.DrawImage(fadedSprite(f), ox, oy, S, S, 0, 0, sz, sz, 0, alpha);
     } else {
         const cl = clamp(it.c.clear.x, 0, 1);
@@ -590,7 +606,8 @@ function drawArrayCase(gr, it, sx, sy, k, aw, I) {
 
 // rows fade out towards the viewer and in at the back; rows behind are tinted towards the page (0.1 steps)
 const rowAlpha = pos => Math.round(255 * clamp(1 + pos, 0, 1) * clamp((4 - pos) / .8, 0, 1));
-const rowTint = pos => Math.round(clamp(.38 * clamp(pos, 0, 1) + .14 * Math.max(0, pos), 0, .8) * 10) / 10;
+// how far a row behind is tinted towards the background (0.1 steps; the floor may fade them less)
+const rowTint = pos => Math.round(clamp(.38 * clamp(pos, 0, 1) + .14 * Math.max(0, pos), 0, .8) * (FLOOR.meta && FLOOR.meta.tint != null ? FLOOR.meta.tint : 1) * 10) / 10;
 
 // The shelf's front lip, an optional look (lip-*.png, described by rail.json → lip; the shipped rail has none, so this
 // draws nothing), drawn after everything standing on the shelf, then its print on the pale face panel, mapped like the spine label (100 units per world unit along the row,
@@ -610,7 +627,7 @@ function drawLip(gr, row, gi, r, x, toScreen, k) {
     }
     const f = rowTint(pos);
     if (f >= .5) return;   // too far back to read
-    const tone = c => withAlpha(mix(c, C.bg, f), alpha / 255);
+    const tone = c => withAlpha(mix(c, fadeBg(), f), alpha / 255);
     const y0 = -.5 - r.scroll.x, lx = x + L.x, o = toScreen({ x: lx, y: y0, z: L.z1 }), u = toScreen({ x: lx, y: y0 + 1, z: L.z1 }), v = toScreen({ x: lx, y: y0, z: L.z1 - 1 });
     QM[0] = (u[0] - o[0]) / 100; QM[1] = (u[1] - o[1]) / 100; QM[2] = (v[0] - o[0]) / 100; QM[3] = (v[1] - o[1]) / 100; QM[4] = o[0]; QM[5] = o[1];
     const ph = (L.z1 - L.z0) * 100;   // panel height in units
