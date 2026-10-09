@@ -21,6 +21,14 @@ Newest version first. Download any version from [Releases](https://github.com/er
   不再处于阴影中，每个外壳更立体，前排之后的封面也更清楚（阵列与查看动画；资料卡不变）。
 
 **Fixed · 修复**
+- The intro film plays every time foobar2000 starts (it is on by default; `MENU › Audio Archive` turns it off). Until now
+  it was usually seen only on the first start after installing: on later starts it began before the window had a size
+  and played unseen. 开场动画现在每次启动 foobar2000 都会播放（默认开启，可在 `菜单 › Audio Archive` 中关闭）。此前通常只在
+  安装后第一次启动时看得到：之后的启动中，动画在窗口尚无尺寸时就开始播放，因此看不到。
+- Lyrics written into the file are read in every common form: plain lyrics (without time stamps) are shown, unsynced,
+  and scroll with the wheel; MP3 lyrics (shown by foobar2000 as `UNSYNCED LYRICS`) are found, timed or not. Synced
+  lyrics online still take precedence over plain ones. 内嵌歌词的常见写法都能读取：不带时间轴的纯文本歌词会显示（未同步，可用
+  滚轮浏览）；MP3 内嵌歌词（foobar2000 显示为 `UNSYNCED LYRICS`）无论是否带时间轴都能读到；在线有同步歌词时仍优先使用同步歌词。
 - The update check's jsDelivr fallback (for when GitHub cannot be reached) asks for the latest release rather than
   the main branch, which jsDelivr can serve hours out of date. 检查更新时的 jsDelivr 备用地址改为读取最新发布版本，而不是
   main 分支（jsDelivr 对分支的缓存可能滞后数小时）。

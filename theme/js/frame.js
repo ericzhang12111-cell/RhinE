@@ -68,6 +68,8 @@ function startBoot() {
     P.fx.Move(0, 0, W, H);
     P.fx.Show(true);
 }
+// the fx panel's script came up after the intro was asked for (see fx.js): ask again
+onMessage("fx-hello", () => { if (fx && fx.kind === "boot") send("fx", "boot"); });
 onMessage("boot-end", () => {
     if (!fx || fx.kind !== "boot") return;
     [0, 70, 140, 210].forEach((d, i) => window.SetTimeout(() => P.fx.Show(i % 2 === 1 && i < 3), d));
@@ -98,6 +100,9 @@ function layout() {
         const p = P[name], rect = r[name];
         if (rect) { p.Move(rect[0], rect[1], Math.max(1, rect[2]), Math.max(1, rect[3])); p.Show(true); } else p.Show(false);
     }
+    // the intro covers the whole window: at start-up it begins before the root knows its size (W = H = 0, so it was
+    // shown at no size at all and played unseen), so it is sized here once the window has one, and again on a resize
+    if (fx && fx.kind === "boot") P.fx.Move(0, 0, W, H);
     sendPlaylistSize(r);
 }
 // the playlist head lays out the column titles for the native playlist's size

@@ -36,26 +36,49 @@ function readLrcFile(path) {
     return text;
 }
 
+// plain lyrics (no time stamps): a line each, blank lines dropped; shown unsynced (scrolled by hand, nothing follows the
+// playback)
+function parsePlain(text) {
+    const lines = String(text).split(/\r?\n/).map(s => s.trim()).filter(Boolean).map(a => ({ t: null, a, b: "" }));
+    return lines.length ? lines : null;
+}
+
+// the tags lyrics come in: foobar2000 shows an MP3's lyrics frame (ID3 USLT) as "UNSYNCED LYRICS", other taggers write
+// LYRICS, UNSYNCEDLYRICS or SYNCEDLYRICS; any of them may hold LRC time stamps or plain text
+const LYRIC_TAGS = ["SYNCEDLYRICS", "SYNCED LYRICS", "LYRICS", "UNSYNCEDLYRICS", "UNSYNCED LYRICS"];
+// Synced lyrics first (the .lrc file, then the tags); failing those, plain lyrics from either ({ synced: false }), which
+// the stage shows while it also asks online for synced ones.
 function loadLyrics(handle) {
     if (!handle) return null;
     const path = handle.Path || "";
-    const finish = (lines, source) => lines ? { lines, source, langs: lines.some(l => l.b) ? 2 : 1 } : null;
+    const finish = (lines, source) => lines ? { lines, source, langs: lines.some(l => l.b) ? 2 : 1, synced: true } : null;
+    let plain = null;
     if (/^[a-z]:\\/i.test(path) || path.startsWith("\\\\")) {
         const lrc = path.replace(/\.[^.\\]+$/, "") + ".lrc";
-        if (utils.IsFile(lrc)) { const r = finish(parseLrc(readLrcFile(lrc)), "LRC"); if (r) return r; }
+        if (utils.IsFile(lrc)) {
+            const text = readLrcFile(lrc), r = finish(parseLrc(text), "LRC");
+            if (r) return r;
+            plain = plain || (parsePlain(text) && { lines: parsePlain(text), source: "LRC" });
+        }
     }
     const info = handle.GetFileInfo(true);
     if (info) {
-        for (const name of ["SYNCEDLYRICS", "LYRICS", "UNSYNCEDLYRICS"]) {
+        for (const name of LYRIC_TAGS) {
             const i = info.MetaFind(name);
-            if (i >= 0) { const r = finish(parseLrc(info.MetaValue(i, 0)), "TAG"); if (r) return r; }
+            if (i < 0) continue;
+            const values = [];
+            for (let v = 0; v < info.MetaValueCount(i); v++) values.push(info.MetaValue(i, v));
+            const text = values.join("\n"), r = finish(parseLrc(text), "TAG");
+            if (r) return r;
+            plain = plain || (parsePlain(text) && { lines: parsePlain(text), source: "TAG" });
         }
     }
-    return null;
+    return plain ? { lines: plain.lines, source: plain.source, langs: 1, synced: false } : null;
 }
 
-// index of the line sung at time `t` (-1 before the first)
+// index of the line sung at time `t` (-1 before the first, and always for unsynced lyrics)
 function lyricIndex(lines, t) {
+    if (!lines.length || lines[0].t == null) return -1;
     let lo = 0, hi = lines.length - 1, r = -1;
     while (lo <= hi) { const m = (lo + hi) >> 1; if (lines[m].t <= t + .05) { r = m; lo = m + 1; } else hi = m - 1; }
     return r;

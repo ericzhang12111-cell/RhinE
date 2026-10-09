@@ -46,8 +46,10 @@ const lyrOff = Spring(0, 9);
 let lyrIdx = -1;            // the line last drawn in the middle
 // scrolling the lyrics: the wheel moves the middle `n` lines away from the sung one; five seconds after the last turn
 // it glides back. A click on a line plays from it.
+// Unsynced (plain) lyrics have no sung line: the wheel moves through them from the first and they stay where they are.
 const LYR_SCROLL = { n: 0, until: 0 };
 const LYR_BACK_MS = 5000;
+const lyrSynced = () => !(T.lyrics && T.lyrics.synced === false);
 const sameHandle = h => !!(T.handle && h && T.handle.RawPath === h.RawPath && T.handle.SubSong === h.SubSong);
 // the current lyrics translated (lib/translate.js), when that is on and they have one language
 function trLyrics(h) {
@@ -62,9 +64,11 @@ function npChanged(same, h, what) {
     else if (!same) {
         T.lyrics = loadLyrics(h);
         trLyrics(h);
-        const found = L => { if (sameHandle(h) && !T.lyrics) { T.lyrics = L; lyrIdx = -1; dirty.left = true; trLyrics(h); clock.wake(); window.Repaint(); } };
+        // lyrics found online replace none, or plain (unsynced) ones from the file: synced lyrics follow the song
+        const unsynced = () => !T.lyrics || T.lyrics.synced === false;
+        const found = L => { if (sameHandle(h) && unsynced()) { T.lyrics = L; lyrIdx = -1; LYR_SCROLL.n = 0; dirty.left = true; trLyrics(h); clock.wake(); window.Repaint(); } };
         // LRCLIB first; when it has none, NetEase (lib/translate.js; only when that source is on)
-        if (!T.lyrics) lyricsOnline(h, found, () => neteaseLyrics(h, L => { if (sameHandle(h)) { LYR.state = ""; found(L); } }));
+        if (unsynced()) lyricsOnline(h, found, () => neteaseLyrics(h, L => { if (sameHandle(h)) { LYR.state = ""; found(L); } }));
         lyrIdx = -1; LYR_SCROLL.n = 0;
         waveLoad(h, () => { if (STATE.view === "signal") window.Repaint(); });
         clock.wake();
@@ -102,14 +106,14 @@ const clock = Clock((dt, now) => {
     if (STATE.view === "signal") { ringUpdate(dt, playing); window.Repaint(); return playing; }
     // lyrics: every frame while something moves, otherwise ten times a second while playing (line changes, read-outs)
     // or while a pop-up's dots cycle; the karaoke rule alone is repainted every frame
-    if (LYR_SCROLL.n && now > LYR_SCROLL.until) { LYR_SCROLL.n = 0; window.Repaint(); }
+    if (LYR_SCROLL.n && now > LYR_SCROLL.until && lyrSynced()) { LYR_SCROLL.n = 0; window.Repaint(); }
     let anim = stepSpring(lyrOff, dt);
     if (stepSpring(heroClear, dt)) { anim = true; dirty.card = true; }
     if (T.title && !scrambleDone(T.title)) { anim = true; dirty.card = true; }
     if (playing && now - lastLeft > 250) { lastLeft = now; dirty.left = true; }
     if (anim || ((playing || alertShown) && now - lastPaint > 100)) { lastPaint = now; window.Repaint(); }
     else if (playing && (lyrBar || specRect)) { if (lyrBar) window.RepaintRect(...lyrBar); if (specRect) window.RepaintRect(...specRect); }
-    return anim || playing || alertShown || LYR_SCROLL.n !== 0;
+    return anim || playing || alertShown || (LYR_SCROLL.n !== 0 && lyrSynced());
 });
 let arrayScaleWas = STATE.arrayScale;
 onMessage("state", () => {
@@ -202,7 +206,7 @@ function drawLyricsFrame(gr, g) {
     const L = T.lyrics, playing = fb.IsPlaying && !fb.IsPaused, lx = g.x0 + dp(40), ty = dp(30);
     gr.FillSolidRect(lx, ty + dp(2), dp(5), dp(5), C.fg);
     const lw = label(gr, tr("LYRICS MONITOR  ·  03"), st(LF_ST.head, C.fg), lx + dp(15), ty - dp(2));
-    const state = T.missing ? tr("FAULT") : !T.info ? tr("STANDBY") : L ? `${tr(L.source)} · ${tr(!L.translated ? "SYNCED" : L.translated === "netease" ? "TR" : "MT")}` : tr("NO LYRICS");
+    const state = T.missing ? tr("FAULT") : !T.info ? tr("STANDBY") : L ? `${tr(L.source)} · ${tr(L.synced === false ? "UNSYNCED" : !L.translated ? "SYNCED" : L.translated === "netease" ? "TR" : "MT")}` : tr("NO LYRICS");
     chip(gr, state, lx + dp(15) + lw + dp(14), dp(24), dp(18), L && playing ? "acc" : "inv", 8.5, C.bg);
     if (L) label(gr, tr("{0} LINES  ·  {1} LANG", pad(L.lines.length, 2), L.langs), st(LF_ST.tiny, C["text-muted"]), g.x1 - dp(40), ty, 2);
     if (!L || T.missing || !T.info) return;
@@ -322,10 +326,11 @@ function analysisLines() {
 // the current line large in the middle with its translation under it; earlier lines above and later ones below, fading
 // with distance; the block slides up by one line when the next line starts
 function drawLyrics(gr, g) {
-    const L = T.lyrics.lines, el = fb.IsPlaying ? fb.PlaybackTime : 0, pitch = dp(58);
+    const L = T.lyrics.lines, el = fb.IsPlaying ? fb.PlaybackTime : 0, pitch = dp(58), synced = lyrSynced();
     const sung = Math.max(0, lyricIndex(L, el));
     LYR_SCROLL.n = clamp(LYR_SCROLL.n, -sung, L.length - 1 - sung);
-    const i = sung + LYR_SCROLL.n, scrolled = LYR_SCROLL.n !== 0;
+    // unsynced lyrics: the middle line is just where the wheel left them (no sung line, karaoke rule or time stamp)
+    const i = sung + LYR_SCROLL.n, scrolled = synced && LYR_SCROLL.n !== 0;
     if (i !== lyrIdx) {
         if (lyrIdx >= 0 && !REDUCE_MOTION && Math.abs(i - lyrIdx) <= 6) { lyrOff.x += pitch * (i - lyrIdx); clock.wake(); }
         lyrIdx = i;
@@ -350,6 +355,7 @@ function drawLyrics(gr, g) {
             gr.DrawText(a, fa, scrolled ? C["fg-soft"] : C.fg, left, y - dp(24), g.cw, dp(46), DT_CENTER_SINGLE | DT_ELLIPSIS);
             if (hasTr) gr.DrawText(line.b.toUpperCase(), fontFor(line.b, 13, 500), C["fg-soft"], left, y + dp(22), g.cw, dp(22), DT_CENTER_SINGLE | DT_ELLIPSIS);
             const wa = Math.min(g.cw, gr.CalcTextWidth(a, fa));
+            if (!synced) continue;
             // karaoke rule under the line (and its translation): a hairline, filled in orange through the line's time
             const ftr = hasTr ? fontFor(line.b, 13, 500) : null, wb = ftr ? gr.CalcTextWidth(line.b.toUpperCase(), ftr) : 0;
             const rw = Math.min(g.cw - dp(40), Math.max(wa, wb)), ry = Math.round(y + dp(hasTr ? 52 : 30));
@@ -373,8 +379,8 @@ function drawLyrics(gr, g) {
     }
     gr.PopClip();
     const trNote = TR.state ? `  ·  ${tr(TR_STATE_TEXT[TR.state] || TR.state)}` : T.lyrics.translated ? `  ·  ${tr("TRANSLATED")} · ${tr(T.lyrics.translated.toUpperCase())}` : "";
-    const where = scrolled ? `  ·  ${tr("CLICK A LINE TO PLAY FROM IT")}` : "";
-    label(gr, `${tr("LYRICS")} / ${tr(T.lyrics.source)}  ·  ${tr("LINE {0} OF {1}", pad(i + 1, 2), pad(L.length, 2))}${scrolled ? where : trNote}`, st(ST.key, C["text-muted"]), cx, H - dp(46), 1);
+    const where = scrolled ? `  ·  ${tr("CLICK A LINE TO PLAY FROM IT")}` : "", plainNote = synced ? "" : `  ·  ${tr("UNSYNCED")}`;
+    label(gr, `${tr("LYRICS")} / ${tr(T.lyrics.source)}  ·  ${tr("LINE {0} OF {1}", pad(i + 1, 2), pad(L.length, 2))}${scrolled ? where : plainNote + trNote}`, st(ST.key, C["text-muted"]), cx, H - dp(46), 1);
 }
 
 // a warning pop-up: a framed window with a filled title strip and a hatched drop shadow; inside, the triangle, the title
@@ -474,7 +480,7 @@ function on_mouse_lbtn_up(x, y) {
     else if (a.id === "profile") inspectRequest();
     else if (a.id === "pager") { if (a.data === 0) fb.Prev(); else if (a.data === 2) fb.Next(); }
     else if (a.id === "queue") plman.ExecutePlaylistDefaultAction(a.data.pl, a.data.index);
-    else if (a.id === "lyric" && T.lyrics && T.lyrics.lines[a.data] && fb.IsPlaying) { LYR_SCROLL.n = 0; fb.PlaybackTime = T.lyrics.lines[a.data].t; }
+    else if (a.id === "lyric" && T.lyrics && T.lyrics.lines[a.data] && T.lyrics.lines[a.data].t != null && fb.IsPlaying) { LYR_SCROLL.n = 0; fb.PlaybackTime = T.lyrics.lines[a.data].t; }
     else if (a.id === "trace" && fb.IsPlaying && fb.PlaybackLength > 0) fb.PlaybackTime = clamp((x - a.x) / a.w, 0, 1) * fb.PlaybackLength;
 }
 function on_char(code) { searchChar(code); }

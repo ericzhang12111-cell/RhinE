@@ -76,7 +76,7 @@ I18N["ja"] = {
     "OFF": "オフ", "NOT FOUND": "見つかりません", "SEARCHING": "検索中", "OFFLINE": "オフライン", "NO LYRICS": "歌詞なし",
     "QUERYING LRCLIB": "LRCLIB に問い合わせ中", "AWAITING INPUT": "入力待ち", "LRC FILE · NOT FOUND": "LRC ファイル · なし",
     "LYRICS TAG · NOT FOUND": "歌詞タグ · なし", "PLAYBACK CONTINUES": "再生は続きます",
-    "LYRICS MONITOR  ·  03": "歌詞モニター  ·  03", "FAULT": "障害", "SYNCED": "同期", "TR": "訳", "MT": "機械訳",
+    "LYRICS MONITOR  ·  03": "歌詞モニター  ·  03", "FAULT": "障害", "SYNCED": "同期", "UNSYNCED": "非同期", "TR": "訳", "MT": "機械訳",
     "LRC": "LRC", "TAG": "タグ", "LRCLIB": "LRCLIB", "NETEASE": "NETEASE",
     "{0} LINES  ·  {1} LANG": "{0} 行  ·  {1} 言語", "LINE": "行", "CLICK A LINE TO PLAY FROM IT": "行をクリックするとそこから再生", "LINE {0} OF {1}": "{0} / {1} 行",
     "TRANSLATED": "翻訳済み", "MYMEMORY": "MYMEMORY", "BAIDU": "BAIDU", "DEEPL": "DEEPL",

@@ -12,9 +12,14 @@ include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
 
 let W = 0, H = 0, kind = "cover";   // "cover" (plain dark until frame.js says what to play), "view", "mode", "boot"
 onMessage("fx", k => {
-    if (k === "boot") startBoot();
+    // a second "boot" while the intro is still running (frame.js asking again, see below) does not restart it
+    if (k === "boot" && !(kind === "boot" && !boot.ended)) startBoot();
     if (k !== kind) { kind = k; window.Repaint(); }
 });
+// At start-up frame.js asks for the intro as soon as every panel exists, which can be before this script runs, and a
+// message to a panel whose script is not running yet is lost (the intro then never played). So this panel says when it
+// is ready, and frame.js asks again for whatever should be playing.
+window.SetTimeout(() => send("fx-hello"), 0);
 
 function on_size(w, h) { W = w; H = h; }
 

@@ -75,7 +75,7 @@ I18N["zh-CN"] = {
     "OFF": "关闭", "NOT FOUND": "未找到", "SEARCHING": "搜索中", "OFFLINE": "离线", "NO LYRICS": "无歌词",
     "QUERYING LRCLIB": "正在查询 LRCLIB", "AWAITING INPUT": "等待输入", "LRC FILE · NOT FOUND": "LRC 文件 · 未找到",
     "LYRICS TAG · NOT FOUND": "歌词标签 · 未找到", "PLAYBACK CONTINUES": "播放继续",
-    "LYRICS MONITOR  ·  03": "歌词监视  ·  03", "FAULT": "故障", "SYNCED": "同步", "TR": "译", "MT": "机译",
+    "LYRICS MONITOR  ·  03": "歌词监视  ·  03", "FAULT": "故障", "SYNCED": "同步", "UNSYNCED": "未同步", "TR": "译", "MT": "机译",
     "LRC": "LRC", "TAG": "标签", "LRCLIB": "LRCLIB", "NETEASE": "网易云",
     "{0} LINES  ·  {1} LANG": "{0} 行  ·  {1} 种语言", "LINE": "行", "CLICK A LINE TO PLAY FROM IT": "点击任意一行从该处播放", "LINE {0} OF {1}": "第 {0} / {1} 行",
     "TRANSLATED": "已翻译", "MYMEMORY": "MYMEMORY", "BAIDU": "百度翻译", "DEEPL": "DEEPL",
