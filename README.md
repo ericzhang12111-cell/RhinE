@@ -2,15 +2,18 @@
 
 *A foobar2000 theme.*
 
-**English** · [Jump to Installation](INSTALL.md) · [中文：安装指南](安装指南.md) · [中文：其他信息](其他信息.md)
+**English** · [Installation Guide](INSTALL.md) · [ChangeLog](CHANGELOG.md) 
+<br>
+[安装指南](安装指南.md) · [其他信息](其他信息.md) · [更新信息](CHANGELOG.md)
 
 An archive terminal for listening: Swiss typography, a monochrome palette with one accent colour, and a sci-fi layer —
 your albums as rendered specimen cases on shelves, a Möbius signal ring that pulses with the music, synced lyrics
 (fetched online when your files have none), ten case skins and five colour schemes in light and dark. Windows,
 foobar2000 v2 with Columns UI and JSplitter.
 
-[![YouTube Video](https://img.shields.io/badge/YouTube-Watch_Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=g_raaMu_Fp0)
-[![RhinE](https://i2.hdslb.com/bfs/archive/02ff5d803b96978126e29b571d7eebaf551ca2c1.jpg)](https://www.youtube.com/watch?v=g_raaMu_Fp0)
+[![YouTube Video](https://img.shields.io/badge/YouTube-Watch_Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/playlist?list=PLYhA3n8CTLnA&si=daRU0tDz3rFgFB_9)
+[![Rhine](https://i2.hdslb.com/bfs/archive/02ff5d803b96978126e29b571d7eebaf551ca2c1.jpg)](https://www.youtube.com/playlist?list=PLYhA3n8CTLnA&si=daRU0tDz3rFgFB_9)
+> **[Demo & Installation Guide & More](https://www.youtube.com/playlist?list=PLYhA3n8CTLnA&si=daRU0tDz3rFgFB_9)**
 
 <img width="1932" height="1050" alt="archive-light" src="https://github.com/user-attachments/assets/b976cbf7-bd5b-4a20-bc41-62a6bdee1099" />
 
