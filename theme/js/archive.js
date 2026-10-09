@@ -348,7 +348,7 @@ CASE_LISTENERS.push(() => {   // another case skin
 // row's first slot); shade-/glow-<piece>.png, the shadow and the light a rail piece (mid, front, back) and the cases on
 // it throw onto the floor, so the shelves stand on it. "-far" pieces are the floor in front of a row, which the next
 // row covers except in front of the front one.
-const FLOOR = { key: "", meta: null, img: null };
+const FLOOR = { key: null, meta: null, img: null };   // key: the folder loaded ("" plain); null: look again
 function floorImages() {
     const dir = STATE.floor && STATE.floor !== "plain" ? THEME_ROOT + `assets\\render\\floor\\${STATE.floor}-${MODE}\\` : "";
     if (FLOOR.key !== dir) {
@@ -362,9 +362,10 @@ function floorImages() {
             FLOOR.img[`glow-${k}${part}`] = d2d.Image(dir + `glow-${k}${part}.png`);
         }
     }
-    return FLOOR.meta ? FLOOR : null;
+    // an image that could not be read leaves the floor plain (rather than failing the whole paint)
+    return FLOOR.meta && Object.values(FLOOR.img).every(Boolean) ? FLOOR : null;
 }
-TOKEN_LISTENERS.push(() => { FLOOR.key = ""; });
+TOKEN_LISTENERS.push(() => { FLOOR.key = null; });
 // the floor, then every row's shade and glow; false when the floor is plain
 function drawFloor(gr, rows, G, Ox, Oy, k, toScreen) {
     const F = floorImages();
@@ -435,7 +436,7 @@ function inspectImages() {
     return null;
 }
 // the archive's big images are kept only while it is shown
-function archiveHidden() { AR.inspOn = false; AR.insp = 0; ARIMG.inspect = null; ARIMG.gen++; ARIMG.inspectLoading = false; ARIMG.faded.clear(); ARIMG.clear = ARIMG.frost = ARIMG.rail = null; AR.info = null; FLOOR.key = ""; FLOOR.img = null; }
+function archiveHidden() { AR.inspOn = false; AR.insp = 0; ARIMG.inspect = null; ARIMG.gen++; ARIMG.inspectLoading = false; ARIMG.faded.clear(); ARIMG.clear = ARIMG.frost = ARIMG.rail = null; AR.info = null; FLOOR.key = null; FLOOR.img = null; }
 
 // covers of what is on screen, nearest first: the current row around the selection, then the rows behind
 function requestVisibleThumbs() {
