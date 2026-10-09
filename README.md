@@ -5,6 +5,8 @@
 **English** · [Installation Guide](INSTALL.md) · [ChangeLog](CHANGELOG.md) 
 <br>
 [安装指南](安装指南.md) · [其他信息](其他信息.md) · [更新信息](CHANGELOG.md)
+<br>
+[Next version Preview](#preview) · [下版本预览](#preview)
 
 An archive terminal for listening: Swiss typography, a monochrome palette with one accent colour, and a sci-fi layer —
 your albums as rendered specimen cases on shelves, a Möbius signal ring that pulses with the music, synced lyrics
@@ -33,6 +35,11 @@ foobar2000 v2 with Columns UI and JSplitter.
 
 <img width="3412" height="1606" alt="162b47adff8e2d2c7f9ca23ff9757cc3" src="https://github.com/user-attachments/assets/aec4c0a3-d1f3-4503-9a76-5632f00b5246" />
 
+### preview
+<img width="2210" height="1530" alt="real-front-vs-topright" src="https://github.com/user-attachments/assets/e8f029ef-057f-41e3-b4ea-9ccba5ce4cf4" />
+<img width="2800" height="1770" alt="light-study-hazard-row-dark" src="https://github.com/user-attachments/assets/b8f569e2-584e-4b7e-b2d1-04e0ae677ed8" />
+<img width="2800" height="1770" alt="light-study-glass-row-dark" src="https://github.com/user-attachments/assets/c4155dd6-7d58-4c58-aff5-cfa3e9155dbd" />
+<img width="2800" height="1770" alt="light-study-aurora-row-dark" src="https://github.com/user-attachments/assets/1e5945e3-3988-4df1-a374-6ee4023b265c" />
 
 ### Installation
 
