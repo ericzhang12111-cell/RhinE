@@ -134,8 +134,8 @@ function drawStyle(gr) {
     y += dp(30);
     ids.forEach((id, i) => drawSchemeCard(gr, id, i, g.m + (i % g.cols) * (g.cw + g.gap), y + Math.floor(i / g.cols) * (g.schemeH + g.gap), g.cw, g.schemeH));
     y += Math.ceil(ids.length / g.cols) * (g.schemeH + g.gap) + dp(10);
-    // DISPLAY: text size, Archive array scale, inspection size
-    label(gr, tr("DISPLAY  ·  03"), st(STY_ST.sec, C.fg), g.m, y);
+    // DISPLAY: text size, Archive array scale, inspection size, Archive floor
+    label(gr, tr("DISPLAY  ·  04"), st(STY_ST.sec, C.fg), g.m, y);
     drawScaleRow(gr, g.m, y + dp(30), g.lx1);
     drawStylePreview(gr, g, skins);
 }
@@ -218,16 +218,18 @@ function drawIntroButton(gr, xr, y) {
     return x;
 }
 
-// TEXT [90% … 120%]   ARRAY [80% … 130%]   INSPECT [100% … 150%] from x, wrapping to a second row before x1
+// TEXT [90% … 120%]   ARRAY [80% … 130%]   INSPECT [100% … 150%]   FLOOR [PLAIN | LAB DECK]
+// from x, wrapping to a second row before x1
 const pct = v => `${Math.round(v * 100)}%`;
 function drawScaleRow(gr, x, y, x1) {
-    const groups = [["TEXT", TEXT_SCALES, STATE.textScale, "sty-text"], ["ARRAY", ARRAY_SCALES, STATE.arrayScale, "sty-array"],
-                    ["INSPECT", INSPECT_SCALES, STATE.inspectScale, "sty-inspect"]];
+    const scales = list => list.map(v => [v, pct(v)]);
+    const groups = [["TEXT", scales(TEXT_SCALES), STATE.textScale, "sty-text"], ["ARRAY", scales(ARRAY_SCALES), STATE.arrayScale, "sty-array"],
+                    ["INSPECT", scales(INSPECT_SCALES), STATE.inspectScale, "sty-inspect"], ["FLOOR", FLOORS, STATE.floor, "sty-floor"]];
     let xl = x;
-    for (const [title, list, cur, id] of groups) {
-        const s = st(GRID_ST.count, 0), need = list.reduce((n, v) => n + dp(18) + labelWidth(pct(v), s), 0) + dp(12) + labelWidth(tr(title), s);
+    for (const [title, items, cur, id] of groups) {
+        const s = st(GRID_ST.count, 0), need = items.reduce((n, [, t]) => n + dp(18) + labelWidth(tr(t), s), 0) + dp(12) + labelWidth(tr(title), s);
         if (xl > x && xl + need > x1) { xl = x; y += dp(34); }
-        segToggle(gr, xl + need, y, title, list.map(v => [v, pct(v)]), cur, id);
+        segToggle(gr, xl + need, y, title, items, cur, id);
         xl += need + dp(28);
     }
 }
@@ -298,4 +300,5 @@ function styleClick(a) {
     else if (a.id === "sty-text" && a.data !== STATE.textScale) send("text-scale", a.data);
     else if (a.id === "sty-array" && a.data !== STATE.arrayScale) send("array-scale", a.data);
     else if (a.id === "sty-inspect" && a.data !== STATE.inspectScale) send("inspect-scale", a.data);
+    else if (a.id === "sty-floor" && a.data !== STATE.floor) send("floor", a.data);
 }

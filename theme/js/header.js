@@ -380,6 +380,10 @@ function showMenu(a) {
     INSPECT_SCALES.forEach((v, i) => is.AppendMenuItem(0, 340 + i, pct(v)));
     is.CheckMenuRadioItem(340, 340 + INSPECT_SCALES.length - 1, 340 + Math.max(0, INSPECT_SCALES.indexOf(STATE.inspectScale)));
     is.AppendTo(theme, 0, tr("Inspection size"));
+    const fm = window.CreatePopupMenu();
+    FLOOR_NAMES.forEach((t, i) => fm.AppendMenuItem(0, 360 + i, tr(t)));
+    fm.CheckMenuRadioItem(360, 360 + FLOORS.length - 1, 360 + Math.max(0, FLOORS.findIndex(f => f[0] === STATE.floor)));
+    fm.AppendTo(theme, 0, tr("Archive floor"));
     // interface language
     const lm = window.CreatePopupMenu();
     UI_LANGS.forEach(([, name], i) => lm.AppendMenuItem(0, 450 + i, name));
@@ -413,6 +417,7 @@ function showMenu(a) {
     else if (id === 10) shuffleLibrary();
     else if (id >= 340 && id < 340 + INSPECT_SCALES.length) send("inspect-scale", INSPECT_SCALES[id - 340]);
     else if (id >= 320 && id < 320 + ARRAY_SCALES.length) send("array-scale", ARRAY_SCALES[id - 320]);
+    else if (id >= 360 && id < 360 + FLOORS.length) send("floor", FLOORS[id - 360][0]);
     else if (id >= 300 && id < 300 + TEXT_SCALES.length) send("text-scale", TEXT_SCALES[id - 300]);
     else if (id >= 200 && schemes[id - 200]) send("scheme", schemes[id - 200]);
     else if (id >= 100 && skins[id - 100]) send("skin", skins[id - 100].id);

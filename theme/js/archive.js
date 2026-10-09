@@ -202,7 +202,7 @@ function albumTracks(a, max) {
     if (list) {
         // a track item further down its album: start the window so it is in view
         const at = own ? [...Array(list.Count).keys()].find(i => sameTrack(list[i], own)) : -1;
-        first = at > max - 2 ? Math.min(at - 1, Math.max(0, list.Count - max)) : 0;
+        first = at > max - 2 ? Math.max(0, Math.min(at - 1, list.Count - max)) : 0;
         const n = Math.min(max, list.Count - first), sub = fb.CreateHandleList();
         for (let i = 0; i < n; i++) sub.Add(list[first + i]);
         rows = TF_AR_TRACK.EvalWithMetadbs(sub).map((s, k) => {
@@ -343,6 +343,59 @@ CASE_LISTENERS.push(() => {   // another case skin
     AR.inspOn = false; AR.insp = 0; AR.dirtyInfo = true;
     if (ARCHIVE_ON) { clock.wake(); window.Repaint(); }
 });
+// the floor under the array (STATE.floor, the Style view's FLOOR): assets\render\floor\<id>-<mode>\, made with the
+// cases' camera (art/build_floor.py): plate.jpg, the floor itself, still and anchored at the world origin (the front
+// row's first slot); shade-/glow-<piece>.png, the shadow and the light a rail piece (mid, front, back) and the cases on
+// it throw onto the floor, so the shelves stand on it. "-far" pieces are the floor in front of a row, which the next
+// row covers except in front of the front one.
+const FLOOR = { key: "", meta: null, img: null };
+function floorImages() {
+    const dir = STATE.floor && STATE.floor !== "plain" ? THEME_ROOT + `assets\\render\\floor\\${STATE.floor}-${MODE}\\` : "";
+    if (FLOOR.key !== dir) {
+        FLOOR.key = dir; FLOOR.img = null;
+        FLOOR.meta = dir && utils.IsFile(dir + "floor.json") ? JSON.parse(utils.ReadTextFile(dir + "floor.json", 65001)) : null;
+    }
+    if (FLOOR.meta && !FLOOR.img) {
+        FLOOR.img = { plate: d2d.Image(dir + "plate.jpg") };
+        for (const k of ["mid", "front", "back"]) for (const part of ["", "-far"]) {
+            FLOOR.img[`shade-${k}${part}`] = d2d.Image(dir + `shade-${k}${part}.png`);
+            FLOOR.img[`glow-${k}${part}`] = d2d.Image(dir + `glow-${k}${part}.png`);
+        }
+    }
+    return FLOOR.meta ? FLOOR : null;
+}
+TOKEN_LISTENERS.push(() => { FLOOR.key = ""; });
+// the floor, then every row's shade and glow; false when the floor is plain
+function drawFloor(gr, rows, G, Ox, Oy, k, toScreen) {
+    const F = floorImages();
+    if (!F) return false;
+    const pm = F.meta.plate, sm = F.meta.shade, [rw, rh] = sm.res, [so0, so1] = sm.origin;
+    gr.DrawImage(F.img.plate, Ox - pm.origin[0] * k, Oy - pm.origin[1] * k, pm.res[0] * k, pm.res[1] * k, 0, 0, pm.res[0], pm.res[1]);
+    // the mid piece holds one slot of a full row's shade, the same all along the row: it is stretched along the row
+    // over all its slots (one image, no seams between slots); the ends are drawn as they are
+    const ax = CASE_META.axes.x, ay = CASE_META.axes.y, az = CASE_META.axes.z, fz = -F.meta.floor_z, det = ax[0] * ay[1] - ay[0] * ax[1];
+    const zx = fz * az[0], zy = fz * az[1];   // the floor lies fz below the sprites' origin plane
+    for (const layer of ["shade-", "glow-"]) for (const [gi, r] of rows) for (const part of ["", "-far"]) {
+        const row = G[gi], pos = r.pos.x, x = -pos * ROWP, n = slotCount(row);
+        const alpha = Math.round(rowAlpha(pos) * (1 - rowTint(pos)) * (part ? clamp(1 - pos, 0, 1) : 1));
+        if (alpha <= 0) continue;
+        for (const end of ["front", "back"]) {
+            const [sx, sy] = toScreen({ x, y: ((end === "front" ? -1 : n) - r.scroll.x) * PITCH, z: 0 });
+            gr.DrawImage(F.img[layer + end + part], sx - so0 * k, sy - so1 * k, rw * k, rh * k, 0, 0, rw, rh, 0, alpha);
+        }
+        if (n < 1) continue;
+        // A = B diag(1, n) B^-1, B = [ax ay]: n times longer along the row, unchanged across it
+        const s = (n - 1) / det, A = [1 - s * ay[0] * ax[1], s * ay[0] * ax[0], -s * ay[1] * ax[1], 1 + s * ay[1] * ax[0]];
+        const [ox, oy] = toScreen({ x, y: ((n - 1) / 2 - r.scroll.x) * PITCH, z: 0 }), ux = zx - so0, uy = zy - so1;
+        QM[0] = k * A[0]; QM[1] = k * A[2]; QM[2] = k * A[1]; QM[3] = k * A[3];
+        QM[4] = ox + k * (A[0] * ux + A[1] * uy - zx); QM[5] = oy + k * (A[2] * ux + A[3] * uy - zy);
+        gr.SetTransform(QM);
+        gr.DrawImage(F.img[layer + "mid" + part], 0, 0, rw, rh, 0, 0, rw, rh, 0, alpha);
+        gr.ResetTransform();
+    }
+    return true;
+}
+
 function arrayImages() {
     if (!ARIMG.clear) { ARIMG.clear = d2d.Image(CASE_DIR + "array-clear.png"); ARIMG.frost = d2d.Image(CASE_DIR + "array-frost.png"); }
     return ARIMG;
@@ -382,7 +435,7 @@ function inspectImages() {
     return null;
 }
 // the archive's big images are kept only while it is shown
-function archiveHidden() { AR.inspOn = false; AR.insp = 0; ARIMG.inspect = null; ARIMG.gen++; ARIMG.inspectLoading = false; ARIMG.faded.clear(); ARIMG.clear = ARIMG.frost = ARIMG.rail = null; AR.info = null; }
+function archiveHidden() { AR.inspOn = false; AR.insp = 0; ARIMG.inspect = null; ARIMG.gen++; ARIMG.inspectLoading = false; ARIMG.faded.clear(); ARIMG.clear = ARIMG.frost = ARIMG.rail = null; AR.info = null; FLOOR.key = ""; FLOOR.img = null; }
 
 // covers of what is on screen, nearest first: the current row around the selection, then the rows behind
 function requestVisibleThumbs() {
@@ -458,6 +511,7 @@ function drawArchive(gr) {
     const R = railImages(), rows = [...AR.rows].filter(([, r]) => r.pos.x > -1 && r.pos.x < 4).sort((p, q) => q[1].pos.x - p[1].pos.x);
     AR.hits = [];
     let selItem = null;
+    drawFloor(gr, rows, G, Ox, Oy, k, toScreen);
     for (const [gi, r] of rows) {
         const row = G[gi], albums = row.albums, pos = r.pos.x, x = -pos * ROWP, active = gi === AR.group, [i0, i1] = caseWindow(r, row);
         const nSlots = slotCount(row), items = [];

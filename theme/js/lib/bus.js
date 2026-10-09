@@ -13,6 +13,9 @@ const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, s
 
 // text size, Array scale and inspection size: the choices offered in MENU › Audio Archive and the Style view (frame.js keeps the value)
 const TEXT_SCALES = [.9, 1, 1.1, 1.2, 1.35, 1.5], ARRAY_SCALES = [.8, .9, 1, 1.15, 1.3], INSPECT_SCALES = [1, 1.15, 1.3, 1.5];
+// the floor under the Archive array: "plain" (the page colour) or a rendered one in assets/render/floor/<id>-<mode>/
+const FLOORS = [["plain", "PLAIN"], ["deck", "LAB DECK"]], FLOOR_NAMES = ["Plain", "Lab deck"];
+const pickFloor = v => FLOORS.some(f => f[0] === v) ? v : "plain";
 const pickScale = (v, list) => list.reduce((a, b) => Math.abs(b - v) < Math.abs(a - v) ? b : a, 1);
 
 function send(type, data = null) { window.NotifyOthers(BUS, JSON.stringify({ type, data })); }

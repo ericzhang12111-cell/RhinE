@@ -26,13 +26,14 @@ STATE.textScale = pickScale(+getSetting("textScale", 1), TEXT_SCALES);
 STATE.arrayScale = pickScale(+getSetting("arrayScale", 1), ARRAY_SCALES);
 setTextScale(STATE.textScale);   // the root panel's own copy: the Playlists view's column widths follow it
 STATE.inspectScale = pickScale(+getSetting("inspectScale", 1.3), INSPECT_SCALES);
+STATE.floor = pickFloor(getSetting("floor", "plain"));
 REDUCE_MOTION = STATE.reduce;
 RELOAD_ON_LANG = false;   // see lib/bus.js
 const P = {};          // child name -> PanelObject
 let ready = false;
 
 const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, reduce: STATE.reduce, boot: STATE.boot, skin: STATE.skin, grain: STATE.grain, lyricsOnline: STATE.lyricsOnline,
-                                   textScale: STATE.textScale, arrayScale: STATE.arrayScale, inspectScale: STATE.inspectScale });
+                                   textScale: STATE.textScale, arrayScale: STATE.arrayScale, inspectScale: STATE.inspectScale, floor: STATE.floor });
 
 // The layout creates the children in CHILDREN order and that is their z-order, so GetPanelByIndex(i) is CHILDREN[i].
 // They may not exist yet on the root's first on_size, so look again (briefly) until they are all there.
@@ -211,6 +212,7 @@ onMessage("lyrics-online", on => { STATE.lyricsOnline = !!on; setSetting("lyrics
 onMessage("text-scale", v => { STATE.textScale = pickScale(+v, TEXT_SCALES); setSetting("textScale", STATE.textScale); setTextScale(STATE.textScale); broadcast(); layout(); });
 onMessage("inspect-scale", v => { STATE.inspectScale = pickScale(+v, INSPECT_SCALES); setSetting("inspectScale", STATE.inspectScale); broadcast(); });
 onMessage("array-scale", v => { STATE.arrayScale = pickScale(+v, ARRAY_SCALES); setSetting("arrayScale", STATE.arrayScale); broadcast(); });
+onMessage("floor", v => { STATE.floor = pickFloor(v); setSetting("floor", STATE.floor); broadcast(); });
 onMessage("grain", on => { STATE.grain = !!on; setSetting("grain", STATE.grain); broadcast(); window.Repaint(); });
 
 const COMMANDS = [["Archive view", () => setView("archive")], ["Playlists view", () => setView("playlists")],

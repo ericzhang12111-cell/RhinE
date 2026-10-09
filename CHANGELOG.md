@@ -5,6 +5,12 @@ Newest version first. Download any version from [Releases](https://github.com/er
 
 ## Unreleased
 
+**Added · 新增**
+- A floor under the Archive array: `FLOOR › LAB DECK` in the `05 STYLE` view (or `MENU › Audio Archive › Archive
+  floor`) stands the shelves on a rendered lab deck, with their shadows on it, in light and dark. `PLAIN` keeps the
+  page colour. 档案阵列可选地面：在 `05 外观` 视图中选择 `地面 › 实验甲板`（或 `菜单 › Audio Archive › 档案地面`），货架立在渲染的
+  实验甲板上并投下阴影，浅色与深色均可；`纯色` 保持原来的背景色。
+
 **Fixed · 修复**
 - The update check's jsDelivr fallback (for when GitHub cannot be reached) asks for the latest release rather than
   the main branch, which jsDelivr can serve hours out of date. 检查更新时的 jsDelivr 备用地址改为读取最新发布版本，而不是

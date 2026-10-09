@@ -160,6 +160,7 @@ Running it again keeps the foobar2000 folder and installs the theme again.
 | Colour scheme (ARCHIVE, HAZARD, FLARE, FIELD, COLD FRONT) | `MENU › Audio Archive › Colour scheme` | — |
 | Style: see and switch skins and schemes | the `05 STYLE` view: hover a card for its preview, click to apply | `5` |
 | Text size (90 – 150 %), Archive array scale (80 – 130 %), inspection size (100 – 150 %) | `TEXT`, `ARRAY` and `INSPECT` at the top of the `05 STYLE` view, or `MENU › Audio Archive › Text size` / `Archive array scale` / `Inspection size` | — |
+| Archive floor: the page colour or a rendered lab deck under the shelves | `FLOOR` at the top of the `05 STYLE` view, or `MENU › Audio Archive › Archive floor` | — |
 | Interface language: English, 简体中文, 日本語 (default: Windows' display language) | `MENU › Audio Archive › Language · 语言 · 言語` | — |
 
 The theme starts dark, with the ARCHIVE colour scheme and the WHITE case skin, in Windows' display language. Its
