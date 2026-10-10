@@ -17,6 +17,8 @@ foobar2000 v2 with Columns UI and JSplitter.
 [![Rhine](https://i2.hdslb.com/bfs/archive/02ff5d803b96978126e29b571d7eebaf551ca2c1.jpg)](https://www.youtube.com/playlist?list=PLYhA3n8CTLnA&si=daRU0tDz3rFgFB_9)
 > **[Demo & Installation Guide & More](https://www.youtube.com/playlist?list=PLYhA3n8CTLnA&si=daRU0tDz3rFgFB_9)**
 
+<img width="1834" height="1043" alt="683fd30edaa5d4e8a1d8128c912cda46" src="https://github.com/user-attachments/assets/d45ea8d4-01bd-4a08-9cbb-ad52c88cf2bf" />
+
 <img width="1932" height="1050" alt="archive-light" src="https://github.com/user-attachments/assets/b976cbf7-bd5b-4a20-bc41-62a6bdee1099" />
 
 ![Archive view](theme/screenshots/v1/archive.jpg)
