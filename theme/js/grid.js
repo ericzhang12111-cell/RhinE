@@ -194,7 +194,8 @@ function drawGrid(gr) {
 //   [FILTER · "word" · 12 ALBUMS ×]               GROUP [GENRE | DECADE | A–Z | NONE]   SORT [ARTIST | TITLE | YEAR | ADDED]
 function drawArchiveBar(gr) {
     const grid = AR.layout === "grid", xr = arrayW() - dp(32), y1 = dp(22), y2 = dp(54), x0 = dp(32);
-    drawFilterChip(gr, x0, grid ? y2 : y1);
+    const fw = drawFilterChip(gr, x0, grid ? y2 : y1);
+    drawPickButton(gr, x0 + (fw ? fw + dp(12) : 0), grid ? y2 : y1);
     let lx = segToggle(gr, xr, y1, "LAYOUT", [["array", "ARRAY"], ["grid", "GRID"]], AR.layout, "ar-layout", true);
     if (grid) lx = segToggle(gr, lx - dp(24), y1, "PER PAGE", PER_PAGE.map(n => [n, String(n)]), GRID.per, "ar-per");
     lx = segToggle(gr, lx - dp(24), y1, "SHOW", [["albums", "ALBUMS"], ["tracks", "TRACKS"]], showTracks() ? "tracks" : "albums", "ar-unit");
@@ -209,6 +210,23 @@ function drawArchiveBar(gr) {
     }
     const sx = segToggle(gr, xr, y2, "SORT", SORT_BY, LIB.sortBy, "ar-sort");
     segToggle(gr, sx - dp(24), y2, "GROUP", GROUP_BY, LIB.groupBy, "ar-group");
+}
+
+// ⚂ RANDOM PICK  R (after the filter chip): a run through the shelves to a random item, which then plays (randomPick)
+function drawPickButton(gr, x, y) {
+    if (!arRows().length) return;
+    const on = !!PICK.steps, h = dp(22), fg = on ? C.bg : C.fg, bg = on ? C.fg : C.bg, s = st(GRID_ST.count, fg, bg);
+    const t = tr(on ? "PICKING …" : "RANDOM PICK"), ks = st(GRID_ST.count, on ? C.bg : C["text-muted"], bg), kw = labelWidth("R", ks);
+    const w = dp(28) + labelWidth(t, s) + dp(14) + kw + dp(10), ty = y + Math.round((h - labelHeight(GRID_ST.count)) / 2);
+    gr.FillSolidRect(x, y, w, h, bg);
+    box(gr, x, y, w, h, on ? C.fg : C["line-faint"]);
+    // a die showing three
+    const ds = dp(10), dx = x + dp(9), dy = y + Math.round((h - ds) / 2);
+    box(gr, dx, dy, ds, ds, fg);
+    for (const p of [.28, .5, .72]) gr.FillSolidRect(Math.round(dx + p * ds - dp(1)), Math.round(dy + (1 - p) * ds - dp(1)), dp(2), dp(2), C.accent);
+    label(gr, t, s, x + dp(28), ty);
+    label(gr, "R", ks, x + w - dp(10) - kw, ty);
+    hits.add("ar-pick", x, y, w, h);
 }
 
 // TITLE [■ A | □ B | …] right-aligned at xr, on a plate; items [[value, text]]; marks: the square toggle marks.

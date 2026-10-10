@@ -13,6 +13,12 @@ Newest version first. Download any version from [Releases](https://github.com/er
 - `FLOOR › REAL STYLE`: the Archive as one rendered scene, frosted cases in their rails on a walnut desk in warm
   light, each case shaded by its neighbours. It always uses the FROST case. `地面 › 写实风格`：档案呈现为一个渲染场景——
   磨砂外壳立在胡桃木桌面上的导轨里，暖光照明，每个外壳都带有相邻外壳的阴影；此模式固定使用 FROST 外壳。
+- `RANDOM PICK` in the Archive (or `R`): the selection runs through the shelves and slows down on a random album,
+  which is lifted out and plays (in the grid it is selected and plays). 档案新增 `随机抽取`（或按 `R`）：选择框在货架间
+  跑动，逐渐减速停在一张随机专辑上，将其取出并播放（网格中则选中并播放）。
+- Each case's title is printed on a strip along its top edge, so the shelves can be read from above like records in a
+  crate (right-click the Archive to turn it off). 每个外壳的顶边贴有标题条，可以像翻唱片箱一样从上方读出货架上的专辑
+  （可在档案中右键关闭）。
 
 **Changed · 改进**
 - The case skins are lit from the right: in the Archive the cases' tops and spine sides catch the light and the gaps

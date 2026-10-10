@@ -48,8 +48,10 @@ const AR = {
     title: null, tracks: { key: "", rows: [], total: 0 },
     rulerStart: Spring(0, 14), ticks: new Map(),
     dirtyInfo: true, info: null,
+    topTitles: getSetting("caseTopTitles", true) !== false,   // the titles on the cases' top edges (the context menu)
 };
 let ARCHIVE_ON = false;
+const PICK = { steps: null, t: 0, after: false };   // RANDOM PICK's run (see randomPick)
 try { AR.selAlbum = String(JSON.parse(getSetting("archiveSel", "{}")).key || ""); } catch (e) { /* none */ }
 
 // ------------------------------------------------------------------------------------------------------ shelves
@@ -104,6 +106,7 @@ LIB_LISTENERS.push(kind => {
 });
 // rows rebuilt (catalog, grouping, layout): select `key` again where it now is, else stay near the same row
 function placeSelection(key) {
+    pickStop();   // the rows are rebuilt: a run's places no longer hold
     if (AR.layout !== "grid") buildShelves();
     const R = arRows();
     // An album or track not listed yet (a track before the worker has listed them, an album still indexing) is kept as
@@ -190,6 +193,65 @@ function moveGroup(d) {
     selectionChanged();
 }
 
+// RANDOM PICK (R, or the button top left): the selection runs through the shelves to a random item, one shelf at a
+// time, then along the shelf, slowing down as it nears it; the case is lifted out and turned to the viewer (the
+// inspection) and its album plays. In the grid the run is the same and the album plays. Any other input stops the run.
+// PICK.steps: [{ t (s from the start), gi, i (none: the shelf's own selection), done }] (PICK is declared at the top)
+function randomPick() {
+    if (PICK.steps) return;
+    if (AR.inspOn || AR.insp > 0) { AR.inspOn = false; PICK.after = true; clock.wake(); return; }   // once the case is back
+    const R = arRows(), total = R.reduce((n, g) => n + g.albums.length, 0), r0 = AR.rows.get(AR.group);
+    if (!total) return;
+    // any item but the selected one
+    let cur = r0 ? r0.sel : 0;
+    for (let gi = 0; gi < AR.group; gi++) cur += R[gi].albums.length;
+    let n = Math.floor(Math.random() * (total > 1 ? total - 1 : 1));
+    if (total > 1 && n >= cur) n++;
+    let g1 = 0;
+    while (n >= R[g1].albums.length) n -= R[g1++].albums.length;
+    const steps = [], g0 = AR.group, dg = g1 - g0, hops = Math.min(Math.abs(dg), 8);
+    let t = 0;
+    if (REDUCE_MOTION) steps.push({ t, gi: g1, i: n });
+    else {
+        for (let h = 1; h <= hops; h++) steps.push({ t: t += .11, gi: g0 + Math.round(dg * h / hops) });
+        const r = AR.rows.get(g1), s = r ? r.sel : selIndexOf(g1), N = Math.min(Math.abs(n - s), 12);
+        let last = s;
+        for (let j = 1; j <= N; j++) {
+            const i = s + Math.round((n - s) * (1 - Math.pow(1 - j / N, 2)));   // eased out: the last steps are short
+            if (i === last) continue;
+            steps.push({ t: t += .06 + .24 * Math.pow(j / N, 2), gi: g1, i });
+            last = i;
+        }
+        if (last !== n || !steps.length) steps.push({ t: t += .1, gi: g1, i: n });
+    }
+    steps.push({ t: t + (REDUCE_MOTION ? 0 : .45), done: true });
+    PICK.steps = steps; PICK.t = 0;
+    clock.wake(); window.Repaint();
+}
+function pickStep(s) {
+    if (s.done) {
+        PICK.steps = null;
+        if (!curAlbum()) return;
+        if (AR.layout !== "grid") { AR.inspOn = true; inspectImages(); }
+        playAlbum();
+        clock.wake(); window.Repaint();
+        return;
+    }
+    if (AR.layout === "grid") { gridSelect(s.gi, s.i == null ? rowState(s.gi).sel : s.i); return; }
+    if (s.gi !== AR.group) { AR.group = s.gi; AR.ticks.clear(); }
+    const r = rowState(s.gi);
+    if (s.i != null) { r.sel = s.i; r.scroll.to = scrollTarget(s.i, arRows()[s.gi]); }
+    selectionChanged();
+}
+function pickUpdate(dt) {
+    if (PICK.after && AR.insp === 0 && !AR.inspOn) { PICK.after = false; randomPick(); }
+    if (!PICK.steps) return PICK.after;
+    PICK.t += dt;
+    while (PICK.steps && PICK.steps[0].t <= PICK.t) pickStep(PICK.steps.shift());
+    return true;
+}
+function pickStop() { const on = !!PICK.steps || PICK.after; PICK.steps = null; PICK.after = false; if (on) window.Repaint(); }
+
 // the tracks of the selected item's album for the file panel, as many as fit (`max`), in disc / track order; each row
 // knows its place in the album (a click plays the album from there) and whether it is the selected track item
 const TF_AR_TRACK = fb.TitleFormat("[%tracknumber%]\u0001%title%\u0001[%length_seconds%]");
@@ -227,6 +289,7 @@ function archiveUpdate(dt) {
     const G = arRows();
     if (!G.length) return false;
     let more = stepInspection(dt);
+    more = pickUpdate(dt) || more;
     // rows: the current one, three behind it, one more fading in at the back and the one leaving towards the viewer
     for (let gi = AR.group - 1; gi <= AR.group + 4; gi++) if (gi >= 0 && gi < G.length) rowState(gi).pos.to = gi - AR.group;
     for (const gi of [...AR.rows.keys()]) if (gi < AR.group - 1 || gi > AR.group + 4) AR.rows.delete(gi);
@@ -453,7 +516,7 @@ function inspectImages() {
     return null;
 }
 // the archive's big images are kept only while it is shown
-function archiveHidden() { AR.inspOn = false; AR.insp = 0; ARIMG.inspect = null; ARIMG.gen++; ARIMG.inspectLoading = false; ARIMG.faded.clear(); ARIMG.clear = ARIMG.frost = ARIMG.rail = null; AR.info = null; FLOOR.key = null; FLOOR.img = null; }
+function archiveHidden() { pickStop(); AR.inspOn = false; AR.insp = 0; ARIMG.inspect = null; ARIMG.gen++; ARIMG.inspectLoading = false; ARIMG.faded.clear(); ARIMG.clear = ARIMG.frost = ARIMG.rail = null; AR.info = null; FLOOR.key = null; FLOOR.img = null; }
 
 // covers of what is on screen, nearest first: the current row around the selection, then the rows behind
 function requestVisibleThumbs() {
@@ -512,6 +575,27 @@ function drawSpineLabel(gr, q, ox, oy, k, no, alpha = 255) {
     const ink = withAlpha(0xFF1B1C18, alpha / 255);
     gr.DrawText("ARC", LABEL_FONTS.a, ink, 8, 6, 90, 20, DT_SINGLE);
     gr.DrawText(pad(no, 4), LABEL_FONTS.b, ink, 8, 28, 92, 28, DT_SINGLE);
+    gr.ResetTransform();
+}
+
+// The item's title on a paper strip along the case's top edge, so the cases can be read from above like records in a
+// crate (the covers of the cases behind are hidden by the ones in front, their tops are not). The strip runs from the
+// case's left end to the index tab (case model units: x along the case, y across it, the top at z); it is mapped
+// like the spine label, 100 units per model unit, the text's top towards the back of the case.
+const TOP_STRIP = { x0: -1.80, x1: 1.10, y: .15, z: 3.5 }, TOP_PAPER = 0xFFE9E6DD, TOP_INK = 0xFF1B1C18;
+function drawTopTitle(gr, a, ox, oy, k, alpha, f) {
+    const m = CASE_META.array.origin, ax = CASE_META.axes, T = TOP_STRIP;
+    const at = (x, y) => [ox + (m[0] + x * ax.x[0] + y * ax.y[0] + T.z * ax.z[0]) * k, oy + (m[1] + x * ax.x[1] + y * ax.y[1] + T.z * ax.z[1]) * k];
+    const o = at(T.x0, T.y), u = at(T.x0 + 1, T.y), v = at(T.x0, T.y - 1);
+    if (Math.hypot(v[0] - o[0], v[1] - o[1]) * T.y * 2 < 5) return;   // too small to read
+    QM[0] = (u[0] - o[0]) / 100; QM[1] = (u[1] - o[1]) / 100; QM[2] = (v[0] - o[0]) / 100; QM[3] = (v[1] - o[1]) / 100; QM[4] = o[0]; QM[5] = o[1];
+    if (!LABEL_FONTS.top) { LABEL_FONTS.top = d2d.Font("Geist Mono SemiBold", 17, 0); LABEL_FONTS.topC = d2d.Font("Microsoft YaHei UI", 18, 1); }
+    const tone = c => withAlpha(f > 0 ? mix(c, fadeBg(), f) : c, alpha / 255), w = (T.x1 - T.x0) * 100, h = T.y * 200;
+    const t = (a.title || tr("UNTITLED")).toUpperCase();
+    gr.SetTransform(QM);
+    gr.FillSolidRect(0, 0, w, h, tone(TOP_PAPER));
+    gr.FillSolidRect(0, 0, 4, h, tone(C.accent));
+    gr.DrawText(t, isCJK(t) ? LABEL_FONTS.topC : LABEL_FONTS.top, tone(TOP_INK), 12, 0, w - 20, h, DT_SINGLE | DT_ELLIPSIS);
     gr.ResetTransform();
 }
 
@@ -592,6 +676,7 @@ function drawArrayCase(gr, it, sx, sy, k, aw, I) {
         if (cl > .01) gr.DrawImage(I.clear, ox, oy, S, S, 0, 0, sz, sz, 0, Math.round(alpha * cl));
         if (it.active) drawSpineLabel(gr, meta.label, ox, oy, k, it.a.no, alpha);
     }
+    if (AR.topTitles && f < .5) drawTopTitle(gr, it.a, ox, oy, k, alpha, f);
     if (it.active && it.pos < .5) AR.hits.push({ i: it.i, quad: meta.cover.map(([px, py]) => [ox + px * k, oy + py * k]) });
     if (it.isSel && it.c.clear.x > .6 && AR.insp === 0) {
         const top = meta.cover[1], x1 = ox + top[0] * k + dp(4), y1 = oy + top[1] * k - dp(4), lx = x1 + dp(26), ly = y1 - dp(30);
@@ -997,6 +1082,8 @@ function archiveMouseLeave() {
     if (AR.hover >= 0 || AR.hoverTick >= 0) { AR.hover = -1; AR.hoverTick = -1; clock.wake(); }
 }
 function archiveClick(x, y, a) {
+    if (a && a.id === "ar-pick") { randomPick(); return; }
+    pickStop();
     if (AR.inspOn) { AR.inspOn = false; clock.wake(); return; }
     if (a) {
         switch (a.id) {
@@ -1024,8 +1111,13 @@ function archiveClick(x, y, a) {
         else moveAlbum(AR.hover - r.sel);
     }
 }
-function archiveWheel(step) { if (AR.layout === "grid") gridWheel(step); else moveAlbum(step > 0 ? -1 : 1); }
+function archiveWheel(step) { pickStop(); if (AR.layout === "grid") gridWheel(step); else moveAlbum(step > 0 ? -1 : 1); }
 function archiveKey(vk) {
+    if (vk === 0x52) { randomPick(); return true; }   // R
+    if (PICK.steps && (vk === 0x1B || vk === 0x0D || vk === 0x20 || vk === 0x47 || (vk >= 0x21 && vk <= 0x28))) {
+        pickStop();
+        if (vk === 0x1B) return true;
+    }
     if (AR.inspOn) {
         if (vk === 0x1B) { AR.inspOn = false; clock.wake(); return true; }
         if (vk === 0x0D) { openAlbum(); return true; }
@@ -1072,6 +1164,8 @@ function archiveMenu(x, y) {
     m.AppendMenuSeparator();
     m.AppendMenuItem(curAlbum() ? 0 : 1, 9, tr("Play album"));
     m.AppendMenuItem(curAlbum() ? 0 : 1, 5, tr("Open album in playlist"));
+    m.AppendMenuItem(curAlbum() ? 0 : 1, 11, tr("Random pick") + "	R");
+    m.AppendMenuItem(AR.topTitles ? 0x8 : 0, 12, tr("Titles on the cases' top edges"));
     m.AppendMenuSeparator();
     const skins = appendSkinMenu(m, 100);
     m.AppendMenuItem(0, 6, tr("Re-index library"));
@@ -1079,6 +1173,8 @@ function archiveMenu(x, y) {
     if (id >= 1 && id <= 4) setGroupBy(by[id - 1]);
     else if (id >= 400 && sorts[id - 400]) setSortBy(sorts[id - 400]);
     else if (id === 9) playAlbum();
+    else if (id === 11) randomPick();
+    else if (id === 12) { AR.topTitles = !AR.topTitles; setSetting("caseTopTitles", AR.topTitles); window.Repaint(); }
     else if (id === 10) setUnit(showTracks() ? "albums" : "tracks");
     else if (id === 5) openAlbum();
     else if (id === 6) libIndex(true);
