@@ -35,6 +35,9 @@ Newest version first. Download any version from [Releases](https://github.com/er
   and scroll with the wheel; MP3 lyrics (shown by foobar2000 as `UNSYNCED LYRICS`) are found, timed or not. Synced
   lyrics online still take precedence over plain ones. 内嵌歌词的常见写法都能读取：不带时间轴的纯文本歌词会显示（未同步，可用
   滚轮浏览）；MP3 内嵌歌词（foobar2000 显示为 `UNSYNCED LYRICS`）无论是否带时间轴都能读到；在线有同步歌词时仍优先使用同步歌词。
+- On smaller windows (such as 1366 × 768) the selected case near the end of a shelf could sit under the Archive's top
+  bar, cut off; a shelf now scrolls far enough, and again when the window is resized. 在较小的窗口（如 1366 × 768）中，
+  货架末尾附近选中的外壳可能被档案顶栏遮住；现在货架会滚动到位，窗口改变大小时也会重新滚动。
 - The update check's jsDelivr fallback (for when GitHub cannot be reached) asks for the latest release rather than
   the main branch, which jsDelivr can serve hours out of date. 检查更新时的 jsDelivr 备用地址改为读取最新发布版本，而不是
   main 分支（jsDelivr 对分支的缓存可能滞后数小时）。

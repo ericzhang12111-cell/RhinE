@@ -152,11 +152,18 @@ function slotsInView() {
     let n = 0;
     while (n < 400) {
         const ox = Ox + n * ax.y[0] * k - m.origin[0] * k, oy = Oy + n * ax.y[1] * k - m.origin[1] * k;
-        if (ox + S * .7 > aw || oy < -S * .3) break;
+        if (ox + S * .7 > aw || oy < dp(56) - S * .05) break;   // a lifted case's top stays under the bar
         n++;
     }
     SLOTS_IN_VIEW = { key, n: Math.max(6, n) };
     return SLOTS_IN_VIEW.n;
+}
+
+// a new size shows a different number of slots: each row scrolls again to keep its selection in view
+function archiveResized() {
+    const R = arRows();
+    for (const [gi, r] of AR.rows) if (R[gi]) r.scroll.to = scrollTarget(r.sel, R[gi]);
+    if (ARCHIVE_ON) clock.wake();
 }
 
 function selectionChanged(animate = true) {

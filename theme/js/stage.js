@@ -150,7 +150,7 @@ function lyricsGeom() {
     return { x0, x1, cx, cw, cy: Math.round(H * .46) };
 }
 
-function on_size(w, h) { W = w; H = h; dirty.left = dirty.card = true; layers.left = layers.card = null; AR.dirtyInfo = true; AR.info = null; }
+function on_size(w, h) { W = w; H = h; dirty.left = dirty.card = true; layers.left = layers.card = null; AR.dirtyInfo = true; AR.info = null; if (w > 0 && h > 0) archiveResized(); }
 
 // layers: bitmaps of the left column and the card, rebuilt when dirty
 const dirty = { left: true, card: true };
