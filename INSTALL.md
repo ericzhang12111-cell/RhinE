@@ -11,7 +11,7 @@ Pick **B** if you already use foobar2000 and want the theme in that copy. Both n
 
 A complete foobar2000 with the theme, in one folder. It does not touch an installed foobar2000.
 
-1. Download **`RhinE-1.3.0-portable.zip`** from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
+1. Download **`RhinE-1.4.0-portable.zip`** from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 2. Unzip it: right-click › *Extract All*.
 3. Open the extracted folder and double-click **`Setup 一键安装.cmd`**.
    If Windows asks whether to run it, choose *Run* (or *More info › Run anyway*).
@@ -27,7 +27,7 @@ the file in your browser, put it in the `setup` folder and double-click `Setup �
 You need foobar2000 v2, **64-bit** ([foobar2000.org](https://www.foobar2000.org/download)). Columns UI and JSplitter are
 installed for you if they are missing.
 
-1. Download **`audio-archive-1.3.0.zip`** from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
+1. Download **`audio-archive-1.4.0.zip`** from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 2. Unzip it: right-click › *Extract All*.
 3. Open the extracted folder and double-click **`install.cmd`**.
 4. Answer the questions with `Y` (or just press Enter). The installer:

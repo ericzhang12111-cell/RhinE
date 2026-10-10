@@ -3,7 +3,7 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
-## Unreleased
+## 1.4.0 — 2026-10-09
 
 **Added · 新增**
 - A floor under the Archive array: `FLOOR › LAB DECK` in the `05 STYLE` view (or `MENU › Audio Archive › Archive
