@@ -5,8 +5,7 @@
 **English** · [Installation Guide](INSTALL.md) · [ChangeLog (Or check out the Youtube Playlist)](CHANGELOG.md) 
 <br>
 [安装指南](安装指南.md) · [其他信息](其他信息.md) · [更新信息 (或查看BILIBILI分P)](CHANGELOG.md)
-<br>
-[Next Version Preview](#preview) · [下版本预览](#preview)
+
 
 An archive terminal for listening: Swiss typography, a monochrome palette with one accent colour, and a sci-fi layer —
 your albums as rendered specimen cases on shelves, a Möbius signal ring that pulses with the music, synced lyrics
