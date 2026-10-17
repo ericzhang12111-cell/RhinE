@@ -59,17 +59,67 @@ function trLyrics(h) {
 // the translation settings changed (MENU): load the lyrics again without the old translation
 onMessage("lyrics-translate", () => { if (T.handle) { T.lyrics = null; npChanged(false, T.handle); } });
 
+// The lyrics source, the switch at the right of the LYRICS MONITOR row (and the same four in the MENU): AUTO keeps the
+// original priority, LOCAL never goes online, LRCLIB and NETEASE are fixed sources and the only ones used while they are
+// on (the file is not read at all). Kept in the settings like the other view options; the current track is read again, so
+// the change shows at once. This panel is the only sender, so `send` does not come back to it (NotifyOthers skips the
+// sender) and the reload below is not run twice.
+function setLyricsSource(v) {
+    const p = pickLyricsSource(v);
+    if (p === STATE.lyricsSource) return;
+    STATE.lyricsSource = p;
+    send("lyrics-source", p);   // frame.js saves it and broadcasts the state
+    if (T.handle) { T.lyrics = null; npChanged(false, T.handle); }
+    clock.wake(); window.Repaint();
+}
+// changed in another panel (the MENU): apply it here too and read the track again
+onMessage("lyrics-source", v => {
+    STATE.lyricsSource = pickLyricsSource(v);
+    if (T.handle) { T.lyrics = null; npChanged(false, T.handle); }
+    clock.wake(); window.Repaint();
+});
+// the translation source changed in the MENU (lib/translate.js reads it): drop what the old one added and translate again
+onMessage("lyrics-trans", () => {
+    if (T.handle) { T.lyrics = null; npChanged(false, T.handle); }
+    clock.wake(); window.Repaint();
+});
+// The translation source, from the state chip's menu (the chip's TR / MT is its doing). Kept the same way as the lyrics
+// source; like it, this panel is the only sender, so the reload is not run twice.
+function setLyricsTrans(v) {
+    const p = pickLyricsTrans(v);
+    if (p === STATE.lyricsTrans) return;
+    STATE.lyricsTrans = p;
+    send("lyrics-trans", p);   // frame.js saves it and broadcasts the state
+    if (T.handle) { T.lyrics = null; npChanged(false, T.handle); }
+    clock.wake(); window.Repaint();
+}
+// the state chip's menu: the same four as MENU › Audio Archive › Translate lyrics, at the chip
+function lyricsTransMenu(x, y) {
+    const m = window.CreatePopupMenu();
+    LYR_TRANS.forEach(([, name], i) => m.AppendMenuItem(0, 1 + i, tr(name)));
+    m.CheckMenuRadioItem(1, LYR_TRANS.length, 1 + Math.max(0, LYR_TRANS.findIndex(([k]) => k === STATE.lyricsTrans)));
+    const id = m.TrackPopupMenu(x, y, 0);
+    if (id > 0 && id <= LYR_TRANS.length) setLyricsTrans(LYR_TRANS[id - 1][0]);
+}
+
 function npChanged(same, h, what) {
     if (what === "cover") { dirty.card = true; window.Repaint(); return; }
     if (!h) T.lyrics = null;
     else if (!same) {
-        T.lyrics = loadLyrics(h);
+        // AUTO (the default): lyrics found online replace none, or plain (unsynced) ones from the file, so synced lyrics
+        // follow the song. LRCLIB and NETEASE are fixed sources and the only ones allowed to supply lyrics while they
+        // are on: the file's are not used at all, so what the switch says is what is shown. When they have nothing the
+        // panel reports no lyrics instead of quietly falling back to the file.
+        const src = STATE.lyricsSource, fixed = lyrFixed();
+        T.lyrics = fixed ? null : loadLyrics(h);
         trLyrics(h);
-        // lyrics found online replace none, or plain (unsynced) ones from the file: synced lyrics follow the song
+        LYR.src = "";   // a new track: no source has been asked yet (the notice names whichever one is, see drawLyricsView)
         const unsynced = () => !T.lyrics || T.lyrics.synced === false;
-        const found = L => { if (sameHandle(h) && unsynced()) { T.lyrics = L; lyrIdx = -1; LYR_SCROLL.n = 0; dirty.left = true; trLyrics(h); clock.wake(); window.Repaint(); } };
-        // LRCLIB first; when it has none, NetEase (lib/translate.js; only when that source is on)
-        if (unsynced()) lyricsOnline(h, found, () => neteaseLyrics(h, L => { if (sameHandle(h)) { LYR.state = ""; found(L); } }));
+        const found = L => { if (sameHandle(h) && (fixed || unsynced())) { T.lyrics = L; lyrIdx = -1; LYR_SCROLL.n = 0; dirty.left = true; trLyrics(h); clock.wake(); window.Repaint(); } };
+        // LRCLIB first; only under AUTO does NetEase follow it (lib/translate.js; which source is on is lyrLrclib/lyrNetease)
+        const ne = () => neteaseLyrics(h, L => { if (sameHandle(h)) { LYR.state = ""; found(L); } });
+        if (lyrLrclib()) lyricsOnline(h, found, () => { if (src === "auto") ne(); });
+        else if (lyrNetease()) ne();
         lyrIdx = -1; LYR_SCROLL.n = 0;
         waveLoad(h, () => { if (STATE.view === "signal") window.Repaint(); });
         clock.wake();
@@ -141,11 +191,8 @@ onMessage("state", () => {
     if (visible()) { loadTrack(); clock.wake(); }
     window.Repaint();
 });
-let lyricsWasOnline = STATE.lyricsOnline;
-onMessage("state", () => {
-    if (STATE.lyricsOnline && !lyricsWasOnline && T.handle && !T.lyrics) npChanged(false, T.handle);
-    lyricsWasOnline = STATE.lyricsOnline;
-});
+// (no transition watcher on STATE.lyricsSource: setLyricsSource above and the "lyrics-source" message cover every change,
+// so watching the broadcast as well would read the track twice and start the same lookup a second time)
 // the transport's cover and the Playlists view's profile card ask to inspect the playing album
 onMessage("inspect", () => inspectRequest());
 onMessage("library?", () => { if (LIB.live) send("library", { files: LIB.tracks, albums: LIB.albums.length }); });
@@ -208,9 +255,15 @@ function drawLyricsView(gr) {
         lines: [[tr("NO TRACK LOADED"), 0], [tr("OUTPUT · IDLE"), 0]], tone: C["fg-soft"] });
     else if (T.lyrics) drawLyrics(gr, g);
     else {
-        const online = tr(!STATE.lyricsOnline ? "OFF" : LYR.state || "NOT FOUND"), searching = LYR.state === "SEARCHING";
-        drawAlert(gr, g, { head: [tr("SYSTEM NOTICE"), tr("LYRICS · 03")], title: tr(searching ? "SEARCHING" : "NO LYRICS"), wait: tr(searching ? "QUERYING LRCLIB" : "AWAITING INPUT"),
-            lines: [[tr("LRC FILE · NOT FOUND"), 0], [tr("LYRICS TAG · NOT FOUND"), 0], [`LRCLIB · ${online}`, searching ? 1 : 0], [tr("PLAYBACK CONTINUES"), 1]] });
+        // the source actually being asked, not the configured one: under AUTO it moves from LRCLIB to NetEase
+        const srcName = tr(LYR.src === "NETEASE" ? "NETEASE" : "LRCLIB");
+        const online = tr(!lyrOnline() ? "OFF" : LYR.state || "NOT FOUND"), searching = LYR.state === "SEARCHING";
+        // what the notice lists is what was actually looked at: a fixed source only its own lookup, LOCAL only the file
+        // and the tag (it never goes online, so a "LRCLIB · OFF" line described something that was never tried), AUTO both
+        const file = [[tr("LRC FILE · NOT FOUND"), 0], [tr("LYRICS TAG · NOT FOUND"), 0]];
+        const remote = [[`${srcName} · ${online}`, searching ? 1 : 0]], done = [[tr("PLAYBACK CONTINUES"), 1]];
+        const lines = lyrFixed() ? [...remote, ...done] : lyrOnline() ? [...file, ...remote, ...done] : [...file, ...done];
+        drawAlert(gr, g, { head: [tr("SYSTEM NOTICE"), tr("LYRICS · 03")], title: tr(searching ? "SEARCHING" : "NO LYRICS"), wait: tr(searching ? "QUERYING {0}" : "AWAITING INPUT", srcName), lines });
     }
 }
 
@@ -218,13 +271,23 @@ function drawLyricsView(gr) {
 const LF_ST = { head: { size: 9, weight: 600, track: .16 }, tiny: { size: 8, weight: 500, track: .14 } };
 function drawLyricsFrame(gr, g) {
     for (const [x, y] of [[g.x0 + dp(16), dp(16)], [g.x1 - dp(27), dp(16)], [g.x0 + dp(16), H - dp(27)], [g.x1 - dp(27), H - dp(27)]]) regCross(gr, x, y);
-    // ■ LYRICS MONITOR · 03   [LRC · SYNCED]                                                      06 LINES · 2 LANG
+    // ■ LYRICS MONITOR · 03   [LRC · SYNCED]
+    //                                                        SOURCE [AUTO | LOCAL | LRCLIB | NETEASE]
     const L = T.lyrics, playing = fb.IsPlaying && !fb.IsPaused, lx = g.x0 + dp(40), ty = dp(30);
     gr.FillSolidRect(lx, ty + dp(2), dp(5), dp(5), C.fg);
     const lw = label(gr, tr("LYRICS MONITOR  ·  03"), st(LF_ST.head, C.fg), lx + dp(15), ty - dp(2));
     const state = T.missing ? tr("FAULT") : !T.info ? tr("STANDBY") : L ? `${tr(L.source)} · ${tr(L.synced === false ? "UNSYNCED" : !L.translated ? "SYNCED" : L.translated === "netease" ? "TR" : "MT")}` : tr("NO LYRICS");
-    chip(gr, state, lx + dp(15) + lw + dp(14), dp(24), dp(18), L && playing ? "acc" : "inv", 8.5, C.bg);
-    if (L) label(gr, tr("{0} LINES  ·  {1} LANG", pad(L.lines.length, 2), L.langs), st(LF_ST.tiny, C["text-muted"]), g.x1 - dp(40), ty, 2);
+    const cx0 = lx + dp(15) + lw + dp(14), cw = chip(gr, state, cx0, dp(24), dp(18), L && playing ? "acc" : "inv", 8.5, C.bg);
+    // The state chip opens the translation source menu (its TR / MT is that setting's doing); the lyrics source is the
+    // switch below it. Both are drawn before the early return below, so they stay reachable while the panel reports
+    // NO LYRICS too: that is when the source is most likely to be changed. The line / language count the row used to
+    // carry sits on the status line under the lyrics now (drawLyrics).
+    hits.add("lyr-trans", cx0, dp(24), cw, dp(18));
+    if (hover && hover.id === "lyr-trans") box(gr, cx0, dp(24), cw, dp(18), C.accent);
+    // A second line, not the head row: the four values are wider than the room left beside the chip, so on a narrow
+    // window the switch and the chip would collide. At dp(46) its plate runs 42..72 — against the chip's bottom (42) and
+    // just above the crop marks (dp(72)) — so the two only have to clear each other vertically.
+    segToggle(gr, g.x1 - dp(40), dp(46), "SOURCE", LYR_SOURCES, STATE.lyricsSource, "lyr-source");
     if (!L || T.missing || !T.info) return;
     // crop marks around the lines
     const pitch = dp(58), bx0 = Math.round(g.cx - g.cw / 2 - dp(24)), bx1 = Math.round(g.cx + g.cw / 2 + dp(24));
@@ -422,7 +485,11 @@ function drawLyrics(gr, g) {
     gr.PopClip();
     const trNote = TR.state ? `  ·  ${tr(TR_STATE_TEXT[TR.state] || TR.state)}` : T.lyrics.translated ? `  ·  ${tr("TRANSLATED")} · ${tr(T.lyrics.translated.toUpperCase())}` : "";
     const where = scrolled ? `  ·  ${tr("CLICK A LINE TO PLAY FROM IT")}` : "", plainNote = synced ? "" : `  ·  ${tr("UNSYNCED")}`;
-    label(gr, `${tr("LYRICS")} / ${tr(T.lyrics.source)}  ·  ${tr("LINE {0} OF {1}", pad(i + 1, 2), pad(L.length, 2))}${scrolled ? where : plainNote + trNote}`, st(ST.key, C["text-muted"]), cx, H - dp(46), 1);
+    // the line count is already in "LINE {0} OF {1}", so only how many languages the text carries is added (it moved
+    // here from the LYRICS MONITOR row, which needed the room for the source switch)
+    // a single language is "1 LANGUAGE", as the Signal view's read-out already puts it
+    const langNote = `  ·  ${tr(T.lyrics.langs > 1 ? "{0} LANGUAGES" : "{0} LANGUAGE", T.lyrics.langs)}`;
+    label(gr, `${tr("LYRICS")} / ${tr(T.lyrics.source)}  ·  ${tr("LINE {0} OF {1}", pad(i + 1, 2), pad(L.length, 2))}${langNote}${scrolled ? where : plainNote + trNote}`, st(ST.key, C["text-muted"]), cx, H - dp(46), 1);
 }
 
 // a warning pop-up: a framed window with a filled title strip and a hatched drop shadow; inside, the triangle, the title
@@ -532,6 +599,8 @@ function on_mouse_lbtn_up(x, y) {
     else if (a.id === "folder") openFolder(T.handle);
     else if (a.id === "pager") { if (a.data === 0) fb.Prev(); else if (a.data === 2) fb.Next(); }
     else if (a.id === "queue") plman.ExecutePlaylistDefaultAction(a.data.pl, a.data.index);
+    else if (a.id === "lyr-source") setLyricsSource(a.data);
+    else if (a.id === "lyr-trans") lyricsTransMenu(a.x, a.y + a.h);
     else if (a.id === "lyric" && T.lyrics && T.lyrics.lines[a.data] && T.lyrics.lines[a.data].t != null && fb.IsPlaying) { LYR_SCROLL.n = 0; fb.PlaybackTime = T.lyrics.lines[a.data].t; }
     else if (a.id === "trace" && fb.IsPlaying && fb.PlaybackLength > 0) fb.PlaybackTime = clamp((x - a.x) / a.w, 0, 1) * fb.PlaybackLength;
 }

@@ -18,12 +18,16 @@ const TR_STATE_TEXT = { TRANSLATING: "TRANSLATING…", QUOTA: "TRANSLATION QUOTA
                         OFFLINE: "TRANSLATION OFFLINE", FAILED: "TRANSLATION FAILED" };
 
 // SYSTEM_LANG (Windows' display language) comes from lib/i18n.js
-// target: a TR_TARGETS code or "off"; community: NetEase (lyrics and Chinese translations); machine: machine translation
+// source: the translation source (LYR_TRANS in lib/bus.js): "off", "netease" (the community translations, Chinese),
+// "machine" or "auto" (community first, machine when it has none). community/machine are derived from it, so the one
+// choice in MENU › Translate lyrics drives both; target is the language to translate into, provider the machine service.
 function trSettings() {
     const target = getSetting("lyricsTarget", SYSTEM_LANG), provider = getSetting("trProvider", "mymemory");
-    return { target: target === "off" || TR_TARGETS.some(t => t[0] === target) ? target : SYSTEM_LANG,
-             community: !!getSetting("lyricsNetease", SYSTEM_LANG.startsWith("zh")),
-             machine: !!getSetting("lyricsTranslate", false),
+    const source = pickLyricsTrans(STATE.lyricsTrans || defaultLyricsTrans());
+    return { source,
+             target: TR_TARGETS.some(t => t[0] === target) ? target : SYSTEM_LANG,
+             community: source === "netease" || source === "auto",
+             machine: source === "machine" || source === "auto",
              provider: TR_PROVIDERS.some(p => p[0] === provider) ? provider : "mymemory" };
 }
 
@@ -300,15 +304,21 @@ function applyCommunity(L, c) {
     return n;
 }
 
-// lyrics from NetEase for a track that has none elsewhere (with its translation when the reader wants Chinese)
+// lyrics from NetEase for a track that has none elsewhere (with its translation when the reader wants Chinese). Which
+// lyrics source is on decides this (lib/bus.js lyrNetease), not the translation source: NetEase is a lyrics provider
+// here, so turning the translation off must not take its lyrics away.
 function neteaseLyrics(handle, onFound) {
     const S = trSettings();
-    if (!S.community || !STATE.lyricsOnline) return;
-    neteaseFetch(handle, c => {
-        if (!c) return;
-        const zh = S.target !== "off" && S.target.startsWith("zh");
+    if (!lyrNetease()) return;
+    // src/state: the no-lyrics notice names the source actually being asked, and under AUTO it moves from LRCLIB to
+    // NetEase once LRCLIB has nothing
+    LYR.src = "NETEASE"; LYR.state = "SEARCHING";
+    neteaseFetch(handle, (c, why) => {
+        // a track that could not be reached is reported as offline, the way the LRCLIB lookup reports it, not as a miss
+        if (!c) { LYR.state = why === "OFFLINE" ? "OFFLINE" : "NOT FOUND"; return; }
+        const zh = S.community && S.target.startsWith("zh");   // the translation under each line follows the other axis
         const lines = neteaseLines(c, zh);
-        if (!lines.length) return;
+        if (!lines.length) { LYR.state = "NOT FOUND"; return; }
         const two = lines.some(l => l.b);
         onFound({ lines, source: "NETEASE", langs: two ? 2 : 1, translated: two ? "netease" : "" });
     });
@@ -317,12 +327,13 @@ function neteaseLyrics(handle, onFound) {
 // ---------------------------------------------------------------------------------------------------------- entry
 // Adds translations (line.b) to single-language lyrics L of `handle`: the community translation when the reader wants
 // Chinese, else (or when there is none) machine translation if it is on. onUpdate() runs when they arrive or the state
-// changes. Lyrics with two languages already, or in the reader's language, are left as they are.
+// changes. Lyrics with two languages already, or in the reader's language, are left as they are. The translation source
+// is its own setting, so what the file (or LRCLIB) has as its words can carry the NetEase translation.
 function translateLyrics(handle, L, onUpdate) {
     const gen = ++TR.gen;
     TR.state = "";
     const S = trSettings();
-    if (S.target === "off" || !L || L.langs > 1 || !handle) return;
+    if (S.source === "off" || !L || L.langs > 1 || !handle) return;
     const texts = [...new Set(L.lines.map(l => l.a).filter(a => a && /\S/.test(a)))];
     if (!texts.length) return;
     const src = detectLang(texts);

@@ -21,7 +21,11 @@ STATE.reduce = getSetting("reduceMotion", false);
 STATE.boot = getSetting("bootSelfTest", true);
 STATE.skin = getSetting("caseSkin", SKIN_DEFAULT);
 STATE.grain = getSetting("grain", true);
-STATE.lyricsOnline = getSetting("lyricsOnline", true);
+migrateLyricsSettings();   // a settings file from before the lyrics source / translation split (see below)
+STATE.lyricsSource = pickLyricsSource(getSetting("lyricsSource", "auto"));
+STATE.lyricsTrans = pickLyricsTrans(getSetting("lyricsTrans", defaultLyricsTrans()));
+// the permission the AUTO fallback needs; migrateLyricsSettings() above carries it over from lyricsNetease
+STATE.lyricsNeteaseAuto = !!getSetting("lyricsNeteaseAuto", SYSTEM_LANG.startsWith("zh"));
 STATE.textScale = pickScale(+getSetting("textScale", 1), TEXT_SCALES);
 STATE.arrayScale = pickScale(+getSetting("arrayScale", 1), ARRAY_SCALES);
 setTextScale(STATE.textScale);   // the root panel's own copy: the Playlists view's column widths follow it
@@ -35,9 +39,27 @@ RELOAD_ON_LANG = false;   // see lib/bus.js
 const P = {};          // child name -> PanelObject
 let ready = false;
 
-const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, reduce: STATE.reduce, boot: STATE.boot, skin: STATE.skin, grain: STATE.grain, lyricsOnline: STATE.lyricsOnline,
+const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, reduce: STATE.reduce, boot: STATE.boot, skin: STATE.skin, grain: STATE.grain,
+                                   lyricsSource: STATE.lyricsSource, lyricsTrans: STATE.lyricsTrans, lyricsNeteaseAuto: STATE.lyricsNeteaseAuto,
                                    textScale: STATE.textScale, arrayScale: STATE.arrayScale, inspectScale: STATE.inspectScale, floor: STATE.floor, wallpaper: STATE.wallpaper,
                                    halftone: STATE.halftone, halftoneLevel: STATE.halftoneLevel });
+
+// One-off: settings written before this change kept three switches for the lyrics (lyricsOnline, lyricsNetease,
+// lyricsTranslate). They map onto lyricsSource and lyricsTrans, and lyricsNeteaseAuto keeps the permission the old
+// lyricsNetease carried for the AUTO fallback. The old keys stay in the file, where an older version still reads them.
+// Runs once: with lyricsSource already present there is nothing to do.
+function migrateLyricsSettings() {
+    if (String(getSetting("lyricsSource", "") || "")) return;
+    const online = getSetting("lyricsOnline", true) !== false, machine = !!getSetting("lyricsTranslate", false);
+    const community = !!getSetting("lyricsNetease", SYSTEM_LANG.startsWith("zh"));
+    const target = String(getSetting("lyricsTarget", SYSTEM_LANG) || SYSTEM_LANG);
+    const trans = target === "off" ? "off" : community ? (machine ? "auto" : "netease") : machine ? "machine" : "off";
+    setSetting("lyricsSource", online ? "auto" : "local");
+    setSetting("lyricsTrans", trans);
+    setSetting("lyricsNeteaseAuto", community);   // what the old lyricsNetease allowed, for the AUTO fallback
+    if (target === "off") setSetting("lyricsTarget", SYSTEM_LANG);   // the target language no longer carries the "off"
+    console.log(`audio-archive lyrics: migrated to source=${online ? "auto" : "local"}, trans=${trans}, neteaseAuto=${community}`);
+}
 
 // The layout creates the children in CHILDREN order and that is their z-order, so GetPanelByIndex(i) is CHILDREN[i].
 // They may not exist yet on the root's first on_size, so look again (briefly) until they are all there.
@@ -229,7 +251,8 @@ onMessage("reduce", setReduce);
 onMessage("boot-play", () => { if (ready && !fx) startBoot(); });
 onMessage("skin", id => { if (id && id !== STATE.skin) { STATE.skin = String(id); setSetting("caseSkin", STATE.skin); broadcast(); } });
 onMessage("boot", on => { STATE.boot = !!on; setSetting("bootSelfTest", STATE.boot); broadcast(); });
-onMessage("lyrics-online", on => { STATE.lyricsOnline = !!on; setSetting("lyricsOnline", STATE.lyricsOnline); broadcast(); });
+onMessage("lyrics-source", v => { STATE.lyricsSource = pickLyricsSource(v); setSetting("lyricsSource", STATE.lyricsSource); broadcast(); });
+onMessage("lyrics-trans", v => { STATE.lyricsTrans = pickLyricsTrans(v); setSetting("lyricsTrans", STATE.lyricsTrans); broadcast(); });
 onMessage("text-scale", v => { STATE.textScale = pickScale(+v, TEXT_SCALES); setSetting("textScale", STATE.textScale); setTextScale(STATE.textScale); broadcast(); layout(); });
 onMessage("inspect-scale", v => { STATE.inspectScale = pickScale(+v, INSPECT_SCALES); setSetting("inspectScale", STATE.inspectScale); broadcast(); });
 onMessage("array-scale", v => { STATE.arrayScale = pickScale(+v, ARRAY_SCALES); setSetting("arrayScale", STATE.arrayScale); broadcast(); });

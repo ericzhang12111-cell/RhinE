@@ -1,7 +1,8 @@
 ﻿"use strict";
 // Synced lyrics: an .lrc file next to the track (same name) or an embedded LYRICS / SYNCEDLYRICS /
 // UNSYNCEDLYRICS tag that contains LRC time stamps; failing both, LRCLIB (lrclib.net, an open database of synced
-// lyrics) when "Fetch lyrics online" is on. Two lines with the same time stamp are the original and its translation.
+// lyrics) when the lyrics source asks for it (lib/bus.js lyrLrclib: AUTO or LRCLIB). Two lines with the same time stamp
+// are the original and its translation.
 // Result: { lines: [{ t, a, b }], source: "LRC" | "TAG" | "LRCLIB", langs: 1 | 2 } or null.
 
 function parseLrc(text) {
@@ -93,14 +94,14 @@ function lyricIndex(lines, t) {
 const LYR_DIR = fb.ProfilePath + "audio-archive-cache\\lyrics\\";
 const LYR_MISS_DAYS = 7;
 const TF_LYR = fb.TitleFormat("[%artist%]\u0001[%title%]\u0001[%album%]");
-const LYR = { state: "", key: "", step: "", req: null };   // state: "" | SEARCHING | NOT FOUND | OFFLINE (the current track's)
+const LYR = { state: "", key: "", step: "", req: null, src: "" };   // state: "" | SEARCHING | NOT FOUND | OFFLINE (the current track's); src: the source being asked (LRCLIB | NETEASE), for the no-lyrics notice
 const lyrQuery = o => Object.entries(o).filter(([, v]) => v !== "").map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
 
 // starts an online lookup for `handle` (with no lyrics of its own); onFound(lyrics) runs when synced lyrics arrive,
 // onMiss() when LRCLIB has none (another source may then be asked)
 function lyricsOnline(handle, onFound, onMiss = () => {}) {
-    LYR.state = ""; LYR.req = null;
-    if (!handle || !STATE.lyricsOnline || !(handle.Length > 0)) return;
+    LYR.state = ""; LYR.req = null; LYR.src = "LRCLIB";
+    if (!handle || !lyrLrclib() || !(handle.Length > 0)) return;
     const [artist, title, album] = TF_LYR.EvalWithMetadb(handle).split("\u0001").map(v => v.trim());
     if (!title) return;   // a track with no artist tag is searched for by its title alone (see lyricsDownloaded)
     const key = fnv(`${artist}|${title}|${album}|${Math.round(handle.Length)}`).toLowerCase(), base = LYR_DIR + key;

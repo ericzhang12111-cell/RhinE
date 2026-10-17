@@ -8,7 +8,8 @@
 
 const BUS = "audio-archive";
 const BUS_HANDLERS = {};
-const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, skin: "white", grain: true, lyricsOnline: true,
+const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, skin: "white", grain: true,
+                lyricsSource: "auto", lyricsTrans: "off", lyricsNeteaseAuto: false,
                 textScale: 1, arrayScale: 1, inspectScale: 1.3, wallpaper: null, halftone: "bottom", halftoneLevel: "mid" };
 
 // text size, Array scale and inspection size: the choices offered in MENU › Audio Archive and the Style view (frame.js keeps the value)
@@ -25,6 +26,33 @@ const pickFloor = v => FLOORS.some(f => f[0] === v) ? v : "plain";
 const HALFTONES = [["off", "OFF"], ["bottom", "BOTTOM"], ["corner", "CORNER"]], HALFTONE_LEVELS = [["low", "FAINT"], ["mid", "MEDIUM"], ["high", "STRONG"]];
 const pickHalftone = v => HALFTONES.some(f => f[0] === v) ? v : "bottom";
 const pickHalftoneLevel = v => HALFTONE_LEVELS.some(f => f[0] === v) ? v : "mid";
+// Where the lyrics come from — the switch at the right of the Lyrics view's LYRICS MONITOR row, and the same four in the
+// MENU. AUTO keeps the original priority: what the file has wins (a synced .lrc or tag), the online lookup filling in
+// only a track with none, or with plain (unsynced) text, LRCLIB first and NetEase when it has nothing. The others are
+// fixed sources: LOCAL never goes online, LRCLIB and NETEASE are the only source used while they are on (the file is not
+// read at all, so a miss is a miss)
+const LYR_SOURCES = [["auto", "AUTO"], ["local", "LOCAL"], ["lrclib", "LRCLIB"], ["netease", "NETEASE"]];
+const pickLyricsSource = v => LYR_SOURCES.some(s => s[0] === v) ? v : "auto";
+// Where the translation under each line comes from (MENU › Translate lyrics). Independent of the lyrics source, so the
+// file's or LRCLIB's words can carry the NetEase community translation: OFF, that community translation (Chinese), the
+// machine services, or AUTO (community first, machine when it has none).
+const LYR_TRANS = [["off", "Off"], ["netease", "NetEase community"], ["machine", "Machine translation"], ["auto", "Automatic"]];
+const pickLyricsTrans = v => LYR_TRANS.some(s => s[0] === v) ? v : "off";
+// the translation a settings file with no lyricsTrans gets: the community translation on a Chinese Windows (where NetEase
+// is useful), nothing elsewhere (machine translation was off by default)
+const defaultLyricsTrans = () => SYSTEM_LANG.startsWith("zh") ? "netease" : "off";
+// which online sources the chosen lyrics source allows: AUTO is LRCLIB first and NetEase when it has nothing, the fixed
+// ones are themselves, LOCAL is neither
+const lyrOnline = () => STATE.lyricsSource !== "local";
+const lyrLrclib = () => STATE.lyricsSource === "auto" || STATE.lyricsSource === "lrclib";
+// a fixed source is the one that supplies the lyrics, so the file's are not used at all with it: a switch labelled
+// LRCLIB that quietly showed the local .lrc read as the switch not having taken effect (stage.js)
+const lyrFixed = () => STATE.lyricsSource === "lrclib" || STATE.lyricsSource === "netease";
+// NetEase also needs the reader to have allowed it: the fixed NETEASE source is an explicit choice, but the AUTO
+// fallback is not, and it sends the track's artist, title and length to music.163.com. lyricsNeteaseAuto carries that
+// permission, with the old lyricsNetease default (on for a Chinese Windows, off elsewhere), so AUTO does not start
+// contacting NetEase for everyone.
+const lyrNetease = () => STATE.lyricsSource === "netease" || (STATE.lyricsSource === "auto" && !!STATE.lyricsNeteaseAuto);
 const pickScale = (v, list) => list.reduce((a, b) => Math.abs(b - v) < Math.abs(a - v) ? b : a, 1);
 
 function send(type, data = null) { window.NotifyOthers(BUS, JSON.stringify({ type, data })); }
