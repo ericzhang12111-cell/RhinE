@@ -60,6 +60,7 @@ const AR = {
     skipInst: getSetting("skipInstrumentals", false) === true,   // play albums without their instrumentals (lib/playlists.js)   // the titles on the cases' top edges (the context menu)
     hoverMode: HOVER_MODES.includes(getSetting("caseHover", "outline")) ? getSetting("caseHover", "outline") : "outline",   // the case under the mouse: outlined, titled or left as is (the context menu)
     hoverPlate: null,   // the case to label this frame (hoverMode "label"): drawn after the shelf, over its neighbours
+    hoverRow: -1,       // the shelf (row index) of the case under the mouse (AR.hover): the selected one or any other
 };
 let ARCHIVE_ON = false;
 const PICK = { steps: null, t: 0, after: false };   // RANDOM PICK's run (see randomPick)
@@ -219,6 +220,17 @@ function moveAlbum(d) {
     r.scroll.to = scrollTarget(sel, g);
     selectionChanged();
 }
+// a case clicked on another shelf: that shelf becomes the selected one, with the case selected on it
+function selectCase(gi, i) {
+    const g = arRows()[gi];
+    if (!g || !g.albums[i] || AR.inspOn || AR.insp > 0) return;
+    AR.group = gi;
+    AR.ticks.clear();
+    const r = rowState(gi);
+    r.sel = i;
+    r.scroll.to = scrollTarget(i, g);
+    selectionChanged();
+}
 function moveGroup(d) {
     const gi = clamp(AR.group + d, 0, arRows().length - 1);
     if (gi === AR.group || AR.inspOn || AR.insp > 0) return;
@@ -372,12 +384,12 @@ function archiveUpdate(dt) {
         const active = gi === AR.group, [i0, i1] = caseWindow(r, G[gi]);
         for (const i of [...r.cases.keys()]) if (i < i0 || i > i1) r.cases.delete(i);
         for (let i = i0; i <= i1; i++) {
-            const t = caseTargets(i, r, active, G[gi]);
+            const t = caseTargets(i, r, active, G[gi], gi === AR.hoverRow ? AR.hover : -1);
             let c = r.cases.get(i);
-            if (!c) { c = { lift: Spring(t.lift, 13), clear: Spring(t.clear, 8), gap: Spring(t.gap, 11) }; r.cases.set(i, c); }
-            c.lift.to = t.lift; c.lift.w = active ? 13 : 7; c.clear.to = t.clear; c.gap.to = t.gap;
-            const m1 = stepSpring(c.lift, dt), m2 = stepSpring(c.clear, dt), m3 = stepSpring(c.gap, dt);
-            more = more || m1 || m2 || m3;
+            if (!c) { c = { lift: Spring(t.lift, 13), clear: Spring(t.clear, 8), gap: Spring(t.gap, 11), hov: Spring(t.hov, 14) }; r.cases.set(i, c); }
+            c.lift.to = t.lift; c.lift.w = active ? 13 : 7; c.clear.to = t.clear; c.gap.to = t.gap; c.hov.to = t.hov;
+            const m1 = stepSpring(c.lift, dt), m2 = stepSpring(c.clear, dt), m3 = stepSpring(c.gap, dt), m4 = stepSpring(c.hov, dt);
+            more = more || m1 || m2 || m3 || m4;
         }
     }
     // album index marks
@@ -434,13 +446,15 @@ function stepInspection(dt) {
     return true;
 }
 // hover: the case under the mouse, which lifts its neighbours a little (-1: none, as for the cases' resting places)
-function caseTargets(i, r, active, row, hover = AR.hover) {
+function caseTargets(i, r, active, row, hover = -1) {
     const d = slotOf(row, i) - slotOf(row, r.sel), bell = Math.exp(-d * d / 4.5) - .32 * Math.exp(-d * d / 18), hd = i - hover;
-    const hov = active && hover >= 0 ? .5 * Math.exp(-hd * hd / 2.2) : 0, isSel = active && i === r.sel;
+    const hov = hover >= 0 ? Math.exp(-hd * hd / 2.2) : 0, isSel = active && i === r.sel;
     return {
-        lift: (active ? 1.1 : .65) * bell + hov + (isSel ? 1.35 : 0),
+        lift: (active ? 1.1 : .65) * bell + .5 * hov + (isSel ? 1.35 : 0),
         clear: isSel ? 1 : 0,
         gap: active ? (i > r.sel ? .55 : i < r.sel ? -.25 : 0) : 0,
+        // how near the mouse the case is (1 under it, its neighbours less), for its title on a shelf that hides them
+        hov,
     };
 }
 
@@ -797,7 +811,7 @@ function drawArchive(gr) {
         for (const it of items) {
             const [sx, sy] = toScreen(it);
             if (it.rail) { drawRailSlot(gr, it, sx, sy, k, aw); continue; }
-            if (it.active) it.rest = toScreen({ x: it.x, y: it.yr, z: it.zr });
+            it.rest = toScreen({ x: it.x, y: it.yr, z: it.zr });
             selItem = drawArrayCase(gr, it, sx, sy, k, aw, I) || selItem;
         }
         drawLip(gr, row, gi, r, x, toScreen, k);
@@ -851,13 +865,16 @@ function drawArrayCase(gr, it, sx, sy, k, aw, I) {
     // the spine labels belong to the selected shelf: they fade with its place as a shelf moves into it or out of it
     const la = Math.round(alpha * selness(it.pos));
     if (la > 0) drawSpineLabel(gr, meta.label, ox, oy, k, it.a.no, la);
-    const ta = Math.round(alpha * readable(f));
-    if (AR.topTitles && ta > 0) drawTopTitle(gr, it.a, ox, oy, k, ta, f);
-    // the whole case (front face and top edge) at its resting place answers the mouse; the one under it is outlined
-    if (it.active) {
+    // the top title: as its shelf shows them, and on the case under the mouse and its neighbours on any shelf (unless
+    // CASE UNDER THE MOUSE is NOTHING), less tinted the nearer the mouse, so a case on a shelf behind can be read
+    const hv = AR.hoverMode === "none" ? 0 : clamp(it.c.hov.x, 0, 1), ta = Math.round(alpha * Math.max(readable(f), hv));
+    if (AR.topTitles && ta > 0) drawTopTitle(gr, it.a, ox, oy, k, ta, f * (1 - hv));
+    // the whole case (front face and top edge) at its resting place answers the mouse, on every shelf in view (a case
+    // on another shelf switches to it); the one under it is outlined
+    if (alpha > 0) {
         const P = casePoly(), rx = it.rest[0] - meta.origin[0] * k, ry = it.rest[1] - meta.origin[1] * k;
-        AR.hits.push({ i: it.i, quad: P.map(([px, py]) => [rx + px * k, ry + py * k]) });
-        const hovered = it.i === AR.hover && !it.isSel && AR.insp === 0;
+        AR.hits.push({ i: it.i, gi: it.gi, quad: P.map(([px, py]) => [rx + px * k, ry + py * k]) });
+        const hovered = it.i === AR.hover && it.gi === AR.hoverRow && !it.isSel && AR.insp === 0;
         if (hovered && AR.hoverMode === "label") AR.hoverPlate = { a: it.a, ox, oy, k, alpha };
         if (hovered && AR.hoverMode === "outline") gr.DrawPolygon(withAlpha(C.accent, alpha / 255), Math.max(HAIR, dp(1.5)), P.flatMap(([px, py]) => [ox + px * k, oy + py * k]));
     }
@@ -1435,18 +1452,19 @@ function archiveMouseMove(x, y, a) {
         window.RepaintRect(infoX() - dp(20), 0, W - infoX() + dp(20), H);
     }
     if (AR.layout === "grid") return gridMouseMove(x, y, a);
-    let h = -1;
-    if (!AR.inspOn && x < arrayW() && !a) for (let j = AR.hits.length - 1; j >= 0; j--) if (inQuad(x, y, AR.hits[j].quad)) { h = AR.hits[j].i; break; }
+    // the case under the mouse, on any shelf: the shelves are drawn back to front, so the nearest one's is found first
+    let h = -1, hg = -1;
+    if (!AR.inspOn && x < arrayW() && !a) for (let j = AR.hits.length - 1; j >= 0; j--) if (inQuad(x, y, AR.hits[j].quad)) { h = AR.hits[j].i; hg = AR.hits[j].gi; break; }
     let ht = -1;
     if (a && a.id === "ar-ruler" && AR.rulerGeom) { const R = AR.rulerGeom; ht = clamp(Math.round((x - R.x0) / R.step + R.s0), 0, R.n - 1); }
-    if (h !== AR.hover || ht !== AR.hoverTick) { AR.hover = h; AR.hoverTick = ht; clock.wake(); }
+    if (h !== AR.hover || hg !== AR.hoverRow || ht !== AR.hoverTick) { AR.hover = h; AR.hoverRow = hg; AR.hoverTick = ht; clock.wake(); }
     return h >= 0;
 }
 function archiveMouseLeave() {
     if (AR.infoHover >= 0 || AR.rateHover) { AR.infoHover = -1; AR.rateHover = null; AR.dirtyInfo = true; window.Repaint(); }
     if (GRID.hover) { GRID.hover = null; window.Repaint(); }
     if (AR.rulerDrag) return;   // a drag along the album index goes on outside the panel
-    if (AR.hover >= 0 || AR.hoverTick >= 0) { AR.hover = -1; AR.hoverTick = -1; clock.wake(); }
+    if (AR.hover >= 0 || AR.hoverTick >= 0) { AR.hover = AR.hoverRow = -1; AR.hoverTick = -1; clock.wake(); }
 }
 function archiveClick(x, y, a) {
     if (a && a.id === "ar-pick") { randomPick(); return; }
@@ -1480,6 +1498,7 @@ function archiveClick(x, y, a) {
         }
     }
     if (AR.layout === "grid") { gridClick(x, y, a); return; }
+    if (AR.hover >= 0 && AR.hoverRow !== AR.group) { selectCase(AR.hoverRow, AR.hover); return; }
     if (AR.hover >= 0) {
         const r = AR.rows.get(AR.group);
         if (AR.hover === r.sel) { AR.inspOn = true; inspectImages(); clock.wake(); }
