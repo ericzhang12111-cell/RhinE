@@ -3,9 +3,9 @@
 //   tracks  where "favStore" in the settings says (Archive context menu › Favourites saved in):
 //             jsplitter  JSplitter's own statistics database, %jsplitter_loved%: no file is written (the default)
 //             tag        a LOVED tag (1) in the files themselves, which other players and taggers can read
-//   albums  their keys (lib/album.js albumKey) in the settings file, "favAlbums" (a list, so not a panel property):
-//           nothing is written to the music files
-// A track is among the favourites when it has the heart or its album does; the FAVOURITES group in the Archive and the
+//   albums  their keys (lib/album.js albumKey; a folder case's, folderKeyOf, likewise) in the settings file,
+//           "favAlbums" (a list, so not a panel property): nothing is written to the music files
+// A track is among the favourites when it has the heart or its album (or folder) does; the FAVOURITES group in the Archive and the
 // "Archive · Favourites" playlist both follow that. H gives (or takes) the playing, else focused, track's heart from any view
 // (globalKey in lib/bus.js). A change is sent as "fav" so every panel reads the hearts again.
 
@@ -53,8 +53,8 @@ function favTracks(all) {
     const out = fb.CreateHandleList();
     if (!all || !all.Count) return out;
     const f = favFlags(all), albums = favAlbums();
-    const keys = albums.size ? TF_ALBUM_KEY.EvalWithMetadbs(all).map(v => { const [al, p] = v.split("\u0001"); return albumKeyOf(al, p); }) : [];
-    for (let i = 0; i < all.Count; i++) if (f[i] || (albums.size && albums.has(keys[i]))) out.Add(all[i]);
+    const keys = albums.size ? TF_ALBUM_KEY.EvalWithMetadbs(all).map(v => { const [al, p] = v.split("\u0001"); return [albumKeyOf(al, p), folderKeyOf(p)]; }) : [];
+    for (let i = 0; i < all.Count; i++) if (f[i] || (albums.size && (albums.has(keys[i][0]) || albums.has(keys[i][1])))) out.Add(all[i]);
     out.OrderByFormat(TF_FAV_ORDER, 1);
     return out;
 }

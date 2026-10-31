@@ -7,14 +7,16 @@
 // the library has loaded) and then from the library worker (js/workers/library.js), which runs one batched
 // title-format pass on its own thread; library changes re-run it after a short pause and only changed rows are
 // written. Albums are grouped by genre, decade, artist initial or not at all, and sorted within each group by artist,
-// title, year or date added. SHOW TRACKS lists every track as its own item instead (LIB.unit), with its album's cover.
+// title, year or date added. SHOW TRACKS lists every track as its own item instead (LIB.unit), with its album's cover;
+// SHOW FOLDERS one item per folder, its tracks whatever their album tags (a downloaded playlist is one case), and GROUP
+// › FOLDER puts each case on the shelf of the folder it lies in.
 // Covers: 256 px thumbnails (512 px on a screen scaled above 125 %, where the cases draw them larger) with a blurred
 // 48 px copy, made by the worker and cached on disk; at most THUMB_MAX are kept in memory (least recently drawn go
 // first).
 
 const LIB = { albums: [], groups: [], live: false, gen: 0, tracks: 0, ms: null, source: "library",
               groupBy: getSetting("archiveGroup", "genre"), sortBy: getSetting("archiveSort", "artist"),
-              unit: getSetting("archiveUnit", "albums"), items: [], albumMap: new Map() };
+              unit: getSetting("archiveUnit", "albums"), items: [], albumMap: new Map(), folders: [], folderMap: new Map(), groupsVer: 0 };
 const LIB_LISTENERS = [];   // fn(kind): "catalog" when the albums or groups changed, "cover" when a thumbnail arrived
 const LIB_DB = fb.ProfilePath + "audio-archive-cache\\library.db";
 const THUMB_PX = SCALE > 1.25 ? 512 : 256;
@@ -180,7 +182,7 @@ function libMessage(m) {
     if (m.type === "catalog") {
         LIB.live = true; LIB.tracks = m.tracks; LIB.ms = m.ms;
         thumbPending.clear(); thumbAsked = "";
-        setAlbums(m.albums, m.items);
+        setAlbums(m.albums, m.items, m.folders);
         send("library", { files: m.tracks, albums: m.albums.length });
         console.log(`audio-archive library: ${m.tracks} tracks, ${m.albums.length} albums, index ${m.ms.index.toFixed(0)} ms, cache ${m.ms.cache.toFixed(0)} ms (${m.written} rows)`);
     } else if (m.type === "cover") {
@@ -191,37 +193,47 @@ function libMessage(m) {
     }
 }
 
-// albums (and, once the worker has run, one item per track: they carry their album's number)
-function setAlbums(albums, items = []) {
+// albums (and, once the worker has run, one item per track: they carry their album's number; and one per folder: a
+// folder that has cases further down holds the tracks left loose in it, and its case says so)
+function setAlbums(albums, items = [], folders = []) {
     albums.forEach(a => { a.no = 1 + parseInt(fnv(a.key), 16) % 9999; });
     LIB.albums = albums;
     LIB.albumMap = new Map(albums.map(a => [a.key, a]));
     items.forEach(t => { const a = LIB.albumMap.get(t.album); t.no = a ? a.no : 0; });
     LIB.items = items;
+    folders.forEach(f => { f.no = 1 + parseInt(fnv(f.key), 16) % 9999; if (f.loose) f.title = tr("{0} · LOOSE TRACKS", f.name); });
+    LIB.folders = folders;
+    LIB.folderMap = new Map(folders.map(f => [f.key, f]));
     groupAlbums();
 }
 
-const GROUP_BY = [["genre", "GENRE"], ["decade", "DECADE"], ["artist", "A–Z"], ["favourites", "FAV"], ["none", "NONE"]];
+const GROUP_BY = [["genre", "GENRE"], ["decade", "DECADE"], ["artist", "A–Z"], ["folder", "FOLDER"], ["favourites", "FAV"], ["none", "NONE"]];
 const SORT_BY = [["artist", "ARTIST"], ["title", "TITLE"], ["year", "YEAR"], ["added", "ADDED"]];
-const GROUP_LABEL = { genre: "GENRE", decade: "DECADE", artist: "ARTIST", favourites: "FAVOURITES", none: "ALL" };
-// a group's name as shown: the fixed ones and decades translated, genres as they are tagged
-const groupName = g => /^\d{3}0S$/.test(g) ? tr("{0}S", g.slice(0, 4)) : tr(g);
+const GROUP_LABEL = { genre: "GENRE", decade: "DECADE", artist: "ARTIST", folder: "FOLDER", favourites: "FAVOURITES", none: "ALL" };
+// a group's name as shown: the fixed ones and decades translated, genres as they are tagged, folders as they are named
+const groupName = g => LIB.groupBy === "folder" ? g || tr("UNKNOWN") : /^\d{3}0S$/.test(g) ? tr("{0}S", g.slice(0, 4)) : tr(g);
 function setGroupBy(by) {
     if (by === LIB.groupBy || !GROUP_LABEL[by]) return;
     LIB.groupBy = by;
     setSetting("archiveGroup", by);
     groupAlbums();
 }
-// ALBUMS or TRACKS: what the archive's cases and tiles stand for
+// ALBUMS, TRACKS or FOLDERS: what the archive's cases and tiles stand for
+const UNITS = [["albums", "ALBUMS"], ["tracks", "TRACKS"], ["folders", "FOLDERS"]];
 function setUnit(u) {
-    if (u === LIB.unit || (u !== "albums" && u !== "tracks")) return;
+    if (u === LIB.unit || !UNITS.some(([k]) => k === u)) return;
     LIB.unit = u;
     setSetting("archiveUnit", u);
     groupAlbums();
 }
-const showTracks = () => LIB.unit === "tracks" && LIB.items.length > 0;
-const unitWord = n => tr(showTracks() ? (n === 1 ? "{0} TRACK" : "{0} TRACKS") : n === 1 ? "{0} ALBUM" : "{0} ALBUMS", fmtCount(n));
-// the album a track item belongs to (an album is its own)
+// the unit shown: tracks and folders once the worker has listed them (the cache holds the albums only)
+const itemUnit = () => LIB.unit === "tracks" && LIB.items.length ? "tracks" : LIB.unit === "folders" && LIB.folders.length ? "folders" : "albums";
+const showTracks = () => itemUnit() === "tracks";
+const UNIT_WORDS = { albums: ["{0} ALBUM", "{0} ALBUMS"], tracks: ["{0} TRACK", "{0} TRACKS"], folders: ["{0} FOLDER", "{0} FOLDERS"] };
+const unitWord = n => tr(UNIT_WORDS[itemUnit()][n === 1 ? 0 : 1], fmtCount(n));
+// the key of the item a track is in as the unit chosen lists them: the track's own, its folder's or its album's
+const itemKeyOf = h => !h ? "" : LIB.unit === "tracks" ? `t|${h.Path.toLowerCase()}|${h.SubSong}` : LIB.unit === "folders" ? folderKeyOf(h.Path) : albumKey(h);
+// the album a track item belongs to (an album or a folder is its own)
 const albumOf = a => a && a.album ? LIB.albumMap.get(a.album) || null : a;
 function setSortBy(by) {
     if (by === LIB.sortBy || !SORT_BY.some(([k]) => k === by)) return;
@@ -264,40 +276,49 @@ const filteredCount = () => LIB.groups.reduce((n, g) => n + g.albums.length, 0);
 
 // groups: [{ name, albums }], sorted by name with the catch-all group last; each album also gets its group's name
 // (a.grp), which the archive's shelves (several groups on one shelf) show. By favourites (lib/favourite.js): an album
-// with the heart or with a track that has it, a track with the heart or on an album that has it, then the others.
+// or folder with the heart or with a track that has it, a track with the heart or on an album that has it, then the
+// others; an item in a folder with the heart too. By folder: the folders in path order, on each the loose tracks'
+// case first.
 function groupAlbums() {
     const by = LIB.groupBy, map = new Map();
     const words = LIB.filter ? LIB.filter.split(/\s+/) : null;
     const fav = by === "favourites" ? favFlags(libHandles) : null, idx = a => a.idx || [];   // (no idx before the worker has run)
-    const inFav = a => a.album ? !!fav[idx(a)[0]] || isFavAlbum(a.album) : isFavAlbum(a.key) || idx(a).some(i => fav[i]);
-    for (const a of showTracks() ? LIB.items : LIB.albums) {
+    const dirFav = fav && libHandles && [...favAlbums()].some(k => k.startsWith(FOLDER_KEY));
+    const inDir = a => dirFav && idx(a).length > 0 && isFavAlbum(folderKeyOf(libHandles[idx(a)[0]].Path));
+    const inFav = a => (a.album ? !!fav[idx(a)[0]] || isFavAlbum(a.album) : isFavAlbum(a.key) || idx(a).some(i => fav[i])) || inDir(a);
+    const unit = itemUnit();
+    for (const a of unit === "tracks" ? LIB.items : unit === "folders" ? LIB.folders : LIB.albums) {
         if (words) { const t = searchText(a); if (!words.every(w => t.includes(w))) continue; }
         let g;
         if (by === "none") g = "ALL ALBUMS";
         else if (by === "decade") g = /^\d{4}$/.test(a.year) ? a.year.slice(0, 3) + "0S" : "UNDATED";
         else if (by === "artist") { const c = String(a.artist || "").trim().charAt(0).toUpperCase(); g = /[A-Z]/.test(c) ? c : /\d/.test(c) ? "0–9" : "OTHER"; }
+        else if (by === "folder") g = a.shelf || "";
         else if (fav) g = inFav(a) ? "FAVOURITES" : "OTHERS";
         else g = String(a.genre || "").trim().toUpperCase() || "UNKNOWN";
         a.grp = g;
         if (!map.has(g)) map.set(g, []);
         map.get(g).push(a);
     }
-    const last = new Set(["UNDATED", "OTHER", "OTHERS", "UNKNOWN"]), order = albumOrder(LIB.sortBy);
+    const dirs = by === "folder", last = new Set(dirs ? [] : ["UNDATED", "OTHER", "OTHERS", "UNKNOWN"]), sorted = albumOrder(LIB.sortBy);
+    const order = dirs ? (p, q) => (!p.loose - !q.loose) || sorted(p, q) : sorted;
     LIB.groups = [...map.entries()]
-        .sort(([x], [y]) => (last.has(x) - last.has(y)) || strCmp(x, y))
+        .sort(([x], [y]) => (last.has(x) - last.has(y)) || (dirs ? strCmp(lcs(x), lcs(y)) : strCmp(x, y)))
         .map(([name, albums]) => ({ name, albums: albums.sort(order) }));
+    LIB.groupsVer++;   // what was laid out from the groups (the cover grid) is out of date
     libNotify("catalog");
 }
 
-// the album's tracks in disc / track order (null until the worker has indexed the library); a track item gives its
-// album's
+// the album's tracks in disc / track order, a folder's by file name (null until the worker has indexed the library); a
+// track item gives its album's
 const TF_TRACK_ORDER = fb.TitleFormat("$num(%discnumber%,2)$num(%tracknumber%,4)%path%");
+const TF_PATH_ORDER = fb.TitleFormat("%path%|$num(%subsong%,4)");
 function albumHandles(a) {
     a = albumOf(a);
     if (!LIB.live || !a || !a.idx || !libHandles) return null;
     const list = fb.CreateHandleList();
     for (const i of a.idx) list.Add(libHandles[i]);
-    list.OrderByFormat(TF_TRACK_ORDER, 1);
+    list.OrderByFormat(a.folder ? TF_PATH_ORDER : TF_TRACK_ORDER, 1);
     return list;
 }
 const albumFirst = a => LIB.live && a && a.idx && libHandles ? libHandles[a.idx[0]] : null;

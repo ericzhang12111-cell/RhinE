@@ -285,4 +285,6 @@ I18N["zh-CN"] = {
     "SIZE": "字号", "LIBRARY": "库内作品", "■ IN YOUR LIBRARY": "■ 库中作品", "+{0} MORE": "还有 {0} 张", "NOTHING BY {0} IN THE LIBRARY": "库中没有 {0} 的作品", "Undo": "撤销", "Cut": "剪切", "Copy": "复制", "Paste": "粘贴", "Delete": "删除", "Select all": "全选",
     // 1.10.2: the frosted glass on the cases
     "GLASS": "玻璃", "Frosted glass on the cases": "外壳磨砂玻璃",
+    // 1.11: folders as cases (SHOW FOLDERS, GROUP › FOLDER)
+    "FOLDERS": "文件夹", "FOLDER": "文件夹", "{0} FOLDER": "{0} 个文件夹", "{0} FOLDERS": "{0} 个文件夹", "FOLDER GRID": "文件夹网格", "FOLDER / SELECT": "文件夹 / 选择", "Group by folder": "按文件夹分组", "Show every folder as one item": "每个文件夹显示为一项", "Favourite folder": "收藏文件夹", "{0} · LOOSE TRACKS": "{0} · 散曲", "FOLDER NO.": "文件夹编号", "PLAY FOLDER": "播放文件夹", "OPEN IN PLAYLIST": "在列表中打开", "Play folder": "播放文件夹", "Open folder in playlist": "在播放列表中打开文件夹",
 };

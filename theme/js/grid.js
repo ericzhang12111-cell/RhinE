@@ -39,7 +39,7 @@ function setLayout(l) {
 // geometry: covers of `cell` px in `cols` columns; each section is a header and its rows; y in content coordinates
 function gridGeom() {
     const aw = arrayW(), padX = dp(32), gap = dp(18), top = dp(100);
-    const key = `${aw}|${H}|${LIB.gen}|${LIB.groupBy}|${LIB.sortBy}|${LIB.unit}|${LIB.filter}|${filteredCount()}|${SCALE}|${GRID.per}`;
+    const key = `${aw}|${H}|${LIB.gen}|${LIB.groupBy}|${LIB.sortBy}|${LIB.unit}|${LIB.filter}|${LIB.groupsVer}|${SCALE}|${GRID.per}`;
     if (GRID.geo && GRID.geo.key === key) return GRID.geo;
     // the column count whose covers come closest to GRID.per on one screen (titles under covers of 80 dp and more)
     const viewH = H - top - dp(24), fit = cols => {
@@ -125,7 +125,7 @@ function drawGrid(gr) {
     if (!LIB.groups.length) { drawArchiveEmpty(gr); return; }
     if (AF.open) { drawArtistFile(gr); drawInfoLayer(gr); return; }   // artist.js
     if (GRID.reveal) { gridReveal(true); gridThumbs(); }
-    const G = gridGeom(), sy = Math.round(GRID.scroll.x), aw = G.aw, np = fb.GetNowPlaying(), playingKey = np ? albumKey(np) : "";
+    const G = gridGeom(), sy = Math.round(GRID.scroll.x), aw = G.aw, np = fb.GetNowPlaying(), playingKey = np ? itemKeyOf(np) : "";
     const selR = AR.rows.get(AR.group), selI = selR ? selR.sel : -1;
     gr.PushClip(0, G.top, aw, H - G.top);
     for (const s of G.secs) {
@@ -189,18 +189,18 @@ function drawGrid(gr) {
 }
 
 // The archive's top bar, in both layouts (a plate behind each control: the array's cases pass under them):
-//   ■ ALBUM GRID · 250 ALBUMS · BY GENRE (grid)       SHOW [ALBUMS | TRACKS]   PER PAGE [10 … 200] (grid)   LAYOUT [ARRAY | GRID]
-//   [FILTER · "word" · 12 ALBUMS ×]               GROUP [GENRE | DECADE | A–Z | NONE]   SORT [ARTIST | TITLE | YEAR | ADDED]
+//   ■ ALBUM GRID · 250 ALBUMS · BY GENRE (grid)   SHOW [ALBUMS | TRACKS | FOLDERS]   PER PAGE [10 … 200] (grid)   LAYOUT [ARRAY | GRID]
+//   [FILTER · "word" · 12 ALBUMS ×]     GROUP [GENRE | DECADE | A–Z | FOLDER | FAV | NONE]   SORT [ARTIST | TITLE | YEAR | ADDED]
 function drawArchiveBar(gr) {
     const grid = AR.layout === "grid", xr = arrayW() - dp(32), y1 = dp(22), y2 = dp(54), x0 = dp(32);
     const fw = drawFilterChip(gr, x0, grid ? y2 : y1);
     drawPickButton(gr, x0 + (fw ? fw + dp(12) : 0), grid ? y2 : y1);
     let lx = segToggle(gr, xr, y1, "LAYOUT", [["array", "ARRAY"], ["grid", "GRID"]], AR.layout, "ar-layout", true);
     if (grid) lx = segToggle(gr, lx - dp(24), y1, "PER PAGE", PER_PAGE.map(n => [n, String(n)]), GRID.per, "ar-per");
-    lx = segToggle(gr, lx - dp(24), y1, "SHOW", [["albums", "ALBUMS"], ["tracks", "TRACKS"]], showTracks() ? "tracks" : "albums", "ar-unit");
+    lx = segToggle(gr, lx - dp(24), y1, "SHOW", UNITS, itemUnit(), "ar-unit");
     if (grid) {   // the title in the room left of the toggles: with the grouping when it fits, shortened when even that does not
         const room = lx - dp(32) - (x0 + dp(14)), hs = st(GRID_ST.head, C.fg), n = filteredCount();
-        const base = `${tr(showTracks() ? "TRACK GRID" : "ALBUM GRID")}  ·  ${unitWord(n)}`, full = LIB.groupBy === "none" ? base : `${base}  ·  ${tr("BY {0}", tr(GROUP_LABEL[LIB.groupBy]))}`;
+        const base = `${tr({ albums: "ALBUM GRID", tracks: "TRACK GRID", folders: "FOLDER GRID" }[itemUnit()])}  ·  ${unitWord(n)}`, full = LIB.groupBy === "none" ? base : `${base}  ·  ${tr("BY {0}", tr(GROUP_LABEL[LIB.groupBy]))}`;
         if (room > dp(40)) {
             gr.FillSolidRect(x0, y1 + dp(10), dp(5), dp(5), C.fg);
             const t = [full, base, unitWord(n)].find(v => labelWidth(v, hs) <= room) || unitWord(n);

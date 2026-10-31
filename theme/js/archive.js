@@ -144,8 +144,9 @@ function placeSelection(key) {
     // An album or track not listed yet (a track before the worker has listed them, an album still indexing) is kept as
     // wanted and looked for again with the next catalog, until something else is selected by hand.
     const want = AR.wantKey || key;
-    // across ALBUMS / TRACKS the selection moves to the album's first track, or to the track's album
-    const alt = !want ? "" : want.startsWith("t|") ? ((LIB.items.find(t => t.key === want) || {}).album || "") : ((LIB.items.find(t => t.album === want) || {}).key || "");
+    // across ALBUMS / TRACKS / FOLDERS the selection moves to what holds the item's first track (or to that track)
+    const was = !want ? null : want.startsWith("t|") ? LIB.items.find(t => t.key === want) : want.startsWith(FOLDER_KEY) ? LIB.folderMap.get(want) : LIB.albumMap.get(want);
+    const alt = was && was.idx && libHandles && LIB.live ? itemKeyOf(libHandles[was.idx[0]]) : "";
     let at = null;
     for (const k of [want, alt, key]) if (k) for (let gi = 0; gi < R.length && !at; gi++) { const i = R[gi].albums.findIndex(a => a.key === k); if (i >= 0) at = [gi, i]; }
     AR.wantKey = at || !LIB.live ? (at ? "" : want) : "";
@@ -318,7 +319,7 @@ const sameTrack = (h, k) => !!(h && k && h.RawPath === k.RawPath && h.SubSong ==
 function albumTracks(a, max) {
     const key = `${a.key}|${LIB.live}|${max}`;
     if (AR.tracks.key === key) return AR.tracks;
-    const list = albumHandles(a), np = fb.GetNowPlaying(), own = itemTrack(a);
+    const list = albumHandles(a), np = fb.GetNowPlaying(), own = itemTrack(a), fold = !!(albumOf(a) || a).folder;   // a folder: numbered in order
     let rows = [], first = 0;
     if (list) {
         // a track item further down its album: start the window so it is in view
@@ -329,7 +330,7 @@ function albumTracks(a, max) {
         const inst = instrumentalFlags(sub);
         rows = TF_AR_TRACK.EvalWithMetadbs(sub).map((s, k) => {
             const [no, title, len] = s.split("\u0001"), i = first + k, h = list[i];
-            return { i, no: no ? pad(parseInt(no) || 0, 2) : pad(i + 1, 2), title, len: +len || 0, playing: sameTrack(h, np), own: sameTrack(h, own), inst: inst[k] };
+            return { i, no: no && !fold ? pad(parseInt(no) || 0, 2) : pad(i + 1, 2), title, len: +len || 0, playing: sameTrack(h, np), own: sameTrack(h, own), inst: inst[k] };
         });
     }
     AR.tracks = { key, rows, first, total: list ? list.Count : (albumOf(a) || a).tracks };
@@ -342,13 +343,13 @@ const TF_AR_LIST = fb.TitleFormat("[%discnumber%]\u0001[%tracknumber%]\u0001%tit
 function albumTrackList(a) {
     const key = `${a.key}|${LIB.live}|${AR.listVer}|${ratingStore()}`;
     if (AR.list && AR.list.key === key) return AR.list;
-    const list = albumHandles(a), np = fb.GetNowPlaying(), own = itemTrack(a);
+    const list = albumHandles(a), np = fb.GetNowPlaying(), own = itemTrack(a), fold = !!(albumOf(a) || a).folder;   // a folder: no discs
     let rows = [];
     if (list && list.Count) {
         const R = getRatings(list), inst = instrumentalFlags(list), F = favFlags(list);
         rows = TF_AR_LIST.EvalWithMetadbs(list).map((v, i) => {
             const [disc, no, title, len] = v.split("\u0001"), h = list[i];
-            return { i, disc: disc || "", no: no ? pad(parseInt(no) || 0, 2) : pad(i + 1, 2), title, len: +len || 0, rating: R[i] || 0,
+            return { i, disc: fold ? "" : disc || "", no: no && !fold ? pad(parseInt(no) || 0, 2) : pad(i + 1, 2), title, len: +len || 0, rating: R[i] || 0,
                      playing: sameTrack(h, np), own: sameTrack(h, own), inst: inst[i], fav: F[i] };
         });
     }
@@ -463,7 +464,7 @@ function stepInspection(dt) {
 // inspected that was not playing is left alone.
 const SWAP = { phase: "", t: 0, key: "" };
 let NP_H = fb.GetNowPlaying();   // the track that was playing (its item is worked out as the shelves list them now)
-const npItemKey = h => !h ? "" : LIB.unit === "tracks" ? `t|${h.Path.toLowerCase()}|${h.SubSong}` : albumKey(h);
+const npItemKey = itemKeyOf;
 function inspectFollow() {
     const h = fb.GetNowPlaying(), was = npItemKey(NP_H), now = npItemKey(h);
     NP_H = h;
@@ -1104,7 +1105,7 @@ function drawFilterChip(gr, x = dp(32), y = dp(22)) {
 // ALBUM / SELECT 05 / 12
 function drawSelectNumeral(gr) {
     const g = curGroup(), x = dp(24), y = H - dp(150);
-    label(gr, tr(showTracks() ? "TRACK / SELECT" : "ALBUM / SELECT"), st(AR_ST.sel, C["text-muted"]), x, y);
+    label(gr, tr({ albums: "ALBUM / SELECT", tracks: "TRACK / SELECT", folders: "FOLDER / SELECT" }[itemUnit()]), st(AR_ST.sel, C["text-muted"]), x, y);
     const f = font(56, 300), cell = Math.round(gr.CalcTextWidth("0", f, true)), h = Math.ceil(f.Height);
     const w = drawRoll(gr, AR.selRoll, f, C.fg, x - dp(3), y + dp(14), cell, h);
     gr.DrawText(`/ ${pad(g.albums.length, AR.selRoll.to.length)}`, font(16, 400), C["text-muted"], x + w + dp(12), y + dp(14) + h - dp(34), dp(120), dp(24), DT_SINGLE);
@@ -1267,10 +1268,11 @@ function drawInfoPages(gr, x, iw, h) {
     INFO_HITS.push(["ar-page", lx - dp(2), cy - dp(11), nw + dp(4), dp(22), INFO_PAGES[(at + 1) % INFO_PAGES.length][0]]);
 }
 
-// ▶ PLAY ALBUM / PLAY TRACK (inverse) · OPEN ALBUM ↗ (orange focus frame); the key that does the same (Space) is
-// printed on the button, dimmed. Returns its height.
+// ▶ PLAY ALBUM / PLAY TRACK / PLAY FOLDER (inverse) · OPEN ALBUM ↗ (orange focus frame); the key that does the same
+// (Space) is printed on the button, dimmed. Returns its height.
 function drawInfoButtons(gr, x, y, isTrack) {
-    const bh = dp(40), bs = st(AR_ST.btn, C.bg, C.fg), playTxt = tr(isTrack ? "PLAY TRACK" : "PLAY ALBUM");
+    const fold = !isTrack && !!(curAlbum() || {}).folder, openTxt = tr(fold ? "OPEN IN PLAYLIST" : "OPEN ALBUM");
+    const bh = dp(40), bs = st(AR_ST.btn, C.bg, C.fg), playTxt = tr(isTrack ? "PLAY TRACK" : fold ? "PLAY FOLDER" : "PLAY ALBUM");
     const ks = st(AR_ST.key, mix(C.bg, C.fg, .45), C.fg), kt = tr("SPACE"), kw = labelWidth(kt, ks);
     const pw = dp(14) + dp(10) + dp(10) + labelWidth(playTxt, bs) + dp(14) + kw + dp(14);
     gr.FillSolidRect(x, y, pw, bh, C.fg);
@@ -1278,11 +1280,11 @@ function drawInfoButtons(gr, x, y, isTrack) {
     label(gr, playTxt, bs, x + dp(34), y + Math.round((bh - labelHeight(AR_ST.btn)) / 2));
     label(gr, kt, ks, x + pw - dp(14) - kw, y + Math.round((bh - labelHeight(AR_ST.key)) / 2));
     INFO_HITS.push(["ar-play", x, y, pw, bh]);
-    const ox2 = x + pw + dp(10), os = st(AR_ST.btn, C.fg), ow = dp(14) + labelWidth(tr("OPEN ALBUM"), os) + dp(40) + dp(26);
+    const ox2 = x + pw + dp(10), os = st(AR_ST.btn, C.fg), ow = dp(14) + labelWidth(openTxt, os) + dp(40) + dp(26);
     if (!LABEL_LIVE) gr.FillSolidRect(ox2, y, ow, bh, C.bg);   // over the halftone (a wallpaper shows through, as before)
     box(gr, ox2, y, ow, bh, C.fg);
     box(gr, ox2 - dp(4), y - dp(4), ow + dp(8), bh + dp(8), C.accent);
-    label(gr, tr("OPEN ALBUM"), os, ox2 + dp(14), y + Math.round((bh - labelHeight(AR_ST.btn)) / 2));
+    label(gr, openTxt, os, ox2 + dp(14), y + Math.round((bh - labelHeight(AR_ST.btn)) / 2));
     const ax0 = ox2 + ow - dp(24), ay0 = y + bh / 2 + dp(5), aL = dp(9), sw = Math.max(HAIR, dp(1.5));
     gr.DrawLine(ax0, ay0, ax0 + aL, ay0 - aL, sw, C.accent);
     gr.DrawLine(ax0 + dp(2.5), ay0 - aL, ax0 + aL, ay0 - aL, sw, C.accent);
@@ -1299,12 +1301,12 @@ function drawInfoButtons(gr, x, y, isTrack) {
 
 // FILE: the album file as it always was (the first tracks, as many as fit; "+ N MORE" turns to the TRACKS page)
 function drawInfoFile(gr, a, x, y, iw, w, h) {
-    // bracketed ALBUM NO. 0269 + format chip
-    const hh = dp(34), hs = st(AR_ST.head, C.fg), lw = labelWidth(tr("ALBUM NO.") + " ", hs);
+    // bracketed ALBUM NO. 0269 (FOLDER NO. for a folder) + format chip
+    const noTxt = tr(a.folder ? "FOLDER NO." : "ALBUM NO.") + " ", hh = dp(34), hs = st(AR_ST.head, C.fg), lw = labelWidth(noTxt, hs);
     const f = font(13, 600), cell = Math.round(gr.CalcTextWidth("0", f, true) + .12 * dp(13)), bw = dp(20) + lw + cell * 4 + dp(16);
     for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) gr.FillSolidRect(x + cx * (bw - dp(5)), y + cy * (hh - dp(5)), dp(5), dp(5), C.fg);
     const ty = y + Math.round((hh - labelHeight(AR_ST.head)) / 2);
-    label(gr, tr("ALBUM NO.") + " ", hs, x + dp(20), ty);
+    label(gr, noTxt, hs, x + dp(20), ty);
     drawRoll(gr, AR.noRoll, f, C.fg, x + dp(20) + lw, ty, cell, labelHeight(AR_ST.head));
     // the format chip keeps clear of the bracket: the short form when the full one does not fit, none when neither does
     const chipW = t => labelWidth(t, { size: 9.5, weight: 600, track: .1, colour: 0, bg: 0 }) + dp(8) * 2 + dp(12);
@@ -1485,8 +1487,8 @@ function playAlbum(at) {
     plman.ExecutePlaylistDefaultAction(pl, i);
     AR.tracks.key = "";
 }
-// the playing track is this item (a track item) or on this album
-function itemPlaying(a, np = fb.GetNowPlaying()) { return !!(a && np && (a.album ? sameTrack(itemTrack(a), np) : albumKey(np) === a.key)); }
+// the playing track is this item (a track item) or on this album, or in this folder
+function itemPlaying(a, np = fb.GetNowPlaying()) { return !!(a && np && (a.album ? sameTrack(itemTrack(a), np) : (a.folder ? folderKeyOf(np.Path) : albumKey(np)) === a.key)); }
 // Inspect from elsewhere: the transport's cover and the signal profile card ask for the playing (else focused) track.
 // The Archive opens on its album (or on the track itself while SHOW TRACKS is on) and inspects it once the view is
 // shown and the item is listed; the inspection belongs to the case array, so the grid gives way to it.
@@ -1494,7 +1496,7 @@ const INSPECT_ASK = { key: "", timer: 0 };
 function inspectRequest() {
     const h = fb.GetNowPlaying() || fb.GetFocusItem();
     if (!h) return;
-    INSPECT_ASK.key = LIB.unit === "tracks" ? `t|${h.Path.toLowerCase()}|${h.SubSong}` : albumKey(h);
+    INSPECT_ASK.key = itemKeyOf(h);
     if (STATE.view !== "archive") send("view", "archive");   // the view comes back here with the next "state"
     else inspectPending(0);
 }
@@ -1670,14 +1672,15 @@ function archiveKey(vk) {
     return false;
 }
 function archiveMenu(x, y) {
-    const m = window.CreatePopupMenu(), by = ["genre", "decade", "artist", "favourites", "none"], sorts = SORT_BY.map(([k]) => k);
-    ["Group by genre", "Group by decade", "Group by artist initial", "Group by favourites", "No groups"].forEach((t, i) => m.AppendMenuItem(0, 30 + i, tr(t)));
+    const m = window.CreatePopupMenu(), by = ["genre", "decade", "artist", "folder", "favourites", "none"], sorts = SORT_BY.map(([k]) => k);
+    ["Group by genre", "Group by decade", "Group by artist initial", "Group by folder", "Group by favourites", "No groups"].forEach((t, i) => m.AppendMenuItem(0, 30 + i, tr(t)));
     m.CheckMenuRadioItem(30, 30 + by.length - 1, 30 + Math.max(0, by.indexOf(LIB.groupBy)));
     const so = window.CreatePopupMenu();
     ["Artist", "Album title", "Year", "Date added (newest first)"].forEach((t, i) => so.AppendMenuItem(0, 400 + i, tr(t)));
     so.CheckMenuRadioItem(400, 403, 400 + Math.max(0, sorts.indexOf(LIB.sortBy)));
     so.AppendTo(m, 0, tr("Sort by"));
     m.AppendMenuItem(showTracks() ? 0x8 : 0, 10, tr("Show every track as its own item"));
+    m.AppendMenuItem(itemUnit() === "folders" ? 0x8 : 0, 21, tr("Show every folder as one item"));
     m.AppendMenuSeparator();
     m.AppendMenuItem(0, 7, tr("Case array") + "\tG");
     m.AppendMenuItem(0, 8, tr("Cover grid") + "\tG");
@@ -1687,8 +1690,9 @@ function archiveMenu(x, y) {
     per.CheckMenuRadioItem(300, 300 + PER_PAGE.length - 1, 300 + Math.max(0, PER_PAGE.indexOf(GRID.per)));
     per.AppendTo(m, 0, tr("Grid: covers per page"));
     m.AppendMenuSeparator();
-    m.AppendMenuItem(curAlbum() ? 0 : 1, 9, tr("Play album"));
-    m.AppendMenuItem(curAlbum() ? 0 : 1, 5, tr("Open album in playlist"));
+    const fold = !!(curAlbum() || {}).folder;
+    m.AppendMenuItem(curAlbum() ? 0 : 1, 9, tr(fold ? "Play folder" : "Play album"));
+    m.AppendMenuItem(curAlbum() ? 0 : 1, 5, tr(fold ? "Open folder in playlist" : "Open album in playlist"));
     m.AppendMenuItem(curAlbum() ? 0 : 1, 13, tr("Open containing folder") + "\tF");
     m.AppendMenuItem(curAlbum() ? 0 : 1, 11, tr("Random pick") + "	R");
     m.AppendMenuItem(AR.topTitles ? 0x8 : 0, 12, tr("Titles on the cases' top edges"));
@@ -1699,7 +1703,7 @@ function archiveMenu(x, y) {
     m.AppendMenuItem(curAlbum() ? 0 : 1, 19, tr("Artist file") + "	I");
     ratingMenu(m, 600);
     const c = curAlbum(), cOn = !!c && (c.album ? isFav(itemTrack(c)) : isFavAlbum(c.key));
-    m.AppendMenuItem((c ? 0 : 1) | (cOn ? 0x8 : 0), 16, tr(c && c.album ? "Favourite track" : "Favourite album"));
+    m.AppendMenuItem((c ? 0 : 1) | (cOn ? 0x8 : 0), 16, tr(c && c.album ? "Favourite track" : c && c.folder ? "Favourite folder" : "Favourite album"));
     m.AppendMenuItem(0, 17, tr("Open favourites playlist"));
     favMenu(m, 700);
     const hv = window.CreatePopupMenu();
@@ -1727,6 +1731,7 @@ function archiveMenu(x, y) {
     else if (id === 15) { AR.skipInst = !AR.skipInst; setSetting("skipInstrumentals", AR.skipInst); AR.dirtyInfo = true; window.Repaint(); }
     else if (id >= 600 && ratingMenuPick(id, 600)) { AR.listVer++; AR.dirtyInfo = true; window.Repaint(); }
     else if (id === 10) setUnit(showTracks() ? "albums" : "tracks");
+    else if (id === 21) setUnit(itemUnit() === "folders" ? "albums" : "folders");
     else if (id === 5) openAlbum();
     else if (id === 6) libIndex(true);
     else if (id === 7 || id === 8) setLayout(id === 8 ? "grid" : "array");

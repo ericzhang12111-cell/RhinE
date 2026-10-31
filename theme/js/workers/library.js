@@ -3,7 +3,7 @@
 //
 //   { type: "index", gen, handles }  one batched title-format pass over the media library, grouped into albums,
 //                                    written to the SQLite cache (only rows that changed) → { type: "catalog", albums,
-//                                    items (one per track), ... }
+//                                    items (one per track), folders (one per folder), ... }
 //   { type: "covers", gen, list }    cover thumbnails for these albums, nearest first; the list replaces any earlier
 //                                    one (the panel asks only for albums it has no thumbnail for). Each thumbnail is cut square, scaled to 256 px (512 px
 //                                    when the index message asks: a high-DPI screen) and cached on disk as JPEG;
@@ -35,6 +35,16 @@ function albumDir(path) {
     return parts;
 }
 const albumKeyOf = (album, path) => album.trim().toLowerCase() + "|" + albumDir(path).join("\\").toLowerCase();
+// A folder case (SHOW FOLDERS) is the tracks right in one folder, a disc folder counting as its parent as for albums: a
+// subfolder is a case of its own and never part of its parent's, so no track is in two (lib/album.js folderKeyOf).
+const FOLDER_KEY = "\u0001f|";
+// The shelf (GROUP › FOLDER) of an album or folder case is the folder it lies in, of a track its own folder, named by
+// the path from its media library folder ("Music › A"; a case right in that folder is on its shelf). root: the
+// library folder's path parts (the drive when the track is not in the library: the playlists' contents).
+function shelfName(dir, root, own) {
+    const n = Math.min(root.length, dir.length), rest = dir.slice(n, own ? dir.length : Math.max(n, dir.length - 1));
+    return [root[root.length - 1] || "", ...rest].join(" › ");
+}
 
 // what the archive's search filter looks in: album fields plus every track's title and artists
 const TF_SEARCH = fb.TitleFormat("%title% %artist% %album artist%");
@@ -53,6 +63,14 @@ let handles = null, gen = 0;
 // title, artist, length, date added and play count, and its album's key for the cover (cover) and the album (album).
 function buildAlbums(list) {
     const rows = TF.EvalWithMetadbs(list), words = TF_SEARCH.EvalWithMetadbs(list), map = new Map(), albums = [], vals = [];
+    let rel = null;
+    try { rel = typeof list.GetLibraryRelativePaths === "function" ? list.GetLibraryRelativePaths() : null; } catch (e) { rel = null; }
+    // the media library folder of track i (its path less the path relative to it)
+    const rootOf = i => {
+        const path = vals[i][1], r = rel && rel[i] ? String(rel[i]) : "";
+        if (r && r.length < path.length && path.toLowerCase().endsWith(r.toLowerCase())) return path.slice(0, path.length - r.length).replace(/\\+$/, "").split("\\");
+        return path.split("\\").slice(0, 1);
+    };
     for (let i = 0; i < rows.length; i++) {
         const v = rows[i].split("\u0001"), key = albumKeyOf(v[0], v[1]);
         vals.push(v);
@@ -61,7 +79,7 @@ function buildAlbums(list) {
             const dir = albumDir(v[1]);
             a = { key, artist: "", title: v[0].trim() || dir[dir.length - 1] || "", genre: "", year: "", codec: v[6], bits: +v[7] || 0,
                   rate: +v[8] || 0, kbps: +v[9] || 0, lossless: v[10] === "1", tracks: 0, length: 0, discs: 1, added: "", plays: 0,
-                  idx: [], text: "", aa: "", artists: new Map() };
+                  idx: [], text: "", aa: "", artists: new Map(), shelf: shelfName(dir, rootOf(i), false) };
             map.set(key, a);
             albums.push(a);
         }
@@ -94,10 +112,35 @@ function buildAlbums(list) {
         tracks.push({ key: "t|" + v[1].toLowerCase() + "|" + v[17], cover: a.key, album: a.key, albumTitle: a.title, title,
                       artist: v[3].trim() || a.artist, genre: a.genre, year: v[5] || a.year, codec: v[6], bits: +v[7] || 0, rate: +v[8] || 0,
                       kbps: +v[9] || 0, lossless: v[10] === "1", tracks: 1, length: Math.round(+v[11] || 0), discs: 1, added: v[13],
-                      plays: +v[14] || 0, ord: (parseInt(v[12]) || 1) * 1000 + (parseInt(v[16]) || 0), idx: [i],
+                      plays: +v[14] || 0, ord: (parseInt(v[12]) || 1) * 1000 + (parseInt(v[16]) || 0), idx: [i], shelf: shelfName(albumDir(v[1]), rootOf(i), true),
                       text: `${title} ${v[3]} ${a.title} ${a.artist} ${a.genre} ${v[5] || a.year} ${words[i]}`.toLowerCase() });
     }
-    return { albums, tracks };
+    // the folder cases, put together from the albums (an album lies in one folder): one artist when all its albums have
+    // the same, else Various Artists; the cover its first album's
+    const fmap = new Map(), folders = [];
+    for (const a of albums) {
+        const dir = albumDir(vals[a.idx[0]][1]), key = FOLDER_KEY + dir.join("\\").toLowerCase();
+        let f = fmap.get(key);
+        if (!f) {
+            f = { key, folder: true, name: dir[dir.length - 1] || "", title: dir[dir.length - 1] || "", cover: a.key, artist: a.artist, genre: "",
+                  year: "", codec: a.codec, bits: a.bits, rate: a.rate, kbps: a.kbps, lossless: a.lossless, tracks: 0, length: 0, discs: 1,
+                  added: "", plays: 0, idx: [], text: "", shelf: a.shelf };
+            fmap.set(key, f);
+            folders.push(f);
+        }
+        if (f.artist !== a.artist) f.artist = "Various Artists";
+        if (!f.genre) f.genre = a.genre;
+        if (a.year && (!f.year || a.year < f.year)) f.year = a.year;
+        if (a.added && (!f.added || a.added < f.added)) f.added = a.added;
+        f.tracks += a.tracks; f.length += a.length; f.plays += a.plays;
+        for (const i of a.idx) f.idx.push(i);
+        f.text += " " + a.text;
+    }
+    // a folder with a case further down holds the tracks left loose in it (the panel names its case so)
+    for (const k of fmap.keys()) {
+        for (let j = k.lastIndexOf("\\"); j > FOLDER_KEY.length; j = k.lastIndexOf("\\", j - 1)) { const up = fmap.get(k.slice(0, j)); if (up) up.loose = true; }
+    }
+    return { albums, tracks, folders };
 }
 
 // writes the albums that changed since the last run; returns the number of rows written or removed
@@ -189,9 +232,9 @@ onmessage = function (event) {
         if (m.thumb === 512 || m.thumb === 256) { THUMB = m.thumb; COVER_DIR = THUMB === 256 ? BARE_DIR : CACHE_DIR + `covers-${THUMB}\\`; }
         queue = [];
         if (m.fresh) fresh = true;
-        const { albums, tracks } = buildAlbums(handles), t1 = performance.now();
+        const { albums, tracks, folders } = buildAlbums(handles), t1 = performance.now();
         const written = writeCache(albums);
-        postMessage({ type: "catalog", gen, albums, items: tracks, tracks: handles.Count, ms: { index: t1 - t0, cache: performance.now() - t1 }, written });
+        postMessage({ type: "catalog", gen, albums, items: tracks, folders, tracks: handles.Count, ms: { index: t1 - t0, cache: performance.now() - t1 }, written });
         warm = albums.map(a => ({ key: a.key, i: a.idx[0], gen, warm: true }));
         pump();
     } else if (m.type === "covers") {

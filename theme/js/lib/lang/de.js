@@ -285,4 +285,6 @@ I18N["de"] = {
     "SIZE": "GRÖSSE", "LIBRARY": "BESTAND", "■ IN YOUR LIBRARY": "■ IM BESTAND", "+{0} MORE": "+{0} WEITERE", "NOTHING BY {0} IN THE LIBRARY": "NICHTS VON {0} IM BESTAND", "Undo": "Rückgängig", "Cut": "Ausschneiden", "Copy": "Kopieren", "Paste": "Einfügen", "Delete": "Löschen", "Select all": "Alles auswählen",
     // 1.10.2: the frosted glass on the cases
     "GLASS": "GLAS", "Frosted glass on the cases": "Mattglas auf den Hüllen",
+    // 1.11: folders as cases (SHOW FOLDERS, GROUP › FOLDER)
+    "FOLDERS": "ORDNER", "FOLDER": "ORDNER", "{0} FOLDER": "{0} ORDNER", "{0} FOLDERS": "{0} ORDNER", "FOLDER GRID": "ORDNERRASTER", "FOLDER / SELECT": "ORDNER / AUSWAHL", "Group by folder": "Nach Ordner gruppieren", "Show every folder as one item": "Jeden Ordner als ein Element zeigen", "Favourite folder": "Lieblingsordner", "{0} · LOOSE TRACKS": "{0} · EINZELTITEL", "FOLDER NO.": "ORDNER NR.", "PLAY FOLDER": "ORDNER ABSPIELEN", "OPEN IN PLAYLIST": "IN WIEDERGABELISTE", "Play folder": "Ordner abspielen", "Open folder in playlist": "Ordner in Wiedergabeliste öffnen",
 };

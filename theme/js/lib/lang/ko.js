@@ -285,4 +285,6 @@ I18N["ko"] = {
     "SIZE": "크기", "LIBRARY": "보유 작품", "■ IN YOUR LIBRARY": "■ 보유 작품", "+{0} MORE": "외 {0}장", "NOTHING BY {0} IN THE LIBRARY": "라이브러리에 {0}의 작품이 없습니다", "Undo": "실행 취소", "Cut": "잘라내기", "Copy": "복사", "Paste": "붙여넣기", "Delete": "삭제", "Select all": "모두 선택",
     // 1.10.2: the frosted glass on the cases
     "GLASS": "유리", "Frosted glass on the cases": "케이스 반투명 유리",
+    // 1.11: folders as cases (SHOW FOLDERS, GROUP › FOLDER)
+    "FOLDERS": "폴더", "FOLDER": "폴더", "{0} FOLDER": "폴더 {0}개", "{0} FOLDERS": "폴더 {0}개", "FOLDER GRID": "폴더 그리드", "FOLDER / SELECT": "폴더 / 선택", "Group by folder": "폴더별 그룹", "Show every folder as one item": "폴더마다 하나로 표시", "Favourite folder": "즐겨찾는 폴더", "{0} · LOOSE TRACKS": "{0} · 낱곡", "FOLDER NO.": "폴더 번호", "PLAY FOLDER": "폴더 재생", "OPEN IN PLAYLIST": "목록에서 열기", "Play folder": "폴더 재생", "Open folder in playlist": "폴더를 재생목록에서 열기",
 };

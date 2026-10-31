@@ -105,11 +105,12 @@ Running it again keeps the foobar2000 folder and installs the theme again.
 | Archive: frosted glass on the cases not selected (their covers blurred) or clear glass on every case | right-click › `Frosted glass on the cases`, or `GLASS` under `DISPLAY` › `ARCHIVE` in `05 STYLE` (frosted by default) | — |
 | Archive: inspect the album | click the selected case; while the playing album is inspected, the next album that plays slides in (showing `TRACKS`: the next track) | `Enter`; `Esc` or click to return |
 | Archive: play / open the album | `PLAY ALBUM` / `OPEN ALBUM` | `Space` plays (or pauses it if it is playing); `Enter` while inspecting opens |
-| Archive: group by genre, decade, artist initial, favourites or none | `GROUP` in the Archive's top bar (`FAV` puts the favourites first), or right-click | — |
+| Archive: group by genre, decade, artist initial, folder, favourites or none | `GROUP` in the Archive's top bar (`FAV` puts the favourites first; `FOLDER` puts each case on the shelf of the folder it lies in, named by its path from the media library folder), or right-click | — |
 | Archive: sort albums by artist, title, year or date added | `SORT` in the Archive's top bar, or right-click | — |
 | Archive: next shelf (behind, on the left) / previous shelf (in front) | `← SHELF 04 / 31 →` under the array, or `Shift` + wheel (a sideways wheel too; in the grid it jumps a section) | `←` `→` |
 | Archive: pick an album from the index under the shelf | hover it to see the album's name; click, or hold and drag along it and release | — |
-| Archive: every track as its own case / tile (with its album's cover) | `SHOW [ALBUMS | TRACKS]` in the Archive's top bar, or right-click | — |
+| Archive: every track as its own case / tile (with its album's cover) | `SHOW [ALBUMS | TRACKS | FOLDERS]` in the Archive's top bar, or right-click | — |
+| Archive: every folder as one case / tile, whatever the album tags in it (a playlist downloaded into one folder is one case) | `SHOW` › `FOLDERS` in the Archive's top bar, or right-click › `Show every folder as one item`. A case holds the tracks right in its folder (a `CD1` / `Disc 2` folder counts as its parent); a subfolder is a case of its own, and the tracks left loose beside subfolders make the case `<folder> · LOOSE TRACKS` | — |
 | Archive: play a track | click it in the album file's track list (the album plays from there) | — |
 | Archive: play albums without their instrumentals (Instrumental, Off Vocal, Inst., Karaoke, カラオケ, 伴奏 …) | right-click › `Play albums without instrumentals`; the album file shows the ones left out greyed, and a track you click by name still plays | — |
 | Playlists: remove the instrumentals | right-click the playlist in the manager › `Remove instrumentals (N)`; *Edit › Undo* puts them back | — |
@@ -213,7 +214,8 @@ of components you installed, in windows of their own.
 
 **Archive view.** Every album of the media library is one case (or, with `SHOW TRACKS`, every track, with its album's
 cover). An album is the tracks with the same album tag in the same folder (a `CD2` / `Disc 1` folder counts as its
-parent), so tracks with guest artists stay together. The cases stand on shelves of 20: the groups (genre, decade,
+parent), so tracks with guest artists stay together. With `SHOW FOLDERS` a case is a folder instead: the tracks right
+in it, whatever their album tags. The cases stand on shelves of 20: the groups (genre, decade,
 artist initial or none) follow one another, so every shelf is full; `SORT` orders them by artist, title, year or date
 added. Each shelf keeps its own selection. The file on the right lists the album's tracks: click one to play the album
 from there. Its second page (the two dots at its bottom, or `L`) lists every track with its rating, so a large library

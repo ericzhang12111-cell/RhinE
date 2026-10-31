@@ -28,6 +28,15 @@ function albumKeyOf(album, path) {
     if (parts.length > 1 && DISC_DIR.test(parts[parts.length - 1])) parts.pop();
     return album.trim().toLowerCase() + "|" + parts.join("\\");
 }
+// A folder case (the Archive's SHOW FOLDERS) is the tracks right in one folder, a disc folder counting as its parent
+// as above; its key cannot be an album's (js/workers/library.js has the same rule).
+const FOLDER_KEY = "\u0001f|";
+function folderKeyOf(path) {
+    const parts = String(path).toLowerCase().split("\\");
+    parts.pop();
+    if (parts.length > 1 && DISC_DIR.test(parts[parts.length - 1])) parts.pop();
+    return FOLDER_KEY + parts.join("\\");
+}
 const TF_ALBUM_KEY = fb.TitleFormat("[%album%]\u0001%path%");
 function albumKey(handle) {
     if (!handle) return "";

@@ -3,6 +3,24 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
+## Unreleased
+
+**Added · 新增**
+- Archive: folders as cases. `SHOW [ALBUMS | TRACKS | FOLDERS]` › `FOLDERS` makes every folder one case, whatever the
+  album tags in it, so a playlist downloaded into one folder is one case instead of dozens of one-track albums. A case
+  holds the tracks right in its folder (a `CD1` / `Disc 2` folder counts as its parent); a subfolder is a case of its
+  own, so no track is in two, and the tracks left loose beside subfolders make a case of their own, `<folder> · LOOSE
+  TRACKS`. `GROUP` › `FOLDER` puts every case on the shelf of the folder it lies in, named by its path from the media
+  library folder (`Music › Anime`); with `TRACKS` each folder is a shelf. Folders can have the heart too. 档案：按文件夹
+  显示。`显示 [专辑 | 曲目 | 文件夹]` › `文件夹` 让每个文件夹成为一项，不论其中的专辑标签，所以下载到同一个文件夹里的歌单是一项，
+  而不是几十张单曲专辑。一项包含直接位于该文件夹中的曲目（`CD1` / `Disc 2` 文件夹算作其上级文件夹）；子文件夹单独成为一项，
+  所以每首曲目只属于一项；与子文件夹并列的零散曲目也单独成为一项：`<文件夹> · 散曲`。`分组` › `文件夹` 把每一项放到它所在
+  文件夹的货架上，货架名是从媒体库文件夹起的路径（`Music › Anime`）；显示曲目时，每个文件夹是一个货架。文件夹也可以收藏。
+
+**Fixed · 修复**
+- Cover grid: with `GROUP` › `FAV`, taking the heart from the last favourite could stop the Archive with a script error
+  (`g is undefined`). 封面网格：按 `收藏` 分组时，取消最后一个收藏可能导致档案出现脚本错误（`g is undefined`）。
+
 ## 1.10.2 — 2026-10-26
 
 **Added · 新增**
