@@ -1,15 +1,25 @@
 {
- "version": "1.10.2",
- "tag": "v1.10.2",
- "date": "2026-10-26",
+ "version": "1.11.0",
+ "tag": "v1.11.0",
+ "date": "2026-11-02",
  "notes": {
   "en": [
-   "Archive: the frosted glass on the cases that are not selected (their covers blurred, as since 1.0) can be switched off, so every cover shows sharp: right-click the Archive › Frosted glass on the cases, or GLASS under DISPLAY › ARCHIVE in 05 STYLE.",
-   "The header no longer overlaps itself in a narrow window: the navigation drops its numbers first, then the clock and the wordmark's text give way, and at last the navigation shows only the numbers."
+   "Archive: folders as cases. SHOW [ALBUMS | TRACKS | FOLDERS] › FOLDERS makes every folder one case, whatever the album tags in it, so a playlist downloaded into one folder is one case instead of dozens of one-track albums. A case holds the tracks right in its folder (a CD1 / Disc 2 folder counts as its parent); a subfolder is a case of its own, so no track is in two, and the tracks left loose beside subfolders make a case of their own, <folder> · LOOSE TRACKS. GROUP › FOLDER puts every case on the shelf of the folder it lies in, named by its path from the media library folder (Music › Anime); with TRACKS each folder is a shelf. Folders can have the heart too.",
+   "Borderless full screen: WINDOW › BORDERLESS under DISPLAY in 05 STYLE, MENU › Audio Archive › Borderless full screen, or F11. The window loses its title bar and frame and covers the whole monitor it is on, the taskbar too; switched off, it goes back exactly where it was. It stays on at the next start until you switch it off.",
+   "Light / dark can follow Windows: MODE › SYSTEM in 05 STYLE, or MENU › Audio Archive › Follow Windows light / dark. Each switch of Windows' setting then changes the theme with its usual sweep; T or LIGHT / DARK set a fixed mode again (#46).",
+   "Factory title tags: 13 tags rendered in real materials, each in its own colours (kraft and manila card, enamelled steel, anodised aluminium, leather, carbon fibre, bamboo, brass), in all four shapes. Pick FACTORY in 05 STYLE › TITLE TAG and choose one on the right; the ones suggested for your colour scheme and case are marked. The song's title is printed the way the rest of the tag is: etched, foil-stamped, pressed or printed. The other finishes are as before.",
+   "The installer installs JSplitter 4.3.3 when it is missing (3.9.4 before). The guide no longer suggests switching to 3.9.4 for a black window: Error setting panel config means the layout did not load, so check that foobar2000 and JSplitter are both x64 and run install.cmd again (#47, thanks to @dima-lur).",
+   "Cover grid: with GROUP › FAV, taking the heart from the last favourite could stop the Archive with a script error (g is undefined).",
+   "The intro film no longer plays again when foobar2000 builds its panels anew while it runs (reported when Windows switches light / dark, #46)."
   ],
   "zh": [
-   "档案：未选中外壳的磨砂玻璃（自 1.0 起封面会被模糊）现在可以关闭，让所有封面都清晰显示：档案右键 › 外壳磨砂玻璃，或 05 外观 › 显示 › 档案 下的 玻璃。",
-   "窄窗口下顶栏不再重叠：导航先去掉编号，再依次隐藏时钟与标志文字，最后只显示编号。"
+   "档案：按文件夹显示。显示 [专辑 | 曲目 | 文件夹] › 文件夹 让每个文件夹成为一项，不论其中的专辑标签，所以下载到同一个文件夹里的歌单是一项，而不是几十张单曲专辑。一项包含直接位于该文件夹中的曲目（CD1 / Disc 2 文件夹算作其上级文件夹）；子文件夹单独成为一项，所以每首曲目只属于一项；与子文件夹并列的零散曲目也单独成为一项：<文件夹> · 散曲。分组 › 文件夹 把每一项放到它所在文件夹的货架上，货架名是从媒体库文件夹起的路径（Music › Anime）；显示曲目时，每个文件夹是一个货架。文件夹也可以收藏。",
+   "无边框全屏：05 外观 › 显示 下的 窗口 › 无边框，菜单 › Audio Archive › 无边框全屏，或按 F11。窗口去掉标题栏和边框，铺满所在的整块屏幕（包括任务栏）；关闭后回到原来的位置和大小。下次启动时仍保持无边框，直到你关闭它。",
+   "浅色 / 深色可以跟随系统：05 外观 中的 模式 › 跟随系统，或 菜单 › Audio Archive › 深浅色跟随系统。之后 Windows 每次切换浅色 / 深色，主题都会以平常的过渡动画跟着切换；按 T 或选 浅色 / 深色 会重新固定模式（#46）。",
+   "出厂标题标签：13 款以真实材质渲染、各有固定颜色的标签（牛皮纸卡、马尼拉纸卡、搪瓷钢板、阳极氧化铝、皮革、碳纤维、竹、黄铜），四种形状都有。在 05 外观 › 标题标签 中选择 出厂，再在右侧挑选；推荐搭配当前配色方案和外壳的会带标记。歌名的印法与标签其余部分一致：蚀刻、烫金、压印或印刷。其他材质不变。",
+   "缺少 JSplitter 时，安装程序改为安装 4.3.3（之前为 3.9.4）。使用说明不再建议黑屏时换用 3.9.4：Error setting panel config 表示布局没有加载成功，请确认 foobar2000 和 JSplitter 都是 x64，再运行一次 install.cmd（#47，感谢 @dima-lur）。",
+   "封面网格：按 收藏 分组时，取消最后一个收藏可能导致档案出现脚本错误（g is undefined）。",
+   "运行中的 foobar2000 重建面板时（有用户在 Windows 切换浅色 / 深色时遇到），不再重新播放开场动画（#46）。"
   ]
  }
 }
