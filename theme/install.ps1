@@ -42,9 +42,9 @@ $Components = @(
     @{ Folder = 'foo_ui_columns'; Name = 'Columns UI 3.7.0'; File = 'foo_ui_columns-3.7.0.x86-x64.fb2k-component'
        Url = 'https://github.com/reupen/columns_ui/releases/download/v3.7.0/foo_ui_columns-3.7.0.x86-x64.fb2k-component'
        Sha256 = 'f8578f01439a000df2f745d2c648e6d34cbfa3d924be8e49fe38407c5dabddb3' },
-    @{ Folder = 'foo_uie_jsplitter'; Name = 'JSplitter 3.9.4'; File = 'foo_uie_jsplitter_3.9.4.fb2k-component'
-       Url = 'https://github.com/dima-lur/jsplitter/releases/download/v3.9.4/foo_uie_jsplitter_3.9.4.fb2k-component'
-       Sha256 = '612079e4c4faa51311812fc77f71d46103cfcc4501124261db14a33825cde1b3' }
+    @{ Folder = 'foo_uie_jsplitter'; Name = 'JSplitter 4.3.3'; File = 'foo_uie_jsplitter_4.3.3.fb2k-component'
+       Url = 'https://github.com/dima-lur/jsplitter/releases/download/v4.3.3/foo_uie_jsplitter_4.3.3.fb2k-component'
+       Sha256 = 'e896a5bea2881d307f13e771e51cdc0c98341d6c0a2a3800da897dba84242f00' }
 )
 
 $zh = (Get-UICulture).Name -like 'zh*'

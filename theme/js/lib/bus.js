@@ -12,7 +12,7 @@ const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, s
                 lyricsSource: "auto", lyricsTrans: "off", lyricsNeteaseAuto: false, lyricsRoma: false,
                 textScale: 1, arrayScale: 1, inspectScale: 1.3, wallpaper: null, halftone: "bottom", halftoneLevel: "mid",
                 emblem: "ring", tag: "plastic", tagShape: "tab", tagColours: "scheme", tagCustom: null, tagOpacity: 50, tagBody: "solid", font: "geist",
-                sides: null };
+                sides: null, modeSystem: false, borderless: false };
 
 // text size, Array scale and inspection size: the choices offered in MENU › Audio Archive and the Style view (frame.js keeps the value)
 const TEXT_SCALES = [.9, 1, 1.1, 1.2, 1.35, 1.5], ARRAY_SCALES = [.8, .9, 1, 1.15, 1.3], INSPECT_SCALES = [1, 1.15, 1.3, 1.5];
@@ -148,7 +148,7 @@ function openFolder(h) {
 
 // Keys shared by every scripted panel (the focused panel receives them): 1 – 5 views, T light/dark, P playlist preset,
 // B intro film, S shuffle the library, F the playing (else focused) track's folder, H its heart (lib/favourite.js),
-// / search. A panel calls globalKey(vk) for keys it does not use itself.
+// / search, F11 borderless full screen. A panel calls globalKey(vk) for keys it does not use itself.
 function globalKey(vk) {
     if (vk === 0xBF) { startSearchFwd(); return true; }   // "/"
     // Ctrl+1–5: rate the playing (else focused) track; Ctrl+0: clear its rating (lib/rating.js)
@@ -160,6 +160,7 @@ function globalKey(vk) {
     else if (vk === 0x53) shuffleLibrary();    // S
     else if (vk === 0x46) openFolder(fb.GetNowPlaying() || fb.GetFocusItem());   // F
     else if (vk === 0x48) setFav(fb.GetNowPlaying() || fb.GetFocusItem());       // H
+    else if (vk === 0x7A) send("borderless");   // F11
     else return false;
     return true;
 }
@@ -237,6 +238,27 @@ function runSwitchMode() {
             return fb.RunMainMenuCommand(hidden[0].FullPath);
     }
     return false;
+}
+// [Light, Dark, Use system setting] of that menu (by their paths, else by the group's shape: a translated build), or null
+function modeCommands() {
+    const all = fbCommands().filter(c => c.Type === "Fixed"), en = ["Light", "Dark", "Use system setting"].map(n => all.find(c => c.FullPath === "View/Mode/" + n));
+    if (en.every(Boolean)) return en;
+    const groups = new Map();
+    for (const c of all) { const p = cmdParent(c.FullPath); groups.set(p, (groups.get(p) || []).concat([c])); }
+    for (const [p, g] of groups) {
+        const shown = g.filter(c => c.Visible);
+        if (p.split("/").length === 2 && g.length === 4 && shown.length === 3 && g.some(c => !c.Visible && !c.HiddenByDefault) && shown.some(c => c.Radio)) return shown;
+    }
+    return null;
+}
+// whether Columns UI follows Windows' light / dark setting (Use system setting is the radio item)
+const modeFollowsSystem = () => { const m = modeCommands(); return !!(m && m[2].Radio); };
+// "light", "dark" or "system": that menu's command for it
+function runModeCommand(v) { const m = modeCommands(), i = ["light", "dark", "system"].indexOf(v); return !!(m && i >= 0 && fb.RunMainMenuCommand(m[i].FullPath)); }
+// Windows' light / dark setting for apps, or "" when it cannot be read
+function windowsMode() {
+    try { return new ActiveXObject("WScript.Shell").RegRead("HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\\AppsUseLightTheme") === 0 ? "dark" : "light"; }
+    catch (e) { return ""; }
 }
 
 // View › Visualizations: foobar2000's own (Spectrum, Oscilloscope, …) and those of installed components, each opening

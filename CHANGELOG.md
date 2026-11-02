@@ -16,10 +16,29 @@ Newest version first. Download any version from [Releases](https://github.com/er
   而不是几十张单曲专辑。一项包含直接位于该文件夹中的曲目（`CD1` / `Disc 2` 文件夹算作其上级文件夹）；子文件夹单独成为一项，
   所以每首曲目只属于一项；与子文件夹并列的零散曲目也单独成为一项：`<文件夹> · 散曲`。`分组` › `文件夹` 把每一项放到它所在
   文件夹的货架上，货架名是从媒体库文件夹起的路径（`Music › Anime`）；显示曲目时，每个文件夹是一个货架。文件夹也可以收藏。
+- Borderless full screen: `WINDOW` › `BORDERLESS` under `DISPLAY` in `05 STYLE`, `MENU › Audio Archive › Borderless
+  full screen`, or `F11`. The window loses its title bar and frame and covers the whole monitor it is on, the taskbar
+  too; switched off, it goes back exactly where it was. It stays on at the next start until you switch it off.
+  无边框全屏：`05 外观` › `显示` 下的 `窗口` › `无边框`，`菜单 › Audio Archive › 无边框全屏`，或按 `F11`。窗口去掉标题栏和边框，
+  铺满所在的整块屏幕（包括任务栏）；关闭后回到原来的位置和大小。下次启动时仍保持无边框，直到你关闭它。
+- Light / dark can follow Windows: `MODE` › `SYSTEM` in `05 STYLE`, or `MENU › Audio Archive › Follow Windows light /
+  dark`. Each switch of Windows' setting then changes the theme with its usual sweep; `T` or `LIGHT` / `DARK` set a
+  fixed mode again (#46). 浅色 / 深色可以跟随系统：`05 外观` 中的 `模式` › `跟随系统`，或 `菜单 › Audio Archive › 深浅色跟随
+  系统`。之后 Windows 每次切换浅色 / 深色，主题都会以平常的过渡动画跟着切换；按 `T` 或选 `浅色` / `深色` 会重新固定模式（#46）。
+
+**Changed · 改进**
+- The installer installs JSplitter 4.3.3 when it is missing (3.9.4 before). The guide no longer suggests switching to
+  3.9.4 for a black window: *Error setting panel config* means the layout did not load, so check that foobar2000 and
+  JSplitter are both x64 and run `install.cmd` again (#47, thanks to @dima-lur). 缺少 JSplitter 时，安装程序改为安装
+  4.3.3（之前为 3.9.4）。使用说明不再建议黑屏时换用 3.9.4：*Error setting panel config* 表示布局没有加载成功，请确认
+  foobar2000 和 JSplitter 都是 x64，再运行一次 `install.cmd`（#47，感谢 @dima-lur）。
 
 **Fixed · 修复**
 - Cover grid: with `GROUP` › `FAV`, taking the heart from the last favourite could stop the Archive with a script error
   (`g is undefined`). 封面网格：按 `收藏` 分组时，取消最后一个收藏可能导致档案出现脚本错误（`g is undefined`）。
+- The intro film no longer plays again when foobar2000 builds its panels anew while it runs (reported when Windows
+  switches light / dark, #46). foobar2000 运行中重建面板时（有用户在 Windows 切换浅色 / 深色时遇到），不再重新播放开场动画
+  （#46）。
 
 ## 1.10.2 — 2026-10-26
 

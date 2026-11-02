@@ -234,14 +234,14 @@ function drawTagCard(gr, id, name, x, y, w, h) {
     hits.add("sty-tagcard", x, y, w, h, id);
 }
 
-// MODE [■ LIGHT | □ DARK], right-aligned at x
+// MODE [■ LIGHT | □ DARK | □ SYSTEM], right-aligned at x (SYSTEM: Windows' light / dark decides)
 function drawModeToggle(gr, xr, y) {
-    const items = [["light", tr("LIGHT")], ["dark", tr("DARK")]], hh = dp(22), s = st(STY_ST.tog, 0);
-    const widths = items.map(([, t]) => dp(9) + dp(5) + dp(6) + labelWidth(t, s) + dp(9)), total = widths[0] + widths[1];
+    const items = [["light", tr("LIGHT")], ["dark", tr("DARK")], ["system", tr("SYSTEM")]], hh = dp(22), s = st(STY_ST.tog, 0);
+    const widths = items.map(([, t]) => dp(9) + dp(5) + dp(6) + labelWidth(t, s) + dp(9)), total = widths.reduce((a, b) => a + b, 0);
     let x = xr - total;
     label(gr, tr("MODE"), st(STY_ST.tog, C["text-muted"]), x - dp(14), y + Math.round((hh - labelHeight(STY_ST.tog)) / 2), 2);
     items.forEach(([m, t], i) => {
-        const on = MODE === m, col = on ? C.bg : C["text-muted"];
+        const on = STATE.modeSystem ? m === "system" : MODE === m, col = on ? C.bg : C["text-muted"];
         if (on) gr.FillSolidRect(x, y, widths[i], hh, C.fg);
         toggleMark(gr, x + dp(9), y + hh / 2, on, col);
         label(gr, t, st(STY_ST.tog, col, on ? C.fg : C.bg), x + dp(20), y + Math.round((hh - labelHeight(STY_ST.tog)) / 2));
@@ -266,7 +266,7 @@ function drawIntroButton(gr, xr, y) {
 // DISPLAY: the settings that are not cards, in four groups whose rows line up (a label column, then the control):
 //   TEXT       SIZE [− 10.0 +] (typed, or stepped by 0.5; 10 is 100 %), FONT
 //   ARCHIVE    ARRAY, INSPECT, FLOOR (with REAL STYLE, the offer of its colour scheme under it), GLASS (frosted or clear)
-//   PAGE       WALLPAPER ›, HALFTONE, DOTS, EMBLEM
+//   PAGE       WALLPAPER ›, HALFTONE, DOTS, EMBLEM, WINDOW (normal, or borderless full screen)
 //   TITLE TAG  TAG SHAPE, TAG COLOURS (the custom ones under it), TAG BODY, TAG OPACITY (the finish: the cards above)
 // The groups flow into as many columns as the width takes. A row that does not apply now (DOTS with the halftone off,
 // the tag's rows with no tag) keeps its place, dimmed.
@@ -282,7 +282,8 @@ function displayGroups() {
                                    row("FLOOR", FLOORS, STATE.floor, "sty-floor"), ...(hearthOffer() ? [{ title: "", kind: "hearth" }] : []),
                                    row("GLASS", [["frost", "FROST"], ["clear", "CLEAR"]], AR.frost ? "frost" : "clear", "sty-glass")] },
         { title: "PAGE", rows: [{ title: "WALLPAPER", kind: "wallpaper" }, row("HALFTONE", HALFTONES, STATE.halftone, "sty-ht"),
-                                row("DOTS", HALFTONE_LEVELS, STATE.halftoneLevel, "sty-htl", STATE.halftone === "off"), row("EMBLEM", EMBLEMS, STATE.emblem, "sty-emblem")] },
+                                row("DOTS", HALFTONE_LEVELS, STATE.halftoneLevel, "sty-htl", STATE.halftone === "off"), row("EMBLEM", EMBLEMS, STATE.emblem, "sty-emblem"),
+                                row("WINDOW", [["window", "NORMAL"], ["borderless", "BORDERLESS"]], STATE.borderless ? "borderless" : "window", "sty-window")] },
         { title: "TITLE TAG", rows: [row("TAG SHAPE", TAG_SHAPES, STATE.tagShape, "sty-tagshape", !tagOn), row("TAG COLOURS", TAG_COLOUR_SOURCES, STATE.tagColours, "sty-tagcol", !tagRecolours()),
                                      ...(tagRecolours() && STATE.tagColours === "custom" ? [{ title: "", kind: "swatches" }] : []),
                                      row("TAG BODY", TAG_BODIES, STATE.tagBody, "sty-tagbody", !tagOn || !!TAG_SEE_KIND[STATE.tag]),
@@ -807,7 +808,8 @@ function styleClick(a) {
     else if (a.id === "sty-cc") { const [k, c] = a.data.split("|"); STY.cc = Object.assign({}, STY.cc || customCase(), { [k]: c }); window.Repaint(); }
     else if (a.id === "sty-ccpat") { STY.cc = Object.assign({}, STY.cc || customCase(), { pattern: a.data }); window.Repaint(); }
     else if (a.id === "sty-ccmake") makeCase();
-    else if (a.id === "sty-mode" && a.data !== MODE) send("mode");
+    else if (a.id === "sty-mode" && (a.data === "system" ? !STATE.modeSystem : STATE.modeSystem || a.data !== MODE)) send("mode-to", a.data);
+    else if (a.id === "sty-window" && (a.data === "borderless") !== STATE.borderless) send("borderless", a.data === "borderless");
     else if (a.id === "sty-intro") send("boot-play");
     else if (a.id === "sty-text" && a.data !== STATE.textScale) send("text-scale", a.data);
     else if (a.id === "sty-array" && a.data !== STATE.arrayScale) send("array-scale", a.data);

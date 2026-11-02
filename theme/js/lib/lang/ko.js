@@ -287,4 +287,6 @@ I18N["ko"] = {
     "GLASS": "유리", "Frosted glass on the cases": "케이스 반투명 유리",
     // 1.11: folders as cases (SHOW FOLDERS, GROUP › FOLDER)
     "FOLDERS": "폴더", "FOLDER": "폴더", "{0} FOLDER": "폴더 {0}개", "{0} FOLDERS": "폴더 {0}개", "FOLDER GRID": "폴더 그리드", "FOLDER / SELECT": "폴더 / 선택", "Group by folder": "폴더별 그룹", "Show every folder as one item": "폴더마다 하나로 표시", "Favourite folder": "즐겨찾는 폴더", "{0} · LOOSE TRACKS": "{0} · 낱곡", "FOLDER NO.": "폴더 번호", "PLAY FOLDER": "폴더 재생", "OPEN IN PLAYLIST": "목록에서 열기", "Play folder": "폴더 재생", "Open folder in playlist": "폴더를 재생목록에서 열기",
+    // 1.11: light / dark following Windows (#46), borderless full screen
+    "SYSTEM": "시스템", "Follow Windows light / dark": "라이트 / 다크를 Windows에 맞춤", "WINDOW": "창", "NORMAL": "일반", "BORDERLESS": "테두리 없음", "Borderless full screen": "테두리 없는 전체 화면",
 };

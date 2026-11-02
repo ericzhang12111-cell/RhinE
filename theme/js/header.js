@@ -410,6 +410,8 @@ function showMenu(a) {
     theme.CheckMenuRadioItem(21, 25, 21 + VIEWS.indexOf(STATE.view));
     theme.AppendMenuSeparator();
     theme.AppendMenuItem(0, 4, tr(MODE === "dark" ? "Light mode" : "Dark mode") + "\tT");
+    theme.AppendMenuItem(STATE.modeSystem ? 0x8 : 0, 17, tr("Follow Windows light / dark"));
+    theme.AppendMenuItem(STATE.borderless ? 0x8 : 0, 16, tr("Borderless full screen") + "\tF11");
     theme.AppendMenuItem(0, 5, tr("Playlist preset: {0}", tr(STATE.preset === "album" ? "Index" : "Album")) + "\tP");
     theme.AppendMenuItem(STATE.reduce ? 0x8 : 0, 6, tr("Reduce motion"));   // MF_CHECKED
     theme.AppendMenuItem(STATE.grain ? 0x8 : 0, 9, tr("Grain texture"));
@@ -483,6 +485,8 @@ function showMenu(a) {
     if (k >= 0 && managers[k]) managers[k].ExecuteByID(id - 1000 * (k + 1));
     else if (id >= 21 && id <= 25) send("view", VIEWS[id - 21]);
     else if (id === 4) send("mode");
+    else if (id === 16) send("borderless");
+    else if (id === 17) send("mode-to", STATE.modeSystem ? MODE : "system");
     else if (id === 5) send("preset");
     else if (id === 6) send("reduce", !STATE.reduce);
     else if (id === 7) send("boot", !STATE.boot);

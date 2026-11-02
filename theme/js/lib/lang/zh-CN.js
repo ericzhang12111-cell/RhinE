@@ -287,4 +287,6 @@ I18N["zh-CN"] = {
     "GLASS": "玻璃", "Frosted glass on the cases": "外壳磨砂玻璃",
     // 1.11: folders as cases (SHOW FOLDERS, GROUP › FOLDER)
     "FOLDERS": "文件夹", "FOLDER": "文件夹", "{0} FOLDER": "{0} 个文件夹", "{0} FOLDERS": "{0} 个文件夹", "FOLDER GRID": "文件夹网格", "FOLDER / SELECT": "文件夹 / 选择", "Group by folder": "按文件夹分组", "Show every folder as one item": "每个文件夹显示为一项", "Favourite folder": "收藏文件夹", "{0} · LOOSE TRACKS": "{0} · 散曲", "FOLDER NO.": "文件夹编号", "PLAY FOLDER": "播放文件夹", "OPEN IN PLAYLIST": "在列表中打开", "Play folder": "播放文件夹", "Open folder in playlist": "在播放列表中打开文件夹",
+    // 1.11: light / dark following Windows (#46), borderless full screen
+    "SYSTEM": "跟随系统", "Follow Windows light / dark": "深浅色跟随系统", "WINDOW": "窗口", "NORMAL": "普通", "BORDERLESS": "无边框", "Borderless full screen": "无边框全屏",
 };

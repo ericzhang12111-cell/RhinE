@@ -18,10 +18,11 @@ Reduce motion option. The interface is in English, Simplified Chinese, Japanese,
 - **foobar2000 v2, 64-bit** (developed on v2.26 x64). The 32-bit build shows a black window, and the installer refuses it.
 - **[Columns UI](https://github.com/reupen/columns_ui/releases)** 3.7 or later
 - **[JSplitter](https://github.com/dima-lur/jsplitter/releases)** x64: tested with 3.9.4, 4.3.1 and 4.3.3. If the window
-  stays black with *Error setting panel config* in the console, check that foobar2000 and JSplitter are both x64, then
-  try JSplitter 3.9.4.
+  stays black with *Error setting panel config* in the console, a panel did not accept its saved settings: the layout
+  did not load, whatever the JSplitter version. Check that foobar2000 and JSplitter are both x64, then run `install.cmd`
+  again so it imports the layout again.
 
-The installer installs the two components when they are missing (Columns UI 3.7.0 and JSplitter 3.9.4, from their
+The installer installs the two components when they are missing (Columns UI 3.7.0 and JSplitter 4.3.3, from their
 official GitHub releases, each checked against its SHA-256).
 
 ## What the installer does
@@ -69,7 +70,8 @@ Running it again keeps the foobar2000 folder and installs the theme again.
 | | Mouse | Key (any of the theme's panels focused) |
 |---|---|---|
 | Archive / Playlists / Lyrics / Signal / Style view | click `01` – `05` in the header | `1` – `5` |
-| Light / dark | `LIGHT` / `DARK` at the right of the transport | `T` |
+| Light / dark | `LIGHT` / `DARK` at the right of the transport; `MODE` in `05 STYLE` also offers `SYSTEM`, which follows Windows' light / dark | `T` |
+| Borderless full screen: no title bar or frame, over the whole monitor (the taskbar too) | `WINDOW` › `BORDERLESS` under `DISPLAY` in `05 STYLE`, or `MENU › Audio Archive › Borderless full screen`; it stays on at the next start until you switch it off, and the window then goes back where it was | `F11` |
 | foobar2000's Preferences | `PREFERENCES` in the header (just the gear on narrow windows) | — |
 | DSP: presets, equalizer, DSP Manager | `DSP` in the transport (it shows the active DSPs, or `OFF`) | — |
 | Visualizations (foobar2000's own and those of installed components, each in its own window) | `VISUALIZATIONS` at the top right of the Signal view | — |
@@ -153,7 +155,9 @@ it first); the native playlist keeps foobar2000's own keys.
 
 **Light and dark** are Columns UI's mode (*View › Mode*). The theme runs that command by its place in the menu, so it
 also works in translated builds of foobar2000. If the colours still do not change, a message says where to switch the
-mode. When the mode is *Use system setting*, Windows' own light / dark setting decides until you switch it in the theme.
+mode. `SYSTEM` (`MODE` in `05 STYLE`, or `MENU › Audio Archive › Follow Windows light / dark`) sets it to *Use system
+setting*: Windows' own light / dark setting then decides, and the theme follows each of its switches. `T` and
+`LIGHT` / `DARK` set a fixed mode again.
 
 ## How the views work
 
@@ -257,7 +261,8 @@ marked orange in both.
 Made by users, not part of RhinE (use them at your own judgement):
 
 - [Foobar-fullscreen](https://github.com/Tianyi-712-Luo/Foobar-fullscreen) by Tianyi-712-Luo: a small separate program
-  that shows foobar2000 borderless across the whole screen, with F11 to switch back to a window.
+  that shows foobar2000 borderless across the whole screen, with F11 to switch back to a window. (The theme now has a
+  borderless mode of its own as well: `F11`.)
 
 ## Updates
 
@@ -290,8 +295,8 @@ installed. Columns UI and JSplitter stay installed.
 
 ## Troubleshooting
 
-- **Black window, or one empty panel:** check that foobar2000 and JSplitter are both 64-bit; if it persists, switch to
-  JSplitter 3.9.4. Then run `install.cmd` again so it imports the layout again.
+- **Black window, or one empty panel:** check that foobar2000 and JSplitter are both 64-bit, then run `install.cmd`
+  again so it imports the layout again (*Error setting panel config* in the console means the layout did not load).
 - **PowerShell says scripts are blocked:** `install.cmd` runs the script with `-ExecutionPolicy Bypass`. If it is still
   blocked, run `Get-ChildItem -Recurse | Unblock-File` in the folder first.
 - **The Archive is empty, or shows "all playlists":** no media library folder yet; click `+ ADD MUSIC FOLDER`.

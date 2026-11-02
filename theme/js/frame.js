@@ -44,6 +44,7 @@ STATE.tagOpacity = pickTagOpacity(getSetting("tagOpacity", 50));
 STATE.tagBody = pickTagBody(getSetting("tagBody", "solid"));
 STATE.font = pickFont(getSetting("font", "geist"));
 STATE.sides = pickSides(getSetting("sides", null));
+STATE.borderless = getSetting("borderless", false) === true;
 REDUCE_MOTION = STATE.reduce;
 RELOAD_ON_LANG = false;   // see lib/bus.js
 const P = {};          // child name -> PanelObject
@@ -54,7 +55,7 @@ const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, 
                                    textScale: STATE.textScale, arrayScale: STATE.arrayScale, inspectScale: STATE.inspectScale, floor: STATE.floor, wallpaper: STATE.wallpaper,
                                    halftone: STATE.halftone, halftoneLevel: STATE.halftoneLevel, emblem: STATE.emblem, tag: STATE.tag,
                                    tagShape: STATE.tagShape, tagColours: STATE.tagColours, tagCustom: STATE.tagCustom, tagOpacity: STATE.tagOpacity, tagBody: STATE.tagBody, font: STATE.font,
-                                   sides: STATE.sides });
+                                   sides: STATE.sides, modeSystem: STATE.modeSystem, borderless: STATE.borderless });
 
 // One-off: settings written before this change kept three switches for the lyrics (lyricsOnline, lyricsNetease,
 // lyricsTranslate). They map onto lyricsSource and lyricsTrans, and lyricsNeteaseAuto keeps the permission the old
@@ -91,9 +92,11 @@ function findPanels(attempt = 0) {
     P.tip.Show(false);
     ready = true;
     restoreLook();
+    readModeSystem();
+    if (STATE.borderless) applyWindow();
     // the boot covers the window before anything else is laid out (the panels have already drawn once by now: foobar2000
     // shows its window before any script runs, and JSplitter does not keep a child panel's visibility across restarts)
-    if (STATE.boot && !REDUCE_MOTION) startBoot(); else P.fx.Show(false);
+    if (STATE.boot && !REDUCE_MOTION && !rebuilt()) startBoot(); else P.fx.Show(false);
     layout();
     broadcast();
 }
@@ -214,6 +217,49 @@ function toggleMode() {
     if (fx && fx.kind === "mode") return;
     if (!startFx("mode")) switchMode();
 }
+// LIGHT, DARK or SYSTEM (05 STYLE › MODE, or MENU › Audio Archive): Columns UI's Light, Dark or Use system setting.
+// With SYSTEM, Windows' light / dark decides, and each of its switches reaches the theme as a change of colours (#46).
+// The sweep runs only when the colours change now.
+function setModeTo(v) {
+    if ((fx && fx.kind === "mode") || !["light", "dark", "system"].includes(v)) return;
+    const want = v === "system" ? windowsMode() : v, run = () => { runModeCommand(v); window.SetTimeout(readModeSystem, 300); };
+    if (!want || want === MODE || !startFx("mode", run)) run();
+}
+// whether the mode follows Windows (Columns UI's own setting, which can also be changed in its menu)
+function readModeSystem() {
+    const on = modeFollowsSystem();
+    if (on === STATE.modeSystem) return;
+    STATE.modeSystem = on;
+    setSetting("modeSystem", on);
+    broadcast();
+}
+
+// BORDERLESS (05 STYLE › DISPLAY › WINDOW, or F11): foobar2000's main window without its title bar and frame, over the
+// whole monitor it is on. A script cannot restyle a window, so tools\window.ps1 does it, given this panel's window; it
+// keeps the window's place for the way back. Applied again at every start while it is on.
+function applyWindow() {
+    const ps1 = THEME_ROOT + "tools\\window.ps1", state = fb.ProfilePath + "audio-archive-cache\\window.json";
+    if (!utils.IsFile(ps1)) return;
+    try {
+        new ActiveXObject("WScript.Shell").Run(`cmd /c set "PSModulePath=" && powershell -NoProfile -ExecutionPolicy Bypass -File "${ps1}" -Panel ${window.ID} -Mode ${STATE.borderless ? "borderless" : "window"} -State "${state}"`, 0, false);
+    } catch (e) { console.log("audio-archive window: " + e); }
+}
+// on: true / false, or none (a message without data comes as null) to switch
+function toggleBorderless(on) {
+    STATE.borderless = on == null ? !STATE.borderless : !!on;
+    setSetting("borderless", STATE.borderless);
+    broadcast();
+    applyWindow();
+}
+
+// foobar2000 can take the panels down and build them again while it runs (reported when Windows switches light / dark,
+// #46): the intro film is for a start, so it does not play when this panel's script went down a moment ago (a rebuild
+// takes a fraction of a second; closing foobar2000 and starting it again takes longer)
+const UNLOAD_MARK = fb.ProfilePath + "audio-archive-cache\\frame-unload.txt";
+function rebuilt() {
+    try { return utils.IsFile(UNLOAD_MARK) && Date.now() - +utils.ReadTextFile(UNLOAD_MARK, 65001) < 1500; } catch (e) { return false; }
+}
+function on_script_unload() { try { utils.WriteTextFile(UNLOAD_MARK, String(Date.now()), false); } catch (e) { /* no cache folder yet */ } }
 
 // presets are partial layout files (columns, groups, style script) imported into Columns UI, one per colour scheme and
 // mode: each also carries the scheme's light and dark colour sets with the mode in use (so an import never changes the
@@ -260,6 +306,8 @@ onMessage("tip", t => {
 });
 onMessage("view", v => setView(v));
 onMessage("mode", toggleMode);
+onMessage("mode-to", setModeTo);
+onMessage("borderless", toggleBorderless);
 onMessage("scheme", setScheme);
 onMessage("preset", togglePreset);
 onMessage("reduce", setReduce);
@@ -297,7 +345,7 @@ onMessage("grain", on => { STATE.grain = !!on; setSetting("grain", STATE.grain);
 
 const COMMANDS = [["Archive view", () => setView("archive")], ["Playlists view", () => setView("playlists")],
                   ["Lyrics view", () => setView("lyrics")], ["Signal view", () => setView("signal")], ["Toggle light / dark", toggleMode],
-                  ["Playlist preset: Album / Index", togglePreset], ["Style view", () => setView("style")]];
+                  ["Playlist preset: Album / Index", togglePreset], ["Style view", () => setView("style")], ["Borderless full screen", () => toggleBorderless()]];
 COMMANDS.forEach(([name], i) => fb.RegisterMainMenuCommand(i, name, name));
 function on_main_menu_dynamic(id) { if (COMMANDS[id]) COMMANDS[id][1](); }
 
@@ -316,7 +364,7 @@ function on_size(w, h) {
 
 // only the gaps between panels show the root
 function on_paint(gr) { gr.FillSolidRect(0, 0, W, H, C.bg); drawGrain(gr, 0, 0, W, H); }
-function on_colours_changed() { refreshTokens(); saveLook(); window.Repaint(); }
+function on_colours_changed() { refreshTokens(); saveLook(); readModeSystem(); window.Repaint(); }
 
 // The scheme, mode and preset after a layout import. An import (install.ps1 runs one on every update) brings back the
 // layout's own colours and resets the panels' properties; "layoutSeen" is such a property, so its absence means the
@@ -336,8 +384,9 @@ function restoreLook() {
         return;
     }
     window.SetProperty("layoutSeen", true);
-    const s = readSettings();
-    const scheme = TOKENS.schemes[s.scheme] ? s.scheme : SCHEME, mode = s.mode === "light" || s.mode === "dark" ? s.mode : MODE;
+    const s = readSettings(), follow = s.modeSystem === true;   // following Windows: its mode stands, not the one saved
+    const scheme = TOKENS.schemes[s.scheme] ? s.scheme : SCHEME, mode = !follow && (s.mode === "light" || s.mode === "dark") ? s.mode : MODE;
+    if (follow && !modeFollowsSystem()) runModeCommand("system");
     if (!s.scheme || (scheme === SCHEME && mode === MODE && STATE.preset === "album")) { saveLook(); return; }   // nothing to put back
     restoring = true;
     if (mode !== MODE) switchMode();

@@ -288,4 +288,6 @@ I18N["ja"] = {
     "GLASS": "ガラス", "Frosted glass on the cases": "ケースのすりガラス",
     // 1.11: folders as cases (SHOW FOLDERS, GROUP › FOLDER)
     "FOLDERS": "フォルダ", "FOLDER": "フォルダ", "{0} FOLDER": "{0} フォルダ", "{0} FOLDERS": "{0} フォルダ", "FOLDER GRID": "フォルダ一覧", "FOLDER / SELECT": "フォルダ / 選択", "Group by folder": "フォルダでグループ化", "Show every folder as one item": "フォルダごとにまとめて表示", "Favourite folder": "お気に入りのフォルダ", "{0} · LOOSE TRACKS": "{0} · 直下の曲", "FOLDER NO.": "フォルダ番号", "PLAY FOLDER": "フォルダを再生", "OPEN IN PLAYLIST": "リストで開く", "Play folder": "フォルダを再生", "Open folder in playlist": "フォルダをプレイリストで開く",
+    // 1.11: light / dark following Windows (#46), borderless full screen
+    "SYSTEM": "システム", "Follow Windows light / dark": "ライト / ダークを Windows に合わせる", "WINDOW": "ウィンドウ", "NORMAL": "通常", "BORDERLESS": "枠なし", "Borderless full screen": "枠なし全画面",
 };

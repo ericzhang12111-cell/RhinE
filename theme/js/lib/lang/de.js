@@ -287,4 +287,6 @@ I18N["de"] = {
     "GLASS": "GLAS", "Frosted glass on the cases": "Mattglas auf den Hüllen",
     // 1.11: folders as cases (SHOW FOLDERS, GROUP › FOLDER)
     "FOLDERS": "ORDNER", "FOLDER": "ORDNER", "{0} FOLDER": "{0} ORDNER", "{0} FOLDERS": "{0} ORDNER", "FOLDER GRID": "ORDNERRASTER", "FOLDER / SELECT": "ORDNER / AUSWAHL", "Group by folder": "Nach Ordner gruppieren", "Show every folder as one item": "Jeden Ordner als ein Element zeigen", "Favourite folder": "Lieblingsordner", "{0} · LOOSE TRACKS": "{0} · EINZELTITEL", "FOLDER NO.": "ORDNER NR.", "PLAY FOLDER": "ORDNER ABSPIELEN", "OPEN IN PLAYLIST": "IN WIEDERGABELISTE", "Play folder": "Ordner abspielen", "Open folder in playlist": "Ordner in Wiedergabeliste öffnen",
+    // 1.11: light / dark following Windows (#46), borderless full screen
+    "SYSTEM": "SYSTEM", "Follow Windows light / dark": "Hell / Dunkel wie Windows", "WINDOW": "FENSTER", "NORMAL": "NORMAL", "BORDERLESS": "RAHMENLOS", "Borderless full screen": "Rahmenloser Vollbildmodus",
 };
