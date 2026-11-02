@@ -289,4 +289,19 @@ I18N["zh-CN"] = {
     "FOLDERS": "文件夹", "FOLDER": "文件夹", "{0} FOLDER": "{0} 个文件夹", "{0} FOLDERS": "{0} 个文件夹", "FOLDER GRID": "文件夹网格", "FOLDER / SELECT": "文件夹 / 选择", "Group by folder": "按文件夹分组", "Show every folder as one item": "每个文件夹显示为一项", "Favourite folder": "收藏文件夹", "{0} · LOOSE TRACKS": "{0} · 散曲", "FOLDER NO.": "文件夹编号", "PLAY FOLDER": "播放文件夹", "OPEN IN PLAYLIST": "在列表中打开", "Play folder": "播放文件夹", "Open folder in playlist": "在播放列表中打开文件夹",
     // 1.11: light / dark following Windows (#46), borderless full screen
     "SYSTEM": "跟随系统", "Follow Windows light / dark": "深浅色跟随系统", "WINDOW": "窗口", "NORMAL": "普通", "BORDERLESS": "无边框", "Borderless full screen": "无边框全屏",
+    // 1.11: the factory tags (05 STYLE › TITLE TAG › FACTORY)
+    "FACTORY": "出厂", "FACTORY TAGS": "出厂标签", "Rendered in real materials, each in its own colours.": "以真实材质渲染，各有自己的颜色。", "SUGGESTED FOR {0}  ·  {1}": "推荐搭配 {0}  ·  {1}",
+    "KRAFT CARD": "牛皮纸卡", "Kraft card, letterpress in black, an orange band.": "牛皮纸卡，黑色凸版印刷，橙色色带。",
+    "YELLOW ENAMEL": "黄色搪瓷", "Yellow vitreous enamel on steel, screen-printed in black.": "钢板黄色搪瓷，黑色丝网印刷。",
+    "ORANGE ANODISED": "橙色阳极氧化", "Orange anodised aluminium, laser-etched.": "橙色阳极氧化铝，激光蚀刻。",
+    "MANILA CARD": "马尼拉纸卡", "Manila card, letterpress in deep green, a paper ring round the hole.": "马尼拉纸卡，深绿色凸版印刷，挂孔有纸质加固圈。",
+    "BRUSHED STEEL": "拉丝钢", "Brushed stainless steel, pad-printed in navy and blue.": "拉丝不锈钢，藏青与蓝色移印。",
+    "CHESTNUT LEATHER": "栗色皮革", "Chestnut calf leather, stamped in gold foil, burnished edges.": "栗色小牛皮，烫金，边缘抛光。",
+    "SADDLE LEATHER": "马鞍皮革", "Saddle leather, blind-debossed, burnished edges.": "马鞍皮，素压凹印，边缘抛光。",
+    "CARBON FIBRE": "碳纤维", "Carbon fibre under clear lacquer, screen-printed in lime and white.": "透明清漆下的碳纤维，青柠色与白色丝网印刷。",
+    "BAMBOO": "竹", "Bamboo, laser-burnt.": "竹板，激光烧刻。",
+    "WHITE ENAMEL": "白色搪瓷", "White vitreous enamel on steel, screen-printed in black, an orange band.": "钢板白色搪瓷，黑色丝网印刷，橙色色带。",
+    "RED ENAMEL": "红色搪瓷", "Red vitreous enamel on steel, screen-printed in white.": "钢板红色搪瓷，白色丝网印刷。",
+    "BLACK ANODISED": "黑色阳极氧化", "Black anodised aluminium, laser-etched, an orange band.": "黑色阳极氧化铝，激光蚀刻，橙色色带。",
+    "BRUSHED BRASS": "拉丝黄铜", "Brushed brass, engraved and filled in black.": "拉丝黄铜，雕刻后填黑。",
 };

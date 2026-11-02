@@ -25,6 +25,13 @@ Newest version first. Download any version from [Releases](https://github.com/er
   dark`. Each switch of Windows' setting then changes the theme with its usual sweep; `T` or `LIGHT` / `DARK` set a
   fixed mode again (#46). 浅色 / 深色可以跟随系统：`05 外观` 中的 `模式` › `跟随系统`，或 `菜单 › Audio Archive › 深浅色跟随
   系统`。之后 Windows 每次切换浅色 / 深色，主题都会以平常的过渡动画跟着切换；按 `T` 或选 `浅色` / `深色` 会重新固定模式（#46）。
+- Factory title tags: 13 tags rendered in real materials, each in its own colours (kraft and manila card, enamelled
+  steel, anodised aluminium, leather, carbon fibre, bamboo, brass), in all four shapes. Pick `FACTORY` in `05 STYLE` ›
+  `TITLE TAG` and choose one on the right; the ones suggested for your colour scheme and case are marked. The song's
+  title is printed the way the rest of the tag is: etched, foil-stamped, pressed or printed. The other finishes are as
+  before. 出厂标题标签：13 款以真实材质渲染、各有固定颜色的标签（牛皮纸卡、马尼拉纸卡、搪瓷钢板、阳极氧化铝、皮革、碳纤维、竹、
+  黄铜），四种形状都有。在 `05 外观` › `标题标签` 中选择 `出厂`，再在右侧挑选；推荐搭配当前配色方案和外壳的会带标记。歌名的印法与
+  标签其余部分一致：蚀刻、烫金、压印或印刷。其他材质不变。
 
 **Changed · 改进**
 - The installer installs JSplitter 4.3.3 when it is missing (3.9.4 before). The guide no longer suggests switching to

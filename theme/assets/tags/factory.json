@@ -1,0 +1,176 @@
+{
+ "tags": [
+  {
+   "id": "kraft",
+   "name": "KRAFT CARD",
+   "about": "Kraft card, letterpress in black, an orange band.",
+   "schemes": [
+    "archive"
+   ],
+   "skins": [
+    "marble",
+    "white"
+   ],
+   "ink": "#1a1714",
+   "relief": "sink"
+  },
+  {
+   "id": "hazard-enamel",
+   "name": "YELLOW ENAMEL",
+   "about": "Yellow vitreous enamel on steel, screen-printed in black.",
+   "schemes": [
+    "hazard"
+   ],
+   "skins": [
+    "hazard"
+   ],
+   "ink": "#141414",
+   "relief": "raise"
+  },
+  {
+   "id": "flare-anodised",
+   "name": "ORANGE ANODISED",
+   "about": "Orange anodised aluminium, laser-etched.",
+   "schemes": [
+    "flare"
+   ],
+   "skins": [
+    "coral",
+    "blackout"
+   ],
+   "ink": "#d8d8d4",
+   "relief": "sink"
+  },
+  {
+   "id": "field-manila",
+   "name": "MANILA CARD",
+   "about": "Manila card, letterpress in deep green, a paper ring round the hole.",
+   "schemes": [
+    "field"
+   ],
+   "skins": [
+    "glass"
+   ],
+   "ink": "#1b3a22",
+   "relief": "sink"
+  },
+  {
+   "id": "front-steel",
+   "name": "BRUSHED STEEL",
+   "about": "Brushed stainless steel, pad-printed in navy and blue.",
+   "schemes": [
+    "front"
+   ],
+   "skins": [
+    "blue",
+    "tide",
+    "frost"
+   ],
+   "ink": "#13213a",
+   "relief": "raise"
+  },
+  {
+   "id": "hearth-leather",
+   "name": "CHESTNUT LEATHER",
+   "about": "Chestnut calf leather, stamped in gold foil, burnished edges.",
+   "schemes": [
+    "hearth"
+   ],
+   "skins": [],
+   "ink": "#e6bd62",
+   "relief": "sink"
+  },
+  {
+   "id": "saddle-leather",
+   "name": "SADDLE LEATHER",
+   "about": "Saddle leather, blind-debossed, burnished edges.",
+   "schemes": [
+    "hearth"
+   ],
+   "skins": [],
+   "ink": "#000000",
+   "relief": "sink"
+  },
+  {
+   "id": "livewire-carbon",
+   "name": "CARBON FIBRE",
+   "about": "Carbon fibre under clear lacquer, screen-printed in lime and white.",
+   "schemes": [
+    "livewire"
+   ],
+   "skins": [
+    "hazard",
+    "blackout"
+   ],
+   "ink": "#ecece6",
+   "relief": "raise"
+  },
+  {
+   "id": "matcha-bamboo",
+   "name": "BAMBOO",
+   "about": "Bamboo, laser-burnt.",
+   "schemes": [
+    "matcha"
+   ],
+   "skins": [
+    "glass",
+    "aurora"
+   ],
+   "ink": "#2b1a0e",
+   "relief": "sink"
+  },
+  {
+   "id": "white-enamel",
+   "name": "WHITE ENAMEL",
+   "about": "White vitreous enamel on steel, screen-printed in black, an orange band.",
+   "schemes": [
+    "archive"
+   ],
+   "skins": [
+    "white",
+    "marble",
+    "aurora"
+   ],
+   "ink": "#151515",
+   "relief": "raise"
+  },
+  {
+   "id": "red-enamel",
+   "name": "RED ENAMEL",
+   "about": "Red vitreous enamel on steel, screen-printed in white.",
+   "schemes": [
+    "archive"
+   ],
+   "skins": [
+    "red"
+   ],
+   "ink": "#f2efe6",
+   "relief": "raise"
+  },
+  {
+   "id": "black-anodised",
+   "name": "BLACK ANODISED",
+   "about": "Black anodised aluminium, laser-etched, an orange band.",
+   "schemes": [
+    "archive",
+    "flare"
+   ],
+   "skins": [
+    "blackout"
+   ],
+   "ink": "#d8d8d4",
+   "relief": "sink"
+  },
+  {
+   "id": "brass-engraved",
+   "name": "BRUSHED BRASS",
+   "about": "Brushed brass, engraved and filled in black.",
+   "schemes": [
+    "hearth"
+   ],
+   "skins": [],
+   "ink": "#121212",
+   "relief": "sink"
+  }
+ ]
+}

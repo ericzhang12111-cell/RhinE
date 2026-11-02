@@ -11,7 +11,7 @@ const BUS_HANDLERS = {};
 const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, skin: "white", grain: true,
                 lyricsSource: "auto", lyricsTrans: "off", lyricsNeteaseAuto: false, lyricsRoma: false,
                 textScale: 1, arrayScale: 1, inspectScale: 1.3, wallpaper: null, halftone: "bottom", halftoneLevel: "mid",
-                emblem: "ring", tag: "plastic", tagShape: "tab", tagColours: "scheme", tagCustom: null, tagOpacity: 50, tagBody: "solid", font: "geist",
+                emblem: "ring", tag: "plastic", tagShape: "tab", tagColours: "scheme", tagCustom: null, tagOpacity: 50, tagBody: "solid", tagFactory: null, font: "geist",
                 sides: null, modeSystem: false, borderless: false };
 
 // text size, Array scale and inspection size: the choices offered in MENU › Audio Archive and the Style view (frame.js keeps the value)
@@ -59,8 +59,10 @@ const lyrNetease = () => STATE.lyricsSource === "netease" || (STATE.lyricsSource
 const EMBLEMS = [["ring", "RING"], ["delta", "DELTA"]];
 const pickEmblem = v => EMBLEMS.some(f => f[0] === v) ? v : "ring";
 // the title tag on the signal profile card and the album file (05 STYLE, lib/tag.js): its finish, or off (plain text),
-// its shape and where its colours come from (TAG_SHAPES, TAG_COLOUR_SOURCES in lib/tag.js)
-const TAGS = [["off", "OFF"], ["plastic", "PLASTIC"], ["paper", "PAPER"], ["metal", "BRUSHED METAL"], ["frosted", "TRANSLUCENT"], ["clear", "TRANSPARENT"], ["tide", "TIDE GLASS"], ["aurora", "AURORA GLASS"]];
+// its shape and where its colours come from (TAG_SHAPES, TAG_COLOUR_SOURCES in lib/tag.js); FACTORY: one of the tags
+// rendered in their own materials and colours (TAG_FACTORY in lib/tag.js, the one in use: tagFactory)
+const TAGS = [["off", "OFF"], ["plastic", "PLASTIC"], ["paper", "PAPER"], ["metal", "BRUSHED METAL"], ["frosted", "TRANSLUCENT"], ["clear", "TRANSPARENT"], ["tide", "TIDE GLASS"], ["aurora", "AURORA GLASS"],
+              ["factory", "FACTORY"]];
 const pickTag = v => TAGS.some(f => f[0] === v) ? v : "plastic";
 const pickTagShape = v => ["tab", "notch", "round", "ticket"].includes(v) ? v : "tab";
 const pickTagColours = v => ["scheme", "case", "custom"].includes(v) ? v : "scheme";

@@ -246,7 +246,7 @@ let lyricsWas = "";
 onMessage("state", () => {
     if (stageSkin() !== CASE_SKIN && loadSkin(stageSkin())) dirty.card = true;
     // another halftone, title tag, font or case (05 STYLE): the album file and the card are drawn again
-    const ht = [STATE.halftone, STATE.halftoneLevel, STATE.tag, STATE.tagShape, STATE.tagColours, JSON.stringify(STATE.tagCustom), STATE.tagOpacity, STATE.tagBody, STATE.font, stageSkin()].join("|");
+    const ht = [STATE.halftone, STATE.halftoneLevel, STATE.tag, STATE.tagShape, STATE.tagColours, JSON.stringify(STATE.tagCustom), STATE.tagOpacity, STATE.tagBody, STATE.tagFactory, STATE.font, stageSkin()].join("|");
     if (ht !== halftoneWas) { halftoneWas = ht; AR.dirtyInfo = dirty.card = true; }
     // the lyrics settings as the track's lyrics were read: when every panel reloads at once (a new interface language)
     // the track can be read before frame.js has sent them, so lyrics read with the defaults are read again

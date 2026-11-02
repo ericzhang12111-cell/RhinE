@@ -42,6 +42,7 @@ STATE.tagColours = pickTagColours(getSetting("tagColours", "scheme"));
 STATE.tagCustom = getSetting("tagCustom", null);
 STATE.tagOpacity = pickTagOpacity(getSetting("tagOpacity", 50));
 STATE.tagBody = pickTagBody(getSetting("tagBody", "solid"));
+STATE.tagFactory = pickTagFactory(getSetting("tagFactory", null));
 STATE.font = pickFont(getSetting("font", "geist"));
 STATE.sides = pickSides(getSetting("sides", null));
 STATE.borderless = getSetting("borderless", false) === true;
@@ -54,7 +55,7 @@ const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, 
                                    lyricsSource: STATE.lyricsSource, lyricsTrans: STATE.lyricsTrans, lyricsNeteaseAuto: STATE.lyricsNeteaseAuto, lyricsRoma: STATE.lyricsRoma,
                                    textScale: STATE.textScale, arrayScale: STATE.arrayScale, inspectScale: STATE.inspectScale, floor: STATE.floor, wallpaper: STATE.wallpaper,
                                    halftone: STATE.halftone, halftoneLevel: STATE.halftoneLevel, emblem: STATE.emblem, tag: STATE.tag,
-                                   tagShape: STATE.tagShape, tagColours: STATE.tagColours, tagCustom: STATE.tagCustom, tagOpacity: STATE.tagOpacity, tagBody: STATE.tagBody, font: STATE.font,
+                                   tagShape: STATE.tagShape, tagColours: STATE.tagColours, tagCustom: STATE.tagCustom, tagOpacity: STATE.tagOpacity, tagBody: STATE.tagBody, tagFactory: STATE.tagFactory, font: STATE.font,
                                    sides: STATE.sides, modeSystem: STATE.modeSystem, borderless: STATE.borderless });
 
 // One-off: settings written before this change kept three switches for the lyrics (lyricsOnline, lyricsNetease,
@@ -330,6 +331,8 @@ onMessage("tag-shape", v => { STATE.tagShape = pickTagShape(v); setSetting("tagS
 onMessage("tag-colours", v => { STATE.tagColours = pickTagColours(v); setSetting("tagColours", STATE.tagColours); broadcast(); });
 onMessage("tag-body", v => { STATE.tagBody = pickTagBody(v); setSetting("tagBody", STATE.tagBody); broadcast(); });
 onMessage("tag-opacity", v => { STATE.tagOpacity = pickTagOpacity(v); setSetting("tagOpacity", STATE.tagOpacity); broadcast(); });
+// a factory tag picked in 05 STYLE: it is put in use
+onMessage("tag-factory", v => { STATE.tagFactory = pickTagFactory(v); STATE.tag = "factory"; setSetting("tagFactory", STATE.tagFactory); setSetting("tag", STATE.tag); broadcast(); });
 onMessage("tag-custom", v => { STATE.tagCustom = Array.isArray(v) ? v : null; setSetting("tagCustom", STATE.tagCustom, true); broadcast(); });
 onMessage("font", v => { STATE.font = pickFont(v); setSetting("font", STATE.font); setFontFamily(STATE.font); broadcast(); layout(); });
 // a side column's new width (lib/bus.js SIDES_START): laid out at once, kept at the end of a drag

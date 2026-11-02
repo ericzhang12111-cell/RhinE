@@ -289,4 +289,19 @@ I18N["de"] = {
     "FOLDERS": "ORDNER", "FOLDER": "ORDNER", "{0} FOLDER": "{0} ORDNER", "{0} FOLDERS": "{0} ORDNER", "FOLDER GRID": "ORDNERRASTER", "FOLDER / SELECT": "ORDNER / AUSWAHL", "Group by folder": "Nach Ordner gruppieren", "Show every folder as one item": "Jeden Ordner als ein Element zeigen", "Favourite folder": "Lieblingsordner", "{0} · LOOSE TRACKS": "{0} · EINZELTITEL", "FOLDER NO.": "ORDNER NR.", "PLAY FOLDER": "ORDNER ABSPIELEN", "OPEN IN PLAYLIST": "IN WIEDERGABELISTE", "Play folder": "Ordner abspielen", "Open folder in playlist": "Ordner in Wiedergabeliste öffnen",
     // 1.11: light / dark following Windows (#46), borderless full screen
     "SYSTEM": "SYSTEM", "Follow Windows light / dark": "Hell / Dunkel wie Windows", "WINDOW": "FENSTER", "NORMAL": "NORMAL", "BORDERLESS": "RAHMENLOS", "Borderless full screen": "Rahmenloser Vollbildmodus",
+    // 1.11: the factory tags (05 STYLE › TITLE TAG › FACTORY)
+    "FACTORY": "WERKSEITIG", "FACTORY TAGS": "WERKSETIKETTEN", "Rendered in real materials, each in its own colours.": "In echten Materialien gerendert, jedes in eigenen Farben.", "SUGGESTED FOR {0}  ·  {1}": "EMPFOHLEN FÜR {0}  ·  {1}",
+    "KRAFT CARD": "KRAFTKARTON", "Kraft card, letterpress in black, an orange band.": "Kraftkarton, schwarzer Buchdruck, ein oranges Band.",
+    "YELLOW ENAMEL": "GELBES EMAIL", "Yellow vitreous enamel on steel, screen-printed in black.": "Gelbes Emaille auf Stahl, schwarzer Siebdruck.",
+    "ORANGE ANODISED": "ORANGE ELOXIERT", "Orange anodised aluminium, laser-etched.": "Orange eloxiertes Aluminium, lasergraviert.",
+    "MANILA CARD": "MANILAKARTON", "Manila card, letterpress in deep green, a paper ring round the hole.": "Manilakarton, Buchdruck in Tiefgrün, ein Papierring um das Loch.",
+    "BRUSHED STEEL": "GEBÜRSTETER STAHL", "Brushed stainless steel, pad-printed in navy and blue.": "Gebürsteter Edelstahl, Tampondruck in Marine und Blau.",
+    "CHESTNUT LEATHER": "KASTANIENLEDER", "Chestnut calf leather, stamped in gold foil, burnished edges.": "Kastanienbraunes Kalbsleder, Goldprägung, polierte Kanten.",
+    "SADDLE LEATHER": "SATTELLEDER", "Saddle leather, blind-debossed, burnished edges.": "Sattelleder, Blindprägung, polierte Kanten.",
+    "CARBON FIBRE": "KOHLEFASER", "Carbon fibre under clear lacquer, screen-printed in lime and white.": "Kohlefaser unter Klarlack, Siebdruck in Limette und Weiß.",
+    "BAMBOO": "BAMBUS", "Bamboo, laser-burnt.": "Bambus, lasergebrannt.",
+    "WHITE ENAMEL": "WEISSES EMAIL", "White vitreous enamel on steel, screen-printed in black, an orange band.": "Weißes Emaille auf Stahl, schwarzer Siebdruck, ein oranges Band.",
+    "RED ENAMEL": "ROTES EMAIL", "Red vitreous enamel on steel, screen-printed in white.": "Rotes Emaille auf Stahl, weißer Siebdruck.",
+    "BLACK ANODISED": "SCHWARZ ELOXIERT", "Black anodised aluminium, laser-etched, an orange band.": "Schwarz eloxiertes Aluminium, lasergraviert, ein oranges Band.",
+    "BRUSHED BRASS": "GEBÜRSTETES MESSING", "Brushed brass, engraved and filled in black.": "Gebürstetes Messing, graviert und schwarz ausgelegt.",
 };

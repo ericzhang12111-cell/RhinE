@@ -5,7 +5,8 @@
 // scheme's colours) and LIGHT / DARK sit at the top right.
 //   left   CASE SKIN: every skin (built-in and hand-installed) as its archive sprite on the page;
 //          COLOUR SCHEME: every scheme as a miniature of the interface in its light and dark sets
-//   right  the preview: a skin's front view and archive sprite, or a scheme's miniature large with its swatches
+//   right  the preview: a skin's front view and archive sprite, or a scheme's miniature large with its swatches; the
+//          editors (wallpaper, custom case, custom scheme) and the factory tags (the TITLE TAG card FACTORY) open here
 
 const STY_ST = {
     head: { size: 9, weight: 600, track: .16 },
@@ -227,7 +228,7 @@ function drawTagCard(gr, id, name, x, y, w, h) {
         gr.PopClip();
     }
     gr.FillSolidRect(x, y + ih, w, HAIR, C["line-faint"]);
-    const t = tr(name), ns = labelWidth(t, st(STY_ST.name, 0)) <= w - dp(18) ? STY_ST.name : STY_ST.nameS;
+    const t = tr(name) + (id === "factory" && STY.edit !== "factory" ? "  ›" : ""), ns = labelWidth(t, st(STY_ST.name, 0)) <= w - dp(18) ? STY_ST.name : STY_ST.nameS;
     label(gr, fitLabel(t, st(ns, C.fg, C.panel), w - dp(18)), st(ns, C.fg, C.panel), x + dp(10), y + ih + Math.round((dp(40) - labelHeight(ns)) / 2));
     if (inUse) chip(gr, tr("IN USE"), x + w - dp(8) - labelWidth(tr("IN USE"), st(STY_ST.tiny, 0)) - dp(16), y + dp(8), dp(16), "inv", 8);
     cardFrame(gr, x, y, w, h, inUse, hov);
@@ -286,7 +287,7 @@ function displayGroups() {
                                 row("WINDOW", [["window", "NORMAL"], ["borderless", "BORDERLESS"]], STATE.borderless ? "borderless" : "window", "sty-window")] },
         { title: "TITLE TAG", rows: [row("TAG SHAPE", TAG_SHAPES, STATE.tagShape, "sty-tagshape", !tagOn), row("TAG COLOURS", TAG_COLOUR_SOURCES, STATE.tagColours, "sty-tagcol", !tagRecolours()),
                                      ...(tagRecolours() && STATE.tagColours === "custom" ? [{ title: "", kind: "swatches" }] : []),
-                                     row("TAG BODY", TAG_BODIES, STATE.tagBody, "sty-tagbody", !tagOn || !!TAG_SEE_KIND[STATE.tag]),
+                                     row("TAG BODY", TAG_BODIES, STATE.tagBody, "sty-tagbody", !tagOn || !!TAG_SEE_KIND[STATE.tag] || STATE.tag === "factory"),
                                      row("TAG OPACITY", TAG_OPACITIES, STATE.tagOpacity, "sty-tagop", !tagSeesThrough())] },
     ];
 }
@@ -485,8 +486,8 @@ function styleWheel(step) {
     if (STY.sizeEdit) { fieldSetText(STY.sizeEdit, (clamp(Math.round(STATE.textScale * TEXT_SIZE_BASE * 2) / 2 + (step > 0 ? .5 : -.5), TEXT_SIZE_MIN, TEXT_SIZE_MAX)).toFixed(1)); STY.sizeEdit.anchor = 0; }
     return true;
 }
-// the tag's colours can be chosen (its finish is not one of the glass ones, which keep theirs)
-const tagRecolours = () => STATE.tag !== "off" && !["tide", "aurora"].includes(STATE.tag);
+// the tag's colours can be chosen (its finish is not one of the glass ones or a factory tag, which keep theirs)
+const tagRecolours = () => STATE.tag !== "off" && !["tide", "aurora", "factory"].includes(STATE.tag);
 // the custom tag colours: TOP ■ BODY ■ BOTTOM ■, each opens the colour picker. Returns the width.
 const TAG_BANDS = ["TOP", "BODY", "BOTTOM"];
 function drawTagSwatches(gr, x, y) {
@@ -610,6 +611,7 @@ function drawStylePreview(gr, g, skins) {
         return;
     }
     if (hv && hv.kind === "tag") { drawTagPreview(gr, hv.id, x0, y0 + dp(30), w, y1); return; }
+    if (!hv && STY.edit === "factory" && STATE.tag === "factory") { drawFactoryPicker(gr, x0, y0 + dp(30), w, y1); return; }
     if (!hv && STY.edit === "wallpaper") { drawWallpaperEditor(gr, x0, y0 + dp(30), w, y1); return; }
     if (!hv && (STY.making || (STATE.skin === "custom" && STY.edit !== "scheme"))) { drawCaseEditor(gr, x0, y0 + dp(30), w, y1); return; }
     if (!hv && SCHEME === "custom") { drawCustomEditor(gr, x0, y0 + dp(30), w, y1); return; }
@@ -664,14 +666,50 @@ function drawTagPreview(gr, id, x0, y, w, y1) {
     // name, what it is, how it is shown
     const ty = Math.max(y + ch + 2 * pad_ + dp(24), y1 - dp(104));
     gr.FillSolidRect(x0, ty, w, dp(3), C.fg);
-    const name = (TAGS.find(t => t[0] === id) || [id, id])[1];
-    label(gr, tr(name), st(STY_ST.big, C.fg), x0, ty + dp(14));
+    const fac = tagFactoryOf(tagFactoryFin(id)), name = (TAGS.find(t => t[0] === id) || [id, id])[1];
+    label(gr, fac ? `${tr(name)}  ·  ${tr(fac.name)}` : tr(name), st(STY_ST.big, C.fg), x0, ty + dp(14));
     const ay = ty + dp(14) + labelHeight(STY_ST.big) + dp(6);
-    text(gr, tr(TAG_ABOUT[id] || ""), 10, 500, C["fg-soft"], x0, ay, w, Math.round(dp(18) * TEXT_SCALE));
+    text(gr, tr(fac ? fac.about : TAG_ABOUT[id] || ""), 10, 500, C["fg-soft"], x0, ay, w, Math.round(dp(18) * TEXT_SCALE));
     const shape = tr((TAG_SHAPES.find(t => t[0] === STATE.tagShape) || ["", ""])[1]);
-    const colours = TAG_SEE_KIND[id] === "glass" ? tr("ITS OWN COLOURS") : tr((TAG_COLOUR_SOURCES.find(t => t[0] === STATE.tagColours) || ["", ""])[1]);
+    const colours = TAG_SEE_KIND[id] === "glass" || fac ? tr("ITS OWN COLOURS") : tr((TAG_COLOUR_SOURCES.find(t => t[0] === STATE.tagColours) || ["", ""])[1]);
     const how = [shape, colours, tagSeesThrough(id) ? `${STATE.tagOpacity}%` : ""].filter(Boolean).join("  ·  ");
     label(gr, how, st(STY_ST.tiny, C["text-muted"]), x0, ay + Math.round(dp(26) * TEXT_SCALE));
+}
+
+// FACTORY TAGS (the right pane while the FACTORY card is picked): every factory tag in the shape in use, with the playing
+// (else the focused) track's title, as many to a row as fit the height; a click puts one in use. The ones suggested for
+// the colour scheme or the case skin in use carry an accent mark.
+function drawFactoryPicker(gr, x0, y, w, y1) {
+    label(gr, tr("FACTORY TAGS"), st(STY_ST.big, C.fg), x0, y);
+    y += labelHeight(STY_ST.big) + dp(6);
+    text(gr, tr("Rendered in real materials, each in its own colours."), 10, 500, C["fg-soft"], x0, y, w, Math.round(dp(18) * TEXT_SCALE));
+    y += Math.round(dp(22) * TEXT_SCALE);
+    const skin = (styleSkins().find(s => s.id === stageSkin()) || { name: "" }).name, ls = st(STY_ST.tiny, C["text-muted"]);
+    gr.FillSolidRect(x0, y + Math.round((labelHeight(STY_ST.tiny) - dp(6)) / 2), dp(6), dp(6), C.accent);
+    label(gr, fitLabel(tr("SUGGESTED FOR {0}  ·  {1}", TOKENS.schemes[SCHEME].name, skin), ls, w - dp(14)), ls, x0 + dp(14), y);
+    y += dp(30);
+    const list = TAG_FACTORY.filter(t => tagFinish("factory:" + t.id));
+    if (!list.length) return;
+    const h0 = fb.GetNowPlaying() || fb.GetFocusItem(), title = h0 ? TF_TAG_TITLE.EvalWithMetadb(h0) : tr("Over the Signal");
+    const vals = { track: "03", total: "12", arc: "0269" }, gap = dp(18), nameH = labelHeight(STY_ST.tiny) + dp(14);
+    // two to a row, or as many more as it takes to fit the height
+    let cols = 2, tw, th;
+    for (; ; cols++) {
+        tw = Math.floor((w - (cols - 1) * gap) / cols);
+        th = tagHeight(tw, "factory:" + list[0].id);
+        if (cols >= 4 || y + Math.ceil(list.length / cols) * (th + nameH + gap) <= y1) break;
+    }
+    const cur = tagFactoryId();
+    list.forEach((t, i) => {
+        const x = x0 + (i % cols) * (tw + gap), cy = y + Math.floor(i / cols) * (th + nameH + gap), on = t.id === cur, hov = STY.facHover === t.id;
+        drawTag(gr, x, cy, tw, title, vals, C.bg, "factory:" + t.id);
+        const ns = st(STY_ST.tiny, on ? C.fg : C["text-muted"]), ny = cy + th + dp(8);
+        let nx = x;
+        if (tagFactorySuggested(t)) { gr.FillSolidRect(x, ny + Math.round((labelHeight(STY_ST.tiny) - dp(6)) / 2), dp(6), dp(6), C.accent); nx += dp(12); }
+        label(gr, fitLabel(tr(t.name), ns, tw - (nx - x)), ns, nx, ny);
+        if (on || hov) box(gr, x - dp(5), cy - dp(5), tw + dp(10), th + nameH + dp(4), on ? C.fg : C.accent, on ? Math.max(HAIR, dp(1.5)) : HAIR);
+        hits.add("sty-factory", x - dp(5), cy - dp(5), tw + dp(10), th + nameH + dp(4), t.id);
+    });
 }
 
 // The custom scheme's editor: for light and for dark, a preview and the three colours to pick (Windows' colour
@@ -781,6 +819,8 @@ function styleMouseMove(a) {
     if (wh !== (STY.wpHover || null)) { STY.wpHover = wh; window.Repaint(); }
     const cp = a && a.id === "sty-cpick" ? a.data : null;
     if (cp !== (STY.cpick || null)) { STY.cpick = cp; window.Repaint(); }
+    const fh = a && a.id === "sty-factory" ? a.data : null;
+    if (fh !== (STY.facHover || null)) { STY.facHover = fh; window.Repaint(); }
     // SIZE: −1 / +1 its buttons, 0 its field (the wheel steps it while the mouse is over any of them)
     const sz = a && a.id === "sty-size" ? a.data : a && a.id === "sty-size-field" ? 0 : null;
     if (sz !== (STY.sizeHover === undefined ? null : STY.sizeHover)) { STY.sizeHover = sz; window.Repaint(); }
@@ -823,7 +863,13 @@ function styleClick(a) {
     else if (a.id === "sty-tagcol" && a.data !== STATE.tagColours) send("tag-colours", a.data);
     else if (a.id === "sty-tagop" && a.data !== STATE.tagOpacity) send("tag-opacity", a.data);
     else if (a.id === "sty-tagbody" && a.data !== STATE.tagBody) send("tag-body", a.data);
-    else if (a.id === "sty-tagcard" && a.data !== STATE.tag) send("tag", a.data);
+    else if (a.id === "sty-tagcard" && a.data === "factory") {   // the factory tags open on the right (a second click closes them)
+        STY.edit = STY.edit === "factory" && STATE.tag === "factory" ? null : "factory";
+        if (STATE.tag !== "factory") send("tag", "factory");
+        window.Repaint();
+    }
+    else if (a.id === "sty-tagcard" && a.data !== STATE.tag) { if (STY.edit === "factory") STY.edit = null; send("tag", a.data); }
+    else if (a.id === "sty-factory") { if (a.data !== STATE.tagFactory || STATE.tag !== "factory") send("tag-factory", a.data); }
     else if (a.id === "sty-font" && a.data !== STATE.font) send("font", a.data);
     else if (a.id === "sty-tagc") {
         const cols = tagCustom().slice(), c = utils.ColourPicker(window.ID, tagArgb(cols[a.data]));

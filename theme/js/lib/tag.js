@@ -14,6 +14,12 @@
 // (print-static.png) and the eyelet (eyelet.png). tags.json says where the bands end and where the title and the small
 // print go. The plate is put together once per shape, finish, colours, width and page; the title is set live, so it can
 // scramble in.
+//
+// FACTORY: tags rendered whole in real materials and their own colours (kraft card, enamelled steel, anodised
+// aluminium, leather …; made with the private .dev/tags3 tools from scanned materials). tags/factory.json lists them, with
+// the colour schemes and case skins each is suggested for; per shape, factory/<id>.jpg is the plate without the title,
+// <id>-a.png its outline and shadow (alpha) and <id>-ink.jpg the same tag marked all over the way its print is (etched,
+// stamped, printed): the title and the small print are drawn with that as their brush, so the letters are cut from it.
 
 const TAG_DIR = THEME_ROOT + "assets\\tags\\";
 const TAG = { specs: {}, src: new Map(), plates: new Map() };
@@ -34,12 +40,26 @@ const TAG_OPACITIES = [[25, "25%"], [50, "50%"], [75, "75%"]];
 const TAG_SEE_KIND = { clear: "clear", frosted: "frosted", tide: "glass", aurora: "glass" };
 // the middle band of a solid finish (05 STYLE › TAG BODY): solid, or see-through like the translucent or clear plate
 const TAG_BODIES = [["solid", "SOLID"], ["frosted", "TRANSLUCENT"], ["clear", "TRANSPARENT"]];
-const tagBodyKind = fin => !TAG_SEE_KIND[fin] && ["frosted", "clear"].includes(STATE.tagBody) ? STATE.tagBody : null;
+const tagBodyKind = fin => !TAG_SEE_KIND[fin] && !tagFactoryFin(fin) && ["frosted", "clear"].includes(STATE.tagBody) ? STATE.tagBody : null;
 // whether a finish shows the page anywhere (the TAG OPACITY row is offered then)
 const tagSeesThrough = (fin = STATE.tag) => fin !== "off" && !!(TAG_SEE_KIND[fin] || tagBodyKind(fin));
 const TAG_WHITE = .8;   // the plate's white in its renders (each finish records its own, F.white): a colour c is c / white
 const isHex = v => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
 const tagCustom = () => { const c = STATE.tagCustom; return Array.isArray(c) && c.length === 3 && c.every(isHex) ? c : TAG_CUSTOM_START; };
+
+const TAG_FACTORY = (() => { try { return JSON.parse(utils.ReadTextFile(TAG_DIR + "factory.json", 65001)).tags || []; } catch (e) { return []; } })();
+const pickTagFactory = v => TAG_FACTORY.some(t => t.id === v) ? v : null;
+// suggested for the colour scheme or the case skin in use
+const tagFactorySuggested = t => (t.schemes || []).includes(SCHEME) || (t.skins || []).includes(stageSkin());
+// the factory tag in use: the one picked, else the first suggested for the scheme, else for the skin, else the first
+function tagFactoryId() {
+    if (pickTagFactory(STATE.tagFactory)) return STATE.tagFactory;
+    const t = TAG_FACTORY.find(f => (f.schemes || []).includes(SCHEME)) || TAG_FACTORY.find(f => (f.skins || []).includes(stageSkin())) || TAG_FACTORY[0];
+    return t ? t.id : null;
+}
+const tagFactoryOf = id => TAG_FACTORY.find(t => t.id === id) || null;
+// a finish id as drawTag takes it: "factory" is the one in use, "factory:<id>" a given one (the Style view's picker)
+const tagFactoryFin = fin => fin === "factory" ? tagFactoryId() : String(fin).startsWith("factory:") ? fin.slice(8) : null;
 
 function tagSpec(shape = STATE.tagShape) {
     if (!(shape in TAG.specs)) {
@@ -49,7 +69,12 @@ function tagSpec(shape = STATE.tagShape) {
 }
 // a finish (the one in use by default) with its shape's layout, or null (off, or not rendered)
 function tagFinish(fin = STATE.tag) {
-    const S = tagSpec(), F = fin !== "off" && S && S.finishes && S.finishes[fin];
+    const fid = tagFactoryFin(fin), S = tagSpec();
+    if (fid) {
+        const t = tagFactoryOf(fid), base = TAG_DIR + STATE.tagShape + "\\factory\\" + fid;
+        return t && S && utils.IsFile(base + ".jpg") ? { S, F: { factory: t, base }, fin } : null;
+    }
+    const F = fin !== "off" && S && S.finishes && S.finishes[fin];
     return F && F.shade && utils.IsFile(TAG_DIR + STATE.tagShape + "\\" + F.shade) ? { S, F, fin } : null;
 }
 // the tag's height at width w px (0 when no tag is shown)
@@ -102,6 +127,32 @@ function tagDots(g, iw, ih, ox, oy, tw, th, colour, dy = 0, fade = true) {
 // the blank tag for a tag w px wide, with the margin round it (the shadow), on a panel of colour bg: each band in its
 // colour (or, where it is see-through, the panel and its dot grid seen through it), the reflections, the print inked
 // for its band, the colour bars and the eyelet. Kept per shape, finish, colours, width, page, opacity and body.
+// A factory tag's plate: its render with its alpha laid on, and the inked render at the same size as a bitmap brush
+// for the title and the small print. Each image is read for the plate and let go (only the plates are kept).
+function tagFactoryPlate(S, F, w) {
+    const t = F.factory, key = `${STATE.tagShape}|factory:${t.id}|${w}`;
+    let P = TAG.plates.get(key);
+    if (P) return P;
+    const k = w / S.canvas.tag[2], iw = Math.max(1, Math.round(S.canvas.w * k)), ih = Math.max(1, Math.round(S.canvas.h * k));
+    const load = f => { try { return utils.IsFile(f) ? d2d.Image(f).Resize(iw, ih, 7) : null; } catch (e) { return null; } };   // HighQualityBicubic
+    const plate = load(F.base + ".jpg"), alpha = load(F.base + "-a.png"), ink = load(F.base + "-ink.jpg");
+    const img = d2d.CreateImage(iw, ih), g = img.GetGraphics();
+    try {
+        if (plate && alpha) {
+            const am = d2d.Effect("{C80ECFF0-3FD5-4F05-8328-C5D1724B4F0A}");   // AlphaMask
+            am.SetInput(0, plate);
+            am.SetInput(1, alpha);
+            g.DrawEffect(am, 0, 0, 0, 0, iw, ih);
+        }
+    } finally { img.ReleaseGraphics(g); }
+    const inks = [t.ink, t.ink, t.ink];
+    P = { img, ox: S.canvas.tag[0] * k, oy: S.canvas.tag[1] * k, k, cols: inks, inks, see: false, factory: t,
+          brush: ink ? d2d.Brush(3, ink, 4) : null };   // BrushType.Bitmap, BrushWrapMode.Clamp
+    if (TAG.plates.size >= 40) TAG.plates.clear();
+    TAG.plates.set(key, P);
+    return P;
+}
+
 function tagPlate(S, fin, w, bg) {
     const F = S.finishes[fin], kind = TAG_SEE_KIND[fin] || null, body = tagBodyKind(fin), op = (STATE.tagOpacity || 50) / 100;
     const cols = tagColours(F), k = w / S.canvas.tag[2], page = tagHex(bg);
@@ -170,7 +221,7 @@ function tagPlate(S, fin, w, bg) {
         for (const f of [S.print && S.print.static, S.eyelet]) { const im = sized(f); if (im) g.DrawImage(im, 0, 0, iw, ih, 0, 0, iw, ih); }
     } finally { img.ReleaseGraphics(g); }
     P = { img, ox, oy, k, cols, inks, see: !!seeKind };
-    if (TAG.plates.size >= 16) TAG.plates.clear();
+    if (TAG.plates.size >= 40) TAG.plates.clear();
     TAG.plates.set(key, P);
     return P;
 }
@@ -200,13 +251,17 @@ function tagFit(gr, title, bw, bh, T, h) {
 function drawTag(gr, x, y, w, title, vals = {}, bg = C.bg, fin = STATE.tag) {
     const t = tagFinish(fin);
     if (!t || !(w >= dp(40))) return 0;   // too narrow to read (or no width yet): the plain title
-    const { S, F } = t, P = tagPlate(S, fin, Math.round(w), bg), h = Math.round(w * S.canvas.tag[3] / S.canvas.tag[2]);
-    gr.DrawImage(P.img, Math.round(x - P.ox), Math.round(y - P.oy), P.img.Width, P.img.Height, 0, 0, P.img.Width, P.img.Height);
-    const inkFor = band => tagArgb(P.inks[{ top: 0, body: 1, bottom: 2 }[band] || 1]);
+    const { S, F } = t, P = F.factory ? tagFactoryPlate(S, F, Math.round(w)) : tagPlate(S, fin, Math.round(w), bg), h = Math.round(w * S.canvas.tag[3] / S.canvas.tag[2]);
+    const px = Math.round(x - P.ox), py = Math.round(y - P.oy);
+    gr.DrawImage(P.img, px, py, P.img.Width, P.img.Height, 0, 0, P.img.Width, P.img.Height);
+    // a factory tag's letters: its inked render, laid exactly over the plate
+    const brush = P.brush;
+    if (brush) { brush.ResetTransform(); brush.Translate(px, py); }
+    const inkFor = band => brush || tagArgb(P.inks[{ top: 0, body: 1, bottom: 2 }[band] || 1]);
     // the small print
     for (const s of S.small || []) {
         const str = String(s.text).replace(/\{(\w+)\}/g, (m, k) => vals[k] !== undefined && vals[k] !== "" ? vals[k] : "—");
-        trackedText(gr, str, { size: s.size * h / dp(1) / TEXT_SCALE, weight: s.weight, track: s.track, colour: withAlpha(inkFor(s.band), s.alpha) }, x + s.x * w, y + s.y * h, s.align === "right" ? 2 : 0);
+        trackedText(gr, str, { size: s.size * h / dp(1) / TEXT_SCALE, weight: s.weight, track: s.track, colour: brush || withAlpha(inkFor(s.band), s.alpha) }, x + s.x * w, y + s.y * h, s.align === "right" ? 2 : 0);
     }
     // the title, at the bottom (or the middle) of its box
     const T = S.title, bx = x + T.box[0] * w, by = y + T.box[1] * h, bw = T.box[2] * w, bh = T.box[3] * h;
@@ -214,8 +269,12 @@ function drawTag(gr, x, y, w, title, vals = {}, bg = C.bg, fin = STATE.tag) {
     const ty = T.valign === "bottom" ? by + bh - lh * n : by + (bh - lh * n) / 2;
     const flags = DT_GLYPH | DT_ELLIPSIS | (T.align === "right" ? 0x00000002 : T.align === "centre" ? 0x00000001 : 0);
     const ink = inkFor(T.band), u = Math.max(1, Math.round(h * .008));
+    // a factory tag's print sits in the face (etched, stamped, pressed: a thin light under each stroke, where the cut
+    // edge faces the light) or on it (printed: a faint shadow)
+    const sink = brush && P.factory.relief === "sink", ru = Math.max(1, Math.round(h * .004));
     fit.lines.forEach((ln, i) => {
-        if (F.fixed || P.see) gr.DrawText(ln, fit.f, withAlpha(0xFF000000, P.inks[1] === "#1b1c18" ? .12 : .3), bx + u * .7, ty + i * lh + u, bw, lh + dp(2), flags);   // on glass: a soft drop
+        if (brush) gr.DrawText(ln, fit.f, sink ? withAlpha(0xFFFFFFFF, .2) : withAlpha(0xFF000000, .22), bx + (sink ? 0 : ru), ty + i * lh + ru, bw, lh + dp(2), flags);
+        else if (F.fixed || P.see) gr.DrawText(ln, fit.f, withAlpha(0xFF000000, P.inks[1] === "#1b1c18" ? .12 : .3), bx + u * .7, ty + i * lh + u, bw, lh + dp(2), flags);   // on glass: a soft drop
         gr.DrawText(ln, fit.f, ink, bx, ty + i * lh, bw, lh + dp(2), flags);
     });
     return h;

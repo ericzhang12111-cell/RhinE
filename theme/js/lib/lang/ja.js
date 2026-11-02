@@ -290,4 +290,19 @@ I18N["ja"] = {
     "FOLDERS": "フォルダ", "FOLDER": "フォルダ", "{0} FOLDER": "{0} フォルダ", "{0} FOLDERS": "{0} フォルダ", "FOLDER GRID": "フォルダ一覧", "FOLDER / SELECT": "フォルダ / 選択", "Group by folder": "フォルダでグループ化", "Show every folder as one item": "フォルダごとにまとめて表示", "Favourite folder": "お気に入りのフォルダ", "{0} · LOOSE TRACKS": "{0} · 直下の曲", "FOLDER NO.": "フォルダ番号", "PLAY FOLDER": "フォルダを再生", "OPEN IN PLAYLIST": "リストで開く", "Play folder": "フォルダを再生", "Open folder in playlist": "フォルダをプレイリストで開く",
     // 1.11: light / dark following Windows (#46), borderless full screen
     "SYSTEM": "システム", "Follow Windows light / dark": "ライト / ダークを Windows に合わせる", "WINDOW": "ウィンドウ", "NORMAL": "通常", "BORDERLESS": "枠なし", "Borderless full screen": "枠なし全画面",
+    // 1.11: the factory tags (05 STYLE › TITLE TAG › FACTORY)
+    "FACTORY": "ファクトリー", "FACTORY TAGS": "ファクトリータグ", "Rendered in real materials, each in its own colours.": "本物の素材でレンダリング。それぞれ固有の色です。", "SUGGESTED FOR {0}  ·  {1}": "{0}  ·  {1} におすすめ",
+    "KRAFT CARD": "クラフト紙", "Kraft card, letterpress in black, an orange band.": "クラフト紙、黒の活版印刷、オレンジの帯。",
+    "YELLOW ENAMEL": "黄色ほうろう", "Yellow vitreous enamel on steel, screen-printed in black.": "鋼板に黄色のほうろう、黒のシルク印刷。",
+    "ORANGE ANODISED": "オレンジアルマイト", "Orange anodised aluminium, laser-etched.": "オレンジのアルマイト処理アルミ、レーザー刻印。",
+    "MANILA CARD": "マニラ紙", "Manila card, letterpress in deep green, a paper ring round the hole.": "マニラ紙、深緑の活版印刷、穴の周りに紙の補強リング。",
+    "BRUSHED STEEL": "ヘアライン鋼", "Brushed stainless steel, pad-printed in navy and blue.": "ヘアライン仕上げのステンレス、紺と青のパッド印刷。",
+    "CHESTNUT LEATHER": "栗色レザー", "Chestnut calf leather, stamped in gold foil, burnished edges.": "栗色のカーフレザー、金の箔押し、磨いたコバ。",
+    "SADDLE LEATHER": "サドルレザー", "Saddle leather, blind-debossed, burnished edges.": "サドルレザー、空押し、磨いたコバ。",
+    "CARBON FIBRE": "カーボン", "Carbon fibre under clear lacquer, screen-printed in lime and white.": "クリア塗装のカーボン、ライムと白のシルク印刷。",
+    "BAMBOO": "竹", "Bamboo, laser-burnt.": "竹、レーザー焼き付け。",
+    "WHITE ENAMEL": "白ほうろう", "White vitreous enamel on steel, screen-printed in black, an orange band.": "鋼板に白のほうろう、黒のシルク印刷、オレンジの帯。",
+    "RED ENAMEL": "赤ほうろう", "Red vitreous enamel on steel, screen-printed in white.": "鋼板に赤のほうろう、白のシルク印刷。",
+    "BLACK ANODISED": "黒アルマイト", "Black anodised aluminium, laser-etched, an orange band.": "黒のアルマイト処理アルミ、レーザー刻印、オレンジの帯。",
+    "BRUSHED BRASS": "ヘアライン真鍮", "Brushed brass, engraved and filled in black.": "ヘアライン仕上げの真鍮、彫刻に黒の墨入れ。",
 };

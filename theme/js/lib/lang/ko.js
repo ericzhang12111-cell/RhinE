@@ -289,4 +289,19 @@ I18N["ko"] = {
     "FOLDERS": "폴더", "FOLDER": "폴더", "{0} FOLDER": "폴더 {0}개", "{0} FOLDERS": "폴더 {0}개", "FOLDER GRID": "폴더 그리드", "FOLDER / SELECT": "폴더 / 선택", "Group by folder": "폴더별 그룹", "Show every folder as one item": "폴더마다 하나로 표시", "Favourite folder": "즐겨찾는 폴더", "{0} · LOOSE TRACKS": "{0} · 낱곡", "FOLDER NO.": "폴더 번호", "PLAY FOLDER": "폴더 재생", "OPEN IN PLAYLIST": "목록에서 열기", "Play folder": "폴더 재생", "Open folder in playlist": "폴더를 재생목록에서 열기",
     // 1.11: light / dark following Windows (#46), borderless full screen
     "SYSTEM": "시스템", "Follow Windows light / dark": "라이트 / 다크를 Windows에 맞춤", "WINDOW": "창", "NORMAL": "일반", "BORDERLESS": "테두리 없음", "Borderless full screen": "테두리 없는 전체 화면",
+    // 1.11: the factory tags (05 STYLE › TITLE TAG › FACTORY)
+    "FACTORY": "팩토리", "FACTORY TAGS": "팩토리 태그", "Rendered in real materials, each in its own colours.": "실제 소재로 렌더링했으며 각자 고유한 색입니다.", "SUGGESTED FOR {0}  ·  {1}": "{0}  ·  {1} 추천",
+    "KRAFT CARD": "크라프트 카드", "Kraft card, letterpress in black, an orange band.": "크라프트 카드, 검은색 활판 인쇄, 주황색 띠.",
+    "YELLOW ENAMEL": "노란색 법랑", "Yellow vitreous enamel on steel, screen-printed in black.": "강판 위 노란색 법랑, 검은색 실크 인쇄.",
+    "ORANGE ANODISED": "주황색 아노다이징", "Orange anodised aluminium, laser-etched.": "주황색 아노다이징 알루미늄, 레이저 각인.",
+    "MANILA CARD": "마닐라 카드", "Manila card, letterpress in deep green, a paper ring round the hole.": "마닐라 카드, 짙은 녹색 활판 인쇄, 구멍 둘레의 종이 보강 링.",
+    "BRUSHED STEEL": "헤어라인 스틸", "Brushed stainless steel, pad-printed in navy and blue.": "헤어라인 스테인리스, 남색과 파란색 패드 인쇄.",
+    "CHESTNUT LEATHER": "밤색 가죽", "Chestnut calf leather, stamped in gold foil, burnished edges.": "밤색 송아지 가죽, 금박, 광택 낸 가장자리.",
+    "SADDLE LEATHER": "새들 가죽", "Saddle leather, blind-debossed, burnished edges.": "새들 가죽, 무색 압인, 광택 낸 가장자리.",
+    "CARBON FIBRE": "카본 파이버", "Carbon fibre under clear lacquer, screen-printed in lime and white.": "투명 코팅 아래의 카본 파이버, 라임색과 흰색 실크 인쇄.",
+    "BAMBOO": "대나무", "Bamboo, laser-burnt.": "대나무, 레이저 각인.",
+    "WHITE ENAMEL": "흰색 법랑", "White vitreous enamel on steel, screen-printed in black, an orange band.": "강판 위 흰색 법랑, 검은색 실크 인쇄, 주황색 띠.",
+    "RED ENAMEL": "빨간색 법랑", "Red vitreous enamel on steel, screen-printed in white.": "강판 위 빨간색 법랑, 흰색 실크 인쇄.",
+    "BLACK ANODISED": "검은색 아노다이징", "Black anodised aluminium, laser-etched, an orange band.": "검은색 아노다이징 알루미늄, 레이저 각인, 주황색 띠.",
+    "BRUSHED BRASS": "헤어라인 황동", "Brushed brass, engraved and filled in black.": "헤어라인 황동, 조각 후 검은색 충전.",
 };

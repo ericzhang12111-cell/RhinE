@@ -289,4 +289,19 @@ I18N["fr"] = {
     "FOLDERS": "DOSSIERS", "FOLDER": "DOSSIER", "{0} FOLDER": "{0} DOSSIER", "{0} FOLDERS": "{0} DOSSIERS", "FOLDER GRID": "GRILLE DE DOSSIERS", "FOLDER / SELECT": "DOSSIER / CHOIX", "Group by folder": "Grouper par dossier", "Show every folder as one item": "Afficher chaque dossier comme un seul élément", "Favourite folder": "Dossier favori", "{0} · LOOSE TRACKS": "{0} · TITRES ISOLÉS", "FOLDER NO.": "DOSSIER N°", "PLAY FOLDER": "LIRE LE DOSSIER", "OPEN IN PLAYLIST": "OUVRIR EN LISTE", "Play folder": "Lire le dossier", "Open folder in playlist": "Ouvrir le dossier dans une liste",
     // 1.11: light / dark following Windows (#46), borderless full screen
     "SYSTEM": "SYSTÈME", "Follow Windows light / dark": "Clair / sombre comme Windows", "WINDOW": "FENÊTRE", "NORMAL": "NORMALE", "BORDERLESS": "SANS BORDURE", "Borderless full screen": "Plein écran sans bordure",
+    // 1.11: the factory tags (05 STYLE › TITLE TAG › FACTORY)
+    "FACTORY": "D'USINE", "FACTORY TAGS": "ÉTIQUETTES D'USINE", "Rendered in real materials, each in its own colours.": "Rendues dans de vraies matières, chacune dans ses propres couleurs.", "SUGGESTED FOR {0}  ·  {1}": "CONSEILLÉ POUR {0}  ·  {1}",
+    "KRAFT CARD": "CARTE KRAFT", "Kraft card, letterpress in black, an orange band.": "Carte kraft, typographie noire, une bande orange.",
+    "YELLOW ENAMEL": "ÉMAIL JAUNE", "Yellow vitreous enamel on steel, screen-printed in black.": "Émail vitrifié jaune sur acier, sérigraphie noire.",
+    "ORANGE ANODISED": "ANODISÉ ORANGE", "Orange anodised aluminium, laser-etched.": "Aluminium anodisé orange, gravé au laser.",
+    "MANILA CARD": "CARTE MANILLE", "Manila card, letterpress in deep green, a paper ring round the hole.": "Carte manille, typographie vert profond, un œillet de papier autour du trou.",
+    "BRUSHED STEEL": "ACIER BROSSÉ", "Brushed stainless steel, pad-printed in navy and blue.": "Acier inoxydable brossé, tampographie bleu marine et bleue.",
+    "CHESTNUT LEATHER": "CUIR CHÂTAIGNE", "Chestnut calf leather, stamped in gold foil, burnished edges.": "Cuir de veau châtaigne, marqué à la feuille d'or, tranches lissées.",
+    "SADDLE LEATHER": "CUIR SELLIER", "Saddle leather, blind-debossed, burnished edges.": "Cuir sellier, gaufré à sec, tranches lissées.",
+    "CARBON FIBRE": "FIBRE DE CARBONE", "Carbon fibre under clear lacquer, screen-printed in lime and white.": "Fibre de carbone sous vernis transparent, sérigraphie citron vert et blanche.",
+    "BAMBOO": "BAMBOU", "Bamboo, laser-burnt.": "Bambou, pyrogravé au laser.",
+    "WHITE ENAMEL": "ÉMAIL BLANC", "White vitreous enamel on steel, screen-printed in black, an orange band.": "Émail vitrifié blanc sur acier, sérigraphie noire, une bande orange.",
+    "RED ENAMEL": "ÉMAIL ROUGE", "Red vitreous enamel on steel, screen-printed in white.": "Émail vitrifié rouge sur acier, sérigraphie blanche.",
+    "BLACK ANODISED": "ANODISÉ NOIR", "Black anodised aluminium, laser-etched, an orange band.": "Aluminium anodisé noir, gravé au laser, une bande orange.",
+    "BRUSHED BRASS": "LAITON BROSSÉ", "Brushed brass, engraved and filled in black.": "Laiton brossé, gravé et rempli de noir.",
 };
