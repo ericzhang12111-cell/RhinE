@@ -3,7 +3,7 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
-## Unreleased
+## 1.11.0 — 2026-11-02
 
 **Added · 新增**
 - Archive: folders as cases. `SHOW [ALBUMS | TRACKS | FOLDERS]` › `FOLDERS` makes every folder one case, whatever the
@@ -44,8 +44,8 @@ Newest version first. Download any version from [Releases](https://github.com/er
 - Cover grid: with `GROUP` › `FAV`, taking the heart from the last favourite could stop the Archive with a script error
   (`g is undefined`). 封面网格：按 `收藏` 分组时，取消最后一个收藏可能导致档案出现脚本错误（`g is undefined`）。
 - The intro film no longer plays again when foobar2000 builds its panels anew while it runs (reported when Windows
-  switches light / dark, #46). foobar2000 运行中重建面板时（有用户在 Windows 切换浅色 / 深色时遇到），不再重新播放开场动画
-  （#46）。
+  switches light / dark, #46). 运行中的 foobar2000 重建面板时（有用户在 Windows 切换浅色 / 深色时遇到），不再重新播放开场
+  动画（#46）。
 
 ## 1.10.2 — 2026-10-26
 
