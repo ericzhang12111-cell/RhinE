@@ -305,4 +305,6 @@ I18N["fr"] = {
     "RED ENAMEL": "ÉMAIL ROUGE", "Red vitreous enamel on steel, screen-printed in white.": "Émail vitrifié rouge sur acier, sérigraphie blanche.",
     "BLACK ANODISED": "ANODISÉ NOIR", "Black anodised aluminium, laser-etched, an orange band.": "Aluminium anodisé noir, gravé au laser, une bande orange.",
     "BRUSHED BRASS": "LAITON BROSSÉ", "Brushed brass, engraved and filled in black.": "Laiton brossé, gravé et rempli de noir.",
+    // 1.12: the Archive room (LAYOUT › ROOM)
+    "ROOM": "SALLE", "Archive room": "Salle d'archives", "PAGE {0} / {1}": "PAGE {0} / {1}",
 };

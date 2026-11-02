@@ -17,6 +17,7 @@ for (const f of ["emblem", "audio", "ring", "lyrics", "translate", "roman", "wav
 include(fb.ProfilePath + "themes\\audio-archive\\js\\archive.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\artist.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\grid.js");
+include(fb.ProfilePath + "themes\\audio-archive\\js\\room.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\customcase.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\style.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\signal.js");
@@ -220,6 +221,7 @@ const clock = Clock((dt, now) => {
     if (STATE.view === "archive") {
         let more = archiveUpdate(dt);
         if (AR.layout === "grid") more = gridUpdate(dt) || more;
+        else if (AR.layout === "room") more = roomUpdate(dt) || more;
         window.RepaintRect(0, 0, AR.dirtyInfo ? W : arrayW(), H);
         return more;
     }
@@ -299,7 +301,7 @@ function on_paint(gr) {
     // the wallpaper (lib/wallpaper.js) where it is on: LABEL_LIVE then also tells the views they draw over it
     LABEL_LIVE = STATE.view !== "style" && wallpaperOn(STATE.view) && drawWallpaper(gr, "stage", 0, 0, W, H);
     try {
-        if (STATE.view === "archive") AR.layout === "grid" ? drawGrid(gr) : drawArchive(gr);
+        if (STATE.view === "archive") AR.layout === "grid" ? drawGrid(gr) : roomOn() ? drawRoom(gr) : drawArchive(gr);
         else if (STATE.view === "signal") drawSignal(gr);
         else if (STATE.view === "lyrics") drawLyricsView(gr);
         else if (STATE.view === "style") drawStyle(gr);
@@ -728,6 +730,7 @@ function on_mouse_lbtn_dblclk(x, y) {
     if (e) { STATE.sides = pickSides(Object.assign({}, STATE.sides, { [e.key]: SIDES_START[e.key] })); sidesChanged(); sendSide(e.key, SIDES_START[e.key], true); return; }
     if (STATE.view === "style") { styleDblClick(x, hits.at(x, y)); return; }
     if (STATE.view === "archive" && AR.layout === "grid" && !hits.at(x, y)) gridDblClick(x, y);
+    if (STATE.view === "archive" && roomOn() && !hits.at(x, y)) roomDoubleClick(x, y);
 }
 function on_mouse_wheel_h(step) { if (STATE.view === "archive") archiveWheelH(step); }   // a sideways wheel: shelves
 function on_mouse_wheel(step) {

@@ -292,7 +292,7 @@ function pickStep(s) {
         PICK.steps = null;
         if (!curAlbum()) return;
         selectionChanged();   // the file panel catches up
-        if (AR.layout !== "grid") { AR.inspOn = true; inspectImages(); }
+        if (AR.layout === "array") { AR.inspOn = true; inspectImages(); }
         playAlbum();
         clock.wake(); window.Repaint();
         return;
@@ -1513,7 +1513,7 @@ function inspectPending(delay = 450) {
             return;
         }
         INSPECT_ASK.key = "";
-        if (AR.layout === "grid") setLayout("array");
+        if (AR.layout !== "array") setLayout("array");
         AR.inspOn = false; AR.insp = 0;
         placeSelection(key);
         if (!curAlbum()) return;
@@ -1559,6 +1559,7 @@ function archiveMouseMove(x, y, a) {
         window.RepaintRect(infoX() - dp(20), 0, W - infoX() + dp(20), H);
     }
     if (AR.layout === "grid") return gridMouseMove(x, y, a);
+    if (roomOn()) return !a && roomMouseMove(x, y);
     const c = !AR.inspOn && !AF.open && x < arrayW() && !a ? caseUnder(x, y) : null, h = c ? c.i : -1, hg = c ? c.gi : -1;
     let ht = -1;
     if (a && a.id === "ar-ruler" && AR.rulerGeom) { const R = AR.rulerGeom; ht = clamp(Math.round((x - R.x0) / R.step + R.s0), 0, R.n - 1); }
@@ -1605,6 +1606,7 @@ function archiveClick(x, y, a) {
     }
     if (AF.open && x < arrayW()) return;   // the artist file covers the shelves
     if (AR.layout === "grid") { gridClick(x, y, a); return; }
+    if (roomOn()) { roomClick(x, y); return; }
     if (AR.hover >= 0 && AR.hoverRow !== AR.group) { selectCase(AR.hoverRow, AR.hover); return; }
     if (AR.hover >= 0) {
         const r = AR.rows.get(AR.group);
@@ -1649,9 +1651,10 @@ function archiveKey(vk) {
         if (vk === 0x20) { playAlbum(); return true; }
         return vk >= 0x21 && vk <= 0x28;   // navigation keys do nothing while inspecting
     }
-    if (vk === 0x47) { setLayout(AR.layout === "grid" ? "array" : "grid"); return true; }   // G
+    if (vk === 0x47) { setLayout(LAYOUTS[(LAYOUTS.findIndex(([l]) => l === AR.layout) + 1) % LAYOUTS.length][0]); return true; }   // G: the next layout
     if (vk === 0x4C) { setInfoPage(INFO_PAGES[(INFO_PAGES.findIndex(([k]) => k === AR.page) + 1) % INFO_PAGES.length][0]); return true; }   // L: the album file's next page
     if (AR.layout === "grid" && gridKey(vk)) return true;
+    if (roomOn() && roomKey(vk)) return true;
     switch (vk) {
         case 0x26: moveAlbum(-1); return true;          // ↑
         case 0x28: moveAlbum(1); return true;           // ↓
@@ -1684,7 +1687,8 @@ function archiveMenu(x, y) {
     m.AppendMenuSeparator();
     m.AppendMenuItem(0, 7, tr("Case array") + "\tG");
     m.AppendMenuItem(0, 8, tr("Cover grid") + "\tG");
-    m.CheckMenuRadioItem(7, 8, AR.layout === "grid" ? 8 : 7);
+    m.AppendMenuItem(0, 22, tr("Archive room") + "\tG");
+    m.CheckMenuItem(7, AR.layout === "array"); m.CheckMenuItem(8, AR.layout === "grid"); m.CheckMenuItem(22, AR.layout === "room");
     const per = window.CreatePopupMenu();
     PER_PAGE.forEach((n, i) => per.AppendMenuItem(0, 300 + i, tr("{0} covers", n)));
     per.CheckMenuRadioItem(300, 300 + PER_PAGE.length - 1, 300 + Math.max(0, PER_PAGE.indexOf(GRID.per)));
@@ -1734,7 +1738,7 @@ function archiveMenu(x, y) {
     else if (id === 21) setUnit(itemUnit() === "folders" ? "albums" : "folders");
     else if (id === 5) openAlbum();
     else if (id === 6) libIndex(true);
-    else if (id === 7 || id === 8) setLayout(id === 8 ? "grid" : "array");
+    else if (id === 7 || id === 8 || id === 22) setLayout(id === 8 ? "grid" : id === 22 ? "room" : "array");
     else if (id >= 300 && PER_PAGE[id - 300]) setPerPage(PER_PAGE[id - 300]);
     else if (id >= 100 && skins[id - 100]) send("skin", skins[id - 100].id);
 }

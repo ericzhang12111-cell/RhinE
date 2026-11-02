@@ -305,4 +305,6 @@ I18N["zh-CN"] = {
     "RED ENAMEL": "红色搪瓷", "Red vitreous enamel on steel, screen-printed in white.": "钢板红色搪瓷，白色丝网印刷。",
     "BLACK ANODISED": "黑色阳极氧化", "Black anodised aluminium, laser-etched, an orange band.": "黑色阳极氧化铝，激光蚀刻，橙色色带。",
     "BRUSHED BRASS": "拉丝黄铜", "Brushed brass, engraved and filled in black.": "拉丝黄铜，雕刻后填黑。",
+    // 1.12: the Archive room (LAYOUT › ROOM)
+    "ROOM": "档案室", "Archive room": "档案室", "PAGE {0} / {1}": "第 {0} / {1} 页",
 };

@@ -306,4 +306,6 @@ I18N["ja"] = {
     "RED ENAMEL": "赤ほうろう", "Red vitreous enamel on steel, screen-printed in white.": "鋼板に赤のほうろう、白のシルク印刷。",
     "BLACK ANODISED": "黒アルマイト", "Black anodised aluminium, laser-etched, an orange band.": "黒のアルマイト処理アルミ、レーザー刻印、オレンジの帯。",
     "BRUSHED BRASS": "ヘアライン真鍮", "Brushed brass, engraved and filled in black.": "ヘアライン仕上げの真鍮、彫刻に黒の墨入れ。",
+    // 1.12: the Archive room (LAYOUT › ROOM)
+    "ROOM": "資料室", "Archive room": "資料室", "PAGE {0} / {1}": "ページ {0} / {1}",
 };

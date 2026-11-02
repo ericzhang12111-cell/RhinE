@@ -305,4 +305,6 @@ I18N["ko"] = {
     "RED ENAMEL": "빨간색 법랑", "Red vitreous enamel on steel, screen-printed in white.": "강판 위 빨간색 법랑, 흰색 실크 인쇄.",
     "BLACK ANODISED": "검은색 아노다이징", "Black anodised aluminium, laser-etched, an orange band.": "검은색 아노다이징 알루미늄, 레이저 각인, 주황색 띠.",
     "BRUSHED BRASS": "헤어라인 황동", "Brushed brass, engraved and filled in black.": "헤어라인 황동, 조각 후 검은색 충전.",
+    // 1.12: the Archive room (LAYOUT › ROOM)
+    "ROOM": "자료실", "Archive room": "자료실", "PAGE {0} / {1}": "페이지 {0} / {1}",
 };

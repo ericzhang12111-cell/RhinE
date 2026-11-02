@@ -8,7 +8,9 @@
 // Only the covers on screen (and a row around them) are drawn and asked for; thumbnails come from the library worker's
 // disk cache (lib/library.js), so a few thousand albums scroll as easily as a few dozen.
 
-AR.layout = getSetting("archiveLayout", "array");
+// ARRAY (the shelves of cases), GRID (covers) and ROOM (room.js: the artist file's room)
+const LAYOUTS = [["array", "ARRAY"], ["grid", "GRID"], ["room", "ROOM"]];
+AR.layout = LAYOUTS.some(([l]) => l === getSetting("archiveLayout", "array")) ? getSetting("archiveLayout", "array") : "array";
 const GRID = { scroll: Spring(0, 10), geo: null, hover: null, reveal: true, per: getSetting("gridPerPage", 36) };
 const PER_PAGE = [10, 36, 50, 75, 100, 200];
 function setPerPage(n) {
@@ -195,7 +197,7 @@ function drawArchiveBar(gr) {
     const grid = AR.layout === "grid", xr = arrayW() - dp(32), y1 = dp(22), y2 = dp(54), x0 = dp(32);
     const fw = drawFilterChip(gr, x0, grid ? y2 : y1);
     drawPickButton(gr, x0 + (fw ? fw + dp(12) : 0), grid ? y2 : y1);
-    let lx = segToggle(gr, xr, y1, "LAYOUT", [["array", "ARRAY"], ["grid", "GRID"]], AR.layout, "ar-layout", true);
+    let lx = segToggle(gr, xr, y1, "LAYOUT", LAYOUTS, AR.layout, "ar-layout", true);
     if (grid) lx = segToggle(gr, lx - dp(24), y1, "PER PAGE", PER_PAGE.map(n => [n, String(n)]), GRID.per, "ar-per");
     lx = segToggle(gr, lx - dp(24), y1, "SHOW", UNITS, itemUnit(), "ar-unit");
     if (grid) {   // the title in the room left of the toggles: with the grouping when it fits, shortened when even that does not
