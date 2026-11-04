@@ -16,10 +16,12 @@ const ART_DIR = fb.ProfilePath + "audio-archive-cache\\artists\\";
 const ART_DAYS = 30, ART_MISS_DAYS = 7;   // a file is looked up again after 30 days; a failed lookup after 7
 const ART_VER = 2;   // files from an older way of looking up (1: no Deezer / NetEase pictures) are looked up again
 const ART_UA = { "User-Agent": "RhinE-AudioArchive/1.10 ( https://github.com/ericzhang12111-cell/RhinE )", Accept: "application/json" };
-// the interface language's Wikipedia first (Chinese in simplified characters), then English, then the artist's own
-const ART_WIKI = { "zh-CN": "zh", ja: "ja", ko: "ko", fr: "fr", de: "de", en: "en" };
+// the interface language's Wikipedia first (Chinese in the interface's own characters), then English, then the artist's own
+const ART_WIKI = { "zh-CN": "zh", "zh-TW": "zh", ja: "ja", ko: "ko", fr: "fr", de: "de", en: "en" };
 const ART_LANGS = [...new Set([ART_WIKI[UI_LANG] || "en", "en", "ja", "ko", "zh", "fr", "de"])];
-const ART = { mem: new Map(), mb: [], mbBusy: false, last: 0, listeners: [], pics: new Map(), asked: new Map() };   // asked: "key|lang" -> an article fetch
+// zh.wikipedia.org keeps one article per artist and renders it in either script, so the interface decides which
+const ART_VARIANT = UI_LANG === "zh-TW" ? "zh-hant" : "zh-hans";
+const ART = { mem: new Map(), mb: [], mbBusy: false, last: 0, listeners: [], pics: new Map(), asked: new Map() };   // asked: "key|lang(|script)" -> an article fetch
 const TF_MBID = fb.TitleFormat("[%musicbrainz_artistid%]|[%musicbrainz artist id%]");
 
 const artKey = name => fnv(String(name).trim().toLowerCase());
@@ -214,17 +216,17 @@ function artWiki(rec, log, next) {
     });
 }
 
-// a language's article lead (all its paragraphs, up to 2400 characters) into rec.wiki[lang]; Chinese in simplified
-// characters
+// a language's article lead (all its paragraphs, up to 2400 characters) into rec.wiki[lang], Chinese in the
+// interface's characters; which script an article was kept in is remembered so the other one asks for it again
 function artWikiText(rec, lang, done) {
     const title = rec.wikiTitles && rec.wikiTitles[lang];
     if (!title) { done(false); return; }
-    artGet(`https://${lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&exsectionformat=plain&exchars=2400&redirects=1&format=json&titles=${encodeURIComponent(title)}${lang === "zh" ? "&variant=zh-hans" : ""}`, d => {
+    artGet(`https://${lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&exsectionformat=plain&exchars=2400&redirects=1&format=json&titles=${encodeURIComponent(title)}${lang === "zh" ? `&variant=${ART_VARIANT}` : ""}`, d => {
         const p = d && d.query && d.query.pages && Object.values(d.query.pages)[0];
         const text = p && p.extract ? p.extract.replace(/\n{2,}/g, "\n").trim() : "";
         if (!text) { done(false); return; }
         rec.wiki = rec.wiki || {};
-        rec.wiki[lang] = { title: p.title, text, url: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(p.title.replace(/ /g, "_"))}` };
+        rec.wiki[lang] = { title: p.title, text, url: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(p.title.replace(/ /g, "_"))}`, variant: lang === "zh" ? ART_VARIANT : "" };
         done(true);
     });
 }
@@ -256,9 +258,11 @@ function artistDownloaded(path, ok) {
 function artistBio(rec) {
     if (!rec) return null;
     if (rec.localText) return { text: rec.localText, source: "ARTIST.TXT", lang: "", url: "" };
-    const w = rec.wiki || {}, want = ART_LANGS[0], ak = artKey(rec.name) + "|" + want, asked = ART.asked.get(ak);
-    // asked once per language and session; a fetch that failed is tried again two minutes later
-    if (!w[want] && rec.wikiTitles && rec.wikiTitles[want] && !(asked && (asked.busy || Date.now() - asked.t < 120000))) {
+    const w = rec.wiki || {}, want = ART_LANGS[0], ak = artKey(rec.name) + "|" + want + (want === "zh" ? "|" + ART_VARIANT : ""), asked = ART.asked.get(ak);
+    // asked once per language and session; a fetch that failed is tried again two minutes later; an article kept in
+    // the other script is not shown and asked for again (a record cached before the variant was remembered has none)
+    const ready = w[want] && (want !== "zh" || (w[want].variant || "zh-hans") === ART_VARIANT);
+    if (!ready && rec.wikiTitles && rec.wikiTitles[want] && !(asked && (asked.busy || Date.now() - asked.t < 120000))) {
         ART.asked.set(ak, { busy: true, t: Date.now() });
         artWikiText(rec, want, ok => {
             ART.asked.set(ak, { busy: false, t: Date.now() });
@@ -271,7 +275,7 @@ function artistBio(rec) {
     }
     // Chinese readers get NetEase's introduction before an article in another language; others get it last
     const ne = rec.neBio ? { text: rec.neBio.text, source: "NETEASE", lang: "zh", url: rec.neBio.url } : null;
-    if (w[want]) return { text: w[want].text, source: "WIKIPEDIA", lang: want, url: w[want].url, licence: "CC BY-SA 4.0" };
+    if (ready) return { text: w[want].text, source: "WIKIPEDIA", lang: want, url: w[want].url, licence: "CC BY-SA 4.0" };
     if (ART.asked.get(ak) && ART.asked.get(ak).busy) return { text: tr("Looking the artist up …"), source: "", lang: "", url: "" };
     if (want === "zh" && ne) return ne;
     const lang = ART_LANGS.find(l => w[l]);
