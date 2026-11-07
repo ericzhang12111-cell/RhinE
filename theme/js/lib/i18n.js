@@ -4,7 +4,7 @@
 // string are filled from tr()'s other arguments. The language is "uiLang" in the settings (default: Windows' display
 // language when there is a table for it); changing it reloads every panel (message "ui-lang", lib/bus.js).
 
-const UI_LANGS = [["en", "English"], ["zh-CN", "简体中文"], ["ja", "日本語"], ["ko", "한국어"], ["fr", "Français"], ["de", "Deutsch"]];
+const UI_LANGS = [["en", "English"], ["zh-CN", "简体中文"], ["zh-TW", "繁體中文"], ["ja", "日本語"], ["ko", "한국어"], ["fr", "Français"], ["de", "Deutsch"]];
 const I18N = {};
 
 // Windows' display language: "zh-CN", "zh-TW", "ja", "ko", "de", "fr" or "en"
@@ -26,8 +26,7 @@ const SYSTEM_LANG = systemLang();
 const UI_LANG = (() => {
     const set = String(getSetting("uiLang", ""));
     if (UI_LANGS.some(l => l[0] === set)) return set;
-    const sys = SYSTEM_LANG === "zh-TW" ? "zh-CN" : SYSTEM_LANG;   // no Traditional table yet: Simplified reads better than English
-    return UI_LANGS.some(l => l[0] === sys) ? sys : "en";
+    return UI_LANGS.some(l => l[0] === SYSTEM_LANG) ? SYSTEM_LANG : "en";
 })();
 if (UI_LANG !== "en") {
     const f = fb.ProfilePath + `themes\\audio-archive\\js\\lib\\lang\\${UI_LANG}.js`;

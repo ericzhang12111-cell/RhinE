@@ -41,7 +41,7 @@ are fetched online when your files have none.
 - **Signal:** a rendered ∞ ring, a spectrum and the whole-track waveform, or a classic player screen.
 - **Style:** eleven case skins and eight colour schemes in light and dark, your own case and scheme, a wallpaper,
   title tags, three fonts.
-- English, Simplified Chinese, Japanese, Korean, French and German. The theme updates itself.
+- English, Simplified and Traditional Chinese, Japanese, Korean, French and German. The theme updates itself.
 
 ## Requirements
 

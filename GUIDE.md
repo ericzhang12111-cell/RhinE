@@ -10,7 +10,7 @@ Five views: **Archive** (every album, or every track, as a rendered specimen cas
 **Lyrics** (synced lyrics from your files or fetched online, with a translation when they are in another language),
 **Signal** (a rendered ∞ ring, spectrum and the whole-track waveform, or a Classic player screen) and **Style** (eleven
 case skins and eight colour schemes, each in light and dark). A pre-rendered intro film, scan transitions, grain and a
-Reduce motion option. The interface is in English, Simplified Chinese, Japanese, Korean, French or German.
+Reduce motion option. The interface is in English, Simplified or Traditional Chinese, Japanese, Korean, French or German.
 
 ## Requirements
 
@@ -146,7 +146,7 @@ Running it again keeps the foobar2000 folder and installs the theme again.
 | Text size (8 – 15, any size: 10 is 100 %), Archive array scale (80 – 130 %), inspection size (100 – 150 %) | `SIZE` (type a number, or − / +, the wheel, `↑` `↓`), `ARRAY` and `INSPECT` under `DISPLAY` in `05 STYLE`, or `MENU › Audio Archive › Text size` (its steps) / `Archive array scale` / `Inspection size` | — |
 | Archive floor: the page colour, a rendered lab deck under the shelves, or REAL STYLE (the Archive as one rendered scene on a walnut desk, always with the FROST case) | `FLOOR` under `DISPLAY` in `05 STYLE`, or `MENU › Audio Archive › Archive floor` | — |
 | Width of the side columns: Playlists' list and card, Lyrics' left column and card, the Archive's album file | drag the column's edge (the cursor turns to ↔); a double-click on the edge gives back the width it came with | — |
-| Interface language: English, 简体中文, 日本語, 한국어, Français, Deutsch (default: Windows' display language) | `MENU › Audio Archive › Language · 语言 · 言語 · 언어 · Langue · Sprache` | — |
+| Interface language: English, 简体中文, 繁體中文, 日本語, 한국어, Français, Deutsch (default: Windows' display language) | `MENU › Audio Archive › Language · 语言 · 語言 · 言語 · 언어 · Langue · Sprache` | — |
 
 The theme starts dark, with the ARCHIVE colour scheme and the WHITE case skin, in Windows' display language. Its
 settings are kept in `<profile>\audio-archive-settings.json` as well as in the layout, so running a newer `install.cmd`

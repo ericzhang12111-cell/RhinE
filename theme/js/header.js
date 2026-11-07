@@ -475,7 +475,7 @@ function showMenu(a) {
     const lm = window.CreatePopupMenu();
     UI_LANGS.forEach(([, name], i) => lm.AppendMenuItem(0, 450 + i, name));
     lm.CheckMenuRadioItem(450, 450 + UI_LANGS.length - 1, 450 + Math.max(0, UI_LANGS.findIndex(l => l[0] === UI_LANG)));
-    lm.AppendTo(theme, 0, "Language · 语言 · 言語 · 언어 · Langue · Sprache");
+    lm.AppendTo(theme, 0, "Language · 语言 · 語言 · 言語 · 언어 · Langue · Sprache");
     theme.AppendMenuSeparator();
     theme.AppendMenuItem(0, 12, `${tr("Check for updates…")}\tRhinE ${themeVersion()}`);
     theme.AppendMenuItem(getSetting("updateCheck", true) !== false ? 0x8 : 0, 13, tr("Check for updates daily"));
