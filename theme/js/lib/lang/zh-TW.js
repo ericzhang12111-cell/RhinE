@@ -24,6 +24,7 @@ I18N["zh-TW"] = {
     "Style view": "外觀檢視", "Light mode": "淺色模式", "Dark mode": "深色模式", "Playlist preset: {0}": "播放清單預設：{0}",
     "Index": "索引", "Album": "專輯", "Reduce motion": "減少動態", "Grain texture": "顆粒質感",
     "AUTO: ask NetEase when LRCLIB has none": "自動：LRCLIB 沒有時查詢網易雲",
+    "NETEASE · OFF IN AUTO · CLICK TO ALLOW": "網易雲 · 自動模式下未開啟 · 點擊允許",
     "Romanized lyrics (Japanese, Korean)": "羅馬拼音歌詞（日語、韓語）", "Edit lyrics (.lrc)…": "編輯歌詞（.lrc）…", "Lyrics source": "歌詞來源", "Intro film at start": "啟動時播放開場動畫",
     "Play intro film": "播放開場動畫", "Shuffle entire library": "隨機播放整個媒體庫", "Colour scheme": "配色方案",
     "Text size": "文字大小", "Archive array scale": "檔案陣列縮放", "Inspection size": "檢視尺寸", "Case skin": "外殼",

@@ -397,6 +397,10 @@ function drawLyricsView(gr) {
         // and the tag (it never goes online, so a "LRCLIB · OFF" line described something that was never tried), AUTO both
         const file = [[tr("LRC FILE · NOT FOUND"), 0], [tr("LYRICS TAG · NOT FOUND"), 0]];
         const remote = [[`${srcName} · ${online}`, searching ? 1 : 0]], done = [[tr("PLAYBACK CONTINUES"), 1]];
+        // AUTO without its NetEase fallback stops at LRCLIB: say so where the miss is reported, with the switch on the
+        // line itself (it sat only in MENU › Lyrics source, off by default outside a Chinese Windows, and read as AUTO
+        // skipping NetEase)
+        if (STATE.lyricsSource === "auto" && !STATE.lyricsNeteaseAuto && LYR.state === "NOT FOUND") remote.push([tr("NETEASE · OFF IN AUTO · CLICK TO ALLOW"), 0, "lyr-ne-auto"]);
         const lines = lyrFixed() ? [...remote, ...done] : lyrOnline() ? [...file, ...remote, ...done] : [...file, ...done];
         drawAlert(gr, g, { head: [tr("SYSTEM NOTICE"), tr("LYRICS · 03")], title: tr(searching ? "SEARCHING" : "NO LYRICS"), wait: tr(searching ? "QUERYING {0}" : "AWAITING INPUT", srcName), lines });
     }
@@ -664,8 +668,11 @@ function drawAlert(gr, g, a) {
     label(gr, a.title, ts, cx, by + Math.round((barH - labelHeight(ts)) / 2), 1);
     // checklist
     let ly = by + barH + dp(22);
-    for (const [text, marked] of a.lines) {
-        const col = marked ? tone : C["fg-soft"], s = dp(7), sx = x + w - dp(4) - s;
+    for (const [text, marked, id] of a.lines) {
+        // a line with an id is a switch: it answers a click and lights up under the pointer
+        const lit = id && hover && hover.id === id, col = marked || lit ? tone : C["fg-soft"], s = dp(7), sx = x + w - dp(4) - s;
+        if (id) hits.add(id, x, ly, w, lh);
+        if (lit) box(gr, x - dp(4), ly, w + dp(8), lh, tone);
         label(gr, text, st(ST.anaL, col), x + dp(4), ly + Math.round((lh - labelHeight(ST.anaL)) / 2));
         if (marked) gr.FillSolidRect(sx, ly + Math.round((lh - s) / 2), s, s, tone); else box(gr, sx, ly + Math.round((lh - s) / 2), s, s, C["fg-soft"]);
         ly += lh;
@@ -755,6 +762,14 @@ function on_mouse_lbtn_up(x, y) {
     else if (a.id === "pager") { if (a.data === 0) fb.Prev(); else if (a.data === 2) fb.Next(); }
     else if (a.id === "queue") plman.ExecutePlaylistDefaultAction(a.data.pl, a.data.index);
     else if (a.id === "lyr-source") setLyricsSource(a.data);
+    else if (a.id === "lyr-ne-auto") {
+        // the same switch as MENU › Lyrics source › AUTO: ask NetEase…; frame.js saves it and tells the others (not this
+        // panel: NotifyOthers skips the sender), so it is applied here as well
+        send("lyrics-netease-auto", true);
+        STATE.lyricsNeteaseAuto = true;
+        if (T.handle) { T.lyrics = null; npChanged(false, T.handle); }
+        clock.wake(); window.Repaint();
+    }
     else if (a.id === "lyr-trans") lyricsTransMenu(a.x, a.y + a.h);
     else if (a.id === "lyric" && T.lyrics && T.lyrics.lines[a.data] && T.lyrics.lines[a.data].t != null && fb.IsPlaying) { LYR_SCROLL.n = 0; fb.PlaybackTime = T.lyrics.lines[a.data].t; }
     else if (a.id === "trace" && fb.IsPlaying && fb.PlaybackLength > 0) fb.PlaybackTime = clamp((x - a.x) / a.w, 0, 1) * fb.PlaybackLength;

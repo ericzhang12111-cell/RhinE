@@ -22,6 +22,7 @@ I18N["zh-CN"] = {
     "Style view": "外观视图", "Light mode": "浅色模式", "Dark mode": "深色模式", "Playlist preset: {0}": "播放列表预设：{0}",
     "Index": "索引", "Album": "专辑", "Reduce motion": "减少动态", "Grain texture": "颗粒质感",
     "AUTO: ask NetEase when LRCLIB has none": "自动：LRCLIB 没有时查询网易云",
+    "NETEASE · OFF IN AUTO · CLICK TO ALLOW": "网易云 · 自动模式下未开启 · 点击允许",
     "Romanized lyrics (Japanese, Korean)": "罗马音歌词（日语、韩语）", "Edit lyrics (.lrc)…": "编辑歌词（.lrc）…", "Lyrics source": "歌词来源", "Intro film at start": "启动时播放开场动画",
     "Play intro film": "播放开场动画", "Shuffle entire library": "随机播放整个媒体库", "Colour scheme": "配色方案",
     "Text size": "文字大小", "Archive array scale": "档案阵列缩放", "Inspection size": "查看尺寸", "Case skin": "外壳",

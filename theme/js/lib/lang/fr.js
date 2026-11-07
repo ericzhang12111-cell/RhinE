@@ -22,6 +22,7 @@ I18N["fr"] = {
     "Style view": "Vue Style", "Light mode": "Mode clair", "Dark mode": "Mode sombre", "Playlist preset: {0}": "Présentation de la playlist : {0}",
     "Index": "Index", "Album": "Album", "Reduce motion": "Réduire les animations", "Grain texture": "Texture granuleuse",
     "AUTO: ask NetEase when LRCLIB has none": "AUTO : demander à NetEase si LRCLIB n'a rien",
+    "NETEASE · OFF IN AUTO · CLICK TO ALLOW": "NETEASE · DÉSACTIVÉ EN AUTO · CLIQUER POUR AUTORISER",
     "Romanized lyrics (Japanese, Korean)": "Paroles romanisées (japonais, coréen)", "Edit lyrics (.lrc)…": "Modifier les paroles (.lrc)…", "Lyrics source": "Source des paroles", "Intro film at start": "Film d'intro au démarrage",
     "Play intro film": "Lire le film d'intro", "Shuffle entire library": "Mélanger toute la bibliothèque", "Colour scheme": "Palette",
     "Text size": "Taille du texte", "Archive array scale": "Taille des rangées", "Inspection size": "Taille de l'inspection", "Case skin": "Boîtier",
