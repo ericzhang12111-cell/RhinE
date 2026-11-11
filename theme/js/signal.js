@@ -171,7 +171,7 @@ function drawClassic(gr) {
     const cy = Math.round(top + dp(22) + R + qh / 2), x = cx - s / 2, y = cy - s / 2;
     // the cover, a hairline on its edge, crop brackets round it, the index tab on its top edge
     if (cov && cov.img) gr.DrawImage(cov.img, x, y, s, s, 0, 0, cov.img.Width, cov.img.Height);
-    else { gr.FillSolidRect(x, y, s, s, C.well); gr.DrawText(tr("NO COVER"), fontFor(tr("NO COVER"), 9, 500), muted, x, y, s, s, DT_CENTER_SINGLE); }
+    else { gr.FillSolidRect(x, y, s, s, C.well); text(gr, tr("NO COVER"), 9, 500, muted, x, y, s, s, 1); }
     box(gr, Math.round(x), Math.round(y), s, s, withAlpha(C.fg, .25));
     const o = dp(12), M = dp(14);
     for (const [bx, by, sx, sy] of [[x - o, y - o, 1, 1], [x + s + o, y - o, -1, 1], [x - o, y + s + o, 1, -1], [x + s + o, y + s + o, -1, -1]]) {
@@ -220,7 +220,7 @@ function drawClassic(gr) {
     // left margin, above the axis: the file tag and its data
     if (I && side > dp(200)) {
         let ty = cy - dp(112);
-        chip(gr, `${tr("FILE")} ${T.file ? pad(T.file, 3) : "—"}`, m, ty, dp(18), "inv", 8.5);
+        chip(gr, tr("FILE {0}", T.file ? pad(T.file, 3) : "—"), m, ty, dp(18), "inv", 8.5);
         ty += dp(30);
         const rows = [
             `${tr("TRACK")} ${I.track ? I.track + (I.total ? " / " + I.total : "") : "—"}`,
@@ -258,9 +258,9 @@ function drawClassic(gr) {
     gr.FillSolidRect(m, ry - dp(18), tabW, dp(18), C.fg);
     label(gr, tr("NOW PLAYING"), tabS, m + dp(8), ry - dp(18) + Math.round((dp(18) - labelHeight(CL_ST.tag)) / 2));
     const title = I ? I.title : tr("NO SIGNAL"), tw = W - 2 * m - dp(240);
-    gr.DrawText(title, fontFor(title, 30, 700), C.fg, m - dp(2), ry + dp(12), tw, dp(44), DT_SINGLE | DT_ELLIPSIS);
+    text(gr, title, 30, 700, C.fg, m - dp(2), ry + dp(12), tw, dp(44));
     const meta = I ? [I.artist, I.album, I.year].filter(Boolean).join("  ·  ").toUpperCase() : tr("AWAITING SIGNAL");
-    gr.DrawText(meta, fontFor(meta, 11, 500), C["fg-soft"], m, ry + dp(58), tw, dp(20), DT_SINGLE | DT_ELLIPSIS);
+    text(gr, meta, 11, 500, C["fg-soft"], m, ry + dp(58), tw, dp(20));
     gr.DrawText(playing ? fmtTime(el) : "--:--", font(30, 300), C.fg, W - m - dp(240), ry + dp(12), dp(240), dp(44), DT_RIGHT_SINGLE);
     text(gr, playing && len > 0 ? `/ ${fmtTime(len)}` : "/ --:--", 11, 500, C["fg-soft"], W - m - dp(240), ry + dp(58), dp(240), dp(20), 2);
 
@@ -275,7 +275,7 @@ function drawClassic(gr) {
         const tgw = labelWidth(tag, ts) + dp(20), lx = m + tgw + dp(28), lw = pw - tgw - dp(140);
         gr.FillSolidRect(m + dp(10), py + dp(10), tgw, ph - dp(20), C.accent);
         label(gr, tag, ts, m + dp(20), py + Math.round((ph - labelHeight(CL_ST.tag)) / 2));
-        gr.DrawText(caption, fontFor(caption, 17, 500), C.bg, lx, py, lw, ph, DT_SINGLE | DT_ELLIPSIS);
+        text(gr, caption, 17, 500, C.bg, lx, py, lw, ph);
         hazard(gr, m + pw - dp(84), py + dp(10), dp(60), ph - dp(20), C.accent);
         if (line) {
             const t1 = li + 1 < L.lines.length ? L.lines[li + 1].t : len, f = clamp((el - line.t) / Math.max(.1, t1 - line.t), 0, 1);

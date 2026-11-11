@@ -8,7 +8,7 @@ I18N["ko"] = {
     "JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC": "1월 2월 3월 4월 5월 6월 7월 8월 9월 10월 11월 12월",
     "{0} · {1} {2} {3}": "{3}년 {2} {1}일 ({0})",
     "ARCHIVE SECTION · BROWSE": "아카이브 · 탐색", "LYRICS SECTION · PLAYBACK": "가사 · 재생",
-    "SIGNAL SECTION · MONITOR": "시그널 · 모니터", "STYLE SECTION · APPEARANCE": "스타일 · 외관",
+    "SIGNAL SECTION · MONITOR": "시그널 · 모니터", "STYLE SECTION · APPEARANCE": "스타일 · 외관", "ONLINE SECTION · STREAMING": "온라인 · 스트리밍",
     "PLAYLIST SECTION": "재생목록", "SIGNAL SECTION": "시그널", "CLASSIC DISPLAY": "클래식 디스플레이",
     "START": "시작", "NOW PLAYING": "재생 중", "LIGHT": "라이트", "DARK": "다크", "ORDER": "순서",
     "SHUFFLE ALL": "전체 셔플", "VOL": "볼륨", "{0} FILES · {1} ALBUMS": "파일 {0}개 · 앨범 {1}개",
@@ -45,13 +45,13 @@ I18N["ko"] = {
     "NOTHING MATCHES \"{0}\"": "\"{0}\"와(과) 일치하는 항목 없음",
     "NO ALBUMS · THE MEDIA LIBRARY AND THE PLAYLISTS ARE EMPTY": "앨범 없음 · 미디어 라이브러리와 재생목록이 비어 있음",
     "INDEXING LIBRARY …": "라이브러리 색인 중 …", "INDEXING …": "색인 중 …", "FILTER": "필터",
-    "ALBUM / SELECT": "앨범 / 선택", "TRACK / SELECT": "곡 / 선택", "SHELF": "선반", "INSPECTION": "상세 보기",
+    "ALBUM / SELECT": "선택한 앨범", "TRACK / SELECT": "선택한 트랙", "SHELF": "선반", "INSPECTION": "상세 보기",
     "ALBUM NO.": "앨범 번호", "PROFILE": "프로필", "FORMAT": "포맷", "RES": "해상도", "DISCS": "디스크", "PLAYS": "재생 수",
     "NO TRACKS": "곡 없음", "SOURCE · ALL PLAYLISTS (NO MEDIA LIBRARY FOLDERS)": "출처 · 모든 재생목록 (미디어 라이브러리 폴더 없음)", "+ {0} MORE  ·  OPEN ALBUM": "+ {0}곡 더  ·  앨범 열기", "PLAY ALBUM": "앨범 재생",
     "PLAY TRACK": "곡 재생", "OPEN ALBUM": "앨범 열기",
     "Group by genre": "장르별 그룹", "Group by decade": "연대별 그룹", "Group by artist initial": "아티스트 첫 글자별 그룹",
     "No groups": "그룹 없음", "Artist": "아티스트", "Album title": "앨범 제목", "Year": "연도", "Date added (newest first)": "추가일 (최신순)",
-    "Sort by": "정렬 기준", "Show every track as its own item": "모든 곡을 각각 표시", "Grid: covers per page": "그리드: 페이지당 커버 수",
+    "Sort by": "정렬 기준", "Show every track as its own item": "모든 곡을 각각 표시", "Compact top bar": "상단 바 간결하게", "Grid: covers per page": "그리드: 페이지당 커버 수",
     "{0} covers": "커버 {0}개", "Play album": "앨범 재생", "Open album in playlist": "재생목록에서 앨범 열기",
     "Re-index library": "라이브러리 다시 색인", "Case array": "케이스 배열", "Cover grid": "커버 그리드",
 
@@ -64,14 +64,15 @@ I18N["ko"] = {
     "Playlist name": "재생목록 이름", "Rename playlist": "재생목록 이름 바꾸기",
 
     // profile card
-    "SIGNAL PROFILE": "시그널 프로필", "FILE": "파일", "STANDBY": "대기", "HI-RES": "하이레스", "LOSSLESS": "무손실", "LOSSY": "손실",
-    "NO SIGNAL": "신호 없음", "TRACK INFORMATION LOADED": "곡 정보 불러옴", "AWAITING SIGNAL": "신호 대기 중",
+    "FILE {0}": "트랙 {0}", "LOCAL FILE": "로컬 파일",
+    "SIGNAL PROFILE": "트랙 정보", "FILE": "파일", "STANDBY": "대기", "HI-RES": "하이레스", "LOSSLESS": "무손실", "LOSSY": "손실",
+    "NO SIGNAL": "재생 안 함", "TRACK INFORMATION LOADED": "곡 정보 불러옴", "AWAITING SIGNAL": "재생 대기",
     "BITRATE": "비트레이트", "GAIN": "게인", "QUEUE": "대기열", "QUEUE / NEXT": "대기열 / 다음", "END OF PLAYLIST": "재생목록 끝",
     "INFO": "INFO",
 
     // lyrics
     "SYSTEM WARNING": "시스템 경고", "SYSTEM NOTICE": "시스템 알림", "PLAYBACK · 03": "재생 · 03", "LYRICS · 03": "가사 · 03",
-    "WARNING": "경고", "ADVANCING": "건너뛰는 중", "FILE NOT FOUND": "파일을 찾을 수 없음", "DECODER · NO INPUT": "디코더 · 입력 없음",
+    "WARNING": "경고", "ADVANCING": "다음 곡으로", "FILE NOT FOUND": "파일을 찾을 수 없음", "DECODER · NO INPUT": "디코더 · 입력 없음",
     "ADVANCING TO NEXT TRACK": "다음 곡으로 이동", "NO TRACK LOADED": "불러온 곡 없음", "OUTPUT · IDLE": "출력 · 유휴",
     "NOT FOUND": "찾을 수 없음", "SEARCHING": "검색 중", "OFFLINE": "오프라인", "NO LYRICS": "가사 없음",
     "QUERYING {0}": "{0} 조회 중", "AWAITING INPUT": "입력 대기 중", "LRC FILE · NOT FOUND": "LRC 파일 · 없음",
@@ -107,8 +108,8 @@ I18N["ko"] = {
     "Your own: pick the page, the text and the accent": "직접 설정: 배경, 글자, 포인트 색 선택", "CUSTOM SCHEME": "사용자 색 구성표", "Pick the page, the text and the accent; the rest follows.": "배경, 글자, 포인트 색을 고르면 나머지는 자동으로 맞춰집니다.", "PAGE": "배경", "ACCENT": "포인트", "GOOD": "좋음", "READABLE": "읽을 수 있음", "HARD TO READ": "읽기 어려움", "TEXT ON PAGE": "배경 위 글자", "ACCENT ON PAGE": "배경 위 포인트", "RESET TO ARCHIVE COLOURS": "ARCHIVE 색으로 되돌리기",
     "Black anodised aluminium, black-on-black etching, topographic lines, one white light": "검은 아노다이징 알루미늄, 검은 에칭, 등고선 무늬, 흰 표시등 하나",
     "RANDOM PICK": "랜덤 선택", "PICKING …": "고르는 중 …", "Random pick": "랜덤 선택", "Titles on the cases' top edges": "케이스 윗면에 제목 표시", "Show the shelves in front (see-through)": "앞쪽 선반 표시 (반투명)",
-    "Case under the mouse": "마우스 아래 케이스", "Outline it": "윤곽선 표시", "Show its title": "제목 표시", "Nothing": "표시 안 함",
-    "White marble specimen case, frosted polymer edges, orange index tab": "흰 대리석 표본 케이스, 반투명 폴리머 테두리, 주황색 인덱스 탭",
+    "Case under the mouse": "마우스를 올린 케이스", "Outline it": "윤곽선 표시", "Show its title": "제목 표시", "Nothing": "표시 안 함",
+    "White marble specimen case, frosted polymer edges, orange index tab": "흰 대리석 케이스, 반투명 폴리머 테두리, 주황색 인덱스 탭",
     "Carbon body, black rubber edges, yellow-and-black stripe band, signal yellow tab": "카본 바디, 검은 고무 테두리, 노랑·검정 줄무늬 띠, 시그널 옐로 탭",
     "Soft matte white plastics and white metal, frosted silver tab": "부드러운 무광 흰 플라스틱과 흰 금속, 반투명 실버 탭",
     "Clear glass frame with frosted edges, caustic glass behind the cover, green glass tab": "반투명 테두리의 투명 유리 프레임, 커버 뒤 커스틱 유리, 초록 유리 탭",
@@ -126,7 +127,7 @@ I18N["ko"] = {
 
     // intro film overlays
     "IGNITION": "점화", "TRANSFER": "전송", "DEPLOY": "배치", "LOCK": "고정", "LINK": "연결",
-    "RAIL ONLINE": "레일 온라인", "SPECIMEN  ·  SLOT 01": "표본  ·  슬롯 01", "SPECIMEN  ·  LOWERING": "표본  ·  하강 중",
+    "RAIL ONLINE": "레일 온라인", "SPECIMEN  ·  SLOT 01": "디스크  ·  슬롯 01", "SPECIMEN  ·  LOWERING": "디스크  ·  넣는 중",
     "OUTPUT DEVICE": "출력 장치", "DECODER CHAIN": "디코더 체인", "LIBRARY INDEX": "라이브러리 색인", "EMPTY": "비어 있음",
     "ARTWORK CACHE": "아트워크 캐시", "LYRICS ENGINE": "가사 엔진", "SIGNAL PATH  ·  48 BANDS": "시그널 경로  ·  48밴드",
     "RAIL 02  ·  SLOT 01  ·  LOCK": "레일 02  ·  슬롯 01  ·  고정", "SESSION LINK": "세션 연결",
@@ -214,7 +215,7 @@ I18N["ko"] = {
     "TICKET": "티켓",
     "TAG BODY": "태그 가운데",
     "SOLID": "단색",
-    "Over the Signal": "시그널 위로",
+    "Over the Signal": "Over the Signal",
     "Glossy plastic, coloured band by band.": "유광 플라스틱, 띠마다 다른 색.",
     "Matte card stock, its fibres showing.": "섬유가 보이는 무광 카드지.",
     "Brushed aluminium: its grain along the tag, the light a band across it.": "브러시드 알루미늄: 결은 태그를 따라, 빛은 그 위를 가로지르는 띠로.",
@@ -222,7 +223,7 @@ I18N["ko"] = {
     "Clear acrylic: the panel shows through, tinted by the band colours.": "투명 아크릴: 뒤의 패널이 띠 색으로 물들어 비칩니다.",
     "The Tide case's blue gradient glass, see-through.": "타이드 케이스의 파랑 그라데이션 유리, 투명.",
     "The Aurora case's pastel gradient glass, see-through.": "오로라 케이스의 파스텔 그라데이션 유리, 투명.",
-    "ON THE SIGNAL PROFILE CARD": "시그널 프로필 카드에",
+    "ON THE SIGNAL PROFILE CARD": "트랙 정보 카드에 표시",
     "ITS OWN COLOURS": "고유 색",
     "TAG OPACITY": "태그 불투명도",
     "TAG COLOURS": "태그 색",
@@ -287,7 +288,7 @@ I18N["ko"] = {
     // 1.10.2: the frosted glass on the cases
     "GLASS": "유리", "Frosted glass on the cases": "케이스 반투명 유리",
     // 1.11: folders as cases (SHOW FOLDERS, GROUP › FOLDER)
-    "FOLDERS": "폴더", "FOLDER": "폴더", "{0} FOLDER": "폴더 {0}개", "{0} FOLDERS": "폴더 {0}개", "FOLDER GRID": "폴더 그리드", "FOLDER / SELECT": "폴더 / 선택", "Group by folder": "폴더별 그룹", "Show every folder as one item": "폴더마다 하나로 표시", "Favourite folder": "즐겨찾는 폴더", "{0} · LOOSE TRACKS": "{0} · 낱곡", "FOLDER NO.": "폴더 번호", "PLAY FOLDER": "폴더 재생", "OPEN IN PLAYLIST": "목록에서 열기", "Play folder": "폴더 재생", "Open folder in playlist": "폴더를 재생목록에서 열기",
+    "FOLDERS": "폴더", "FOLDER": "폴더", "{0} FOLDER": "폴더 {0}개", "{0} FOLDERS": "폴더 {0}개", "FOLDER GRID": "폴더 그리드", "FOLDER / SELECT": "선택한 폴더", "Group by folder": "폴더별 그룹", "Show every folder as one item": "폴더마다 하나로 표시", "Favourite folder": "즐겨찾는 폴더", "{0} · LOOSE TRACKS": "{0} · 낱곡", "FOLDER NO.": "폴더 번호", "PLAY FOLDER": "폴더 재생", "OPEN IN PLAYLIST": "목록에서 열기", "Play folder": "폴더 재생", "Open folder in playlist": "폴더를 재생목록에서 열기",
     // 1.11: light / dark following Windows (#46), borderless full screen
     "SYSTEM": "시스템", "Follow Windows light / dark": "라이트 / 다크를 Windows에 맞춤", "WINDOW": "창", "NORMAL": "일반", "BORDERLESS": "테두리 없음", "Borderless full screen": "테두리 없는 전체 화면",
     // 1.11: the factory tags (05 STYLE › TITLE TAG › FACTORY)
@@ -306,5 +307,44 @@ I18N["ko"] = {
     "BLACK ANODISED": "검은색 아노다이징", "Black anodised aluminium, laser-etched, an orange band.": "검은색 아노다이징 알루미늄, 레이저 각인, 주황색 띠.",
     "BRUSHED BRASS": "헤어라인 황동", "Brushed brass, engraved and filled in black.": "헤어라인 황동, 조각 후 검은색 충전.",
     // 1.12: the Archive room (LAYOUT › ROOM)
-    "ROOM": "자료실", "Archive room": "자료실", "PAGE {0} / {1}": "페이지 {0} / {1}",
+    "ROOM": "자료실", "Archive room": "자료실",
+   
+    // 2.0: 06 ONLINE (NetEase through the local bridge)
+    // 2.0: import
+    "IMPORT": "가져오기", "IMPORT A PLAYLIST": "플레이리스트 가져오기", "A NetEase or QQ Music playlist link, or a file: Exportify's CSV (Spotify), Spotify's data export (Playlist1.json), a CSV, or \"artist - title\" lines.": "NetEase 또는 QQ Music 플레이리스트 링크, 또는 파일: Exportify CSV(Spotify), Spotify 데이터 내보내기(Playlist1.json), CSV, “아티스트 - 제목” 줄.", "What your library has becomes a foobar2000 playlist; the rest goes on a list of what is missing.": "라이브러리에 있는 곡은 foobar2000 플레이리스트가 되고, 나머지는 없는 곡 목록에 적힙니다.", "PASTE A LINK": "링크 붙여넣기", "OPEN A FILE": "파일 열기", "READING…": "읽는 중…", "IMPORTED": "가져온 항목", "{0} MISSING": "{0}곡 없음", "ALL FOUND": "모두 찾음", "OPEN ONLINE": "온라인에서 열기", "MISSING LIST": "없는 곡 목록", "PLAY": "재생", "A NetEase or QQ Music playlist link (a share text will do):": "NetEase 또는 QQ Music 플레이리스트 링크(공유 문구 그대로도 됩니다):", "Import": "가져오기", "not in the library": "곡이 라이브러리에 없음", "No link in that text.": "텍스트에 링크가 없습니다.", "Not a NetEase or QQ Music playlist link.": "NetEase 또는 QQ Music 플레이리스트 링크가 아닙니다.", "The playlist was not found (a private one needs that account logged in here).": "플레이리스트를 찾을 수 없습니다(비공개는 해당 계정으로 여기서 로그인해야 합니다).", "The file was not found.": "파일을 찾을 수 없습니다.", "The file is too large.": "파일이 너무 큽니다.", "No songs were found in the file.": "파일에서 곡을 찾지 못했습니다.", "The bridge did not answer.": "브리지가 응답하지 않습니다.",
+    // 2.0: the online home
+    "LAST SYNC {0}": "{0} 동기화", "{0} LISTS": "플레이리스트 {0}개", "RECENT SEARCHES": "최근 검색", "QUALITY": "음질", "LIKED": "좋아요", "LISTS": "플레이리스트", "PLAYABLE TODAY": "오늘 재생 가능", "{0}, {1}": "{0}, {1}", "SHUFFLE": "셔플", "+{0} MORE  ›": "{0}곡 더 보기  ›", "JUMP BACK IN": "이어서 듣기", "FROM": "출처", "UP NEXT": "다음 곡",
+    "Nothing in “{0}” can be played here now.": "‘{0}’에는 지금 여기서 재생할 수 있는 곡이 없습니다.",
+    "Reading “{0}”…": "‘{0}’ 불러오는 중…", "Playing “{0}”": "‘{0}’ 재생", "“{0}” did not load. Try again.": "‘{0}’을(를) 불러오지 못했습니다. 다시 시도하세요.", "NOTHING PLAYABLE NOW": "지금 재생 가능한 곡 없음",
+    // 2.0: the room's opaque cases and their lights
+    "WHITE": "화이트", "BLACKOUT": "블랙", "ROOM LIGHT": "조명", "TOP LIGHT": "톱 라이트", "BACKLIGHT": "역광", "TWO-TONE": "투톤", "WARM KEY": "웜 라이트", "SOFTBOX": "소프트박스", "FROM BELOW": "아래에서",
+    // 2.0: the mini player
+    "Mini player": "미니 플레이어", "Corner": "위치", "Top left": "왼쪽 위", "Top right": "오른쪽 위", "Bottom left": "왼쪽 아래", "Bottom right": "오른쪽 아래", "Show lyrics": "가사 표시", "Back to the full window": "전체 창으로 돌아가기",
+    // 2.0: Spotify (import)
+    "Spotify answers an app of your own only while its owner has Premium. Without it: export the playlist with Exportify (a CSV) or ask Spotify for your data (Playlist1.json), then OPEN A FILE.": "Spotify는 소유자가 Premium인 앱에만 데이터를 줍니다. Premium이 없다면 Exportify로 플레이리스트를 내보내거나(CSV) Spotify에 데이터를 요청한 뒤(Playlist1.json) ‘파일 열기’로 불러오세요.",
+    "Connect Spotify first (below), or open a file exported from it: Exportify's CSV or Spotify's own Playlist1.json.": "먼저 아래에서 Spotify를 연결하거나, Spotify에서 내보낸 파일(Exportify CSV, Spotify Playlist1.json)을 여세요.", "Spotify did not give the playlist: {0}": "Spotify가 플레이리스트를 주지 않았습니다: {0}", "Spotify did not log in: {0}": "Spotify 로그인에 실패했습니다: {0}", "That is not a Client ID (32 letters and digits, from developer.spotify.com › your app).": "Client ID가 아닙니다(developer.spotify.com 앱 페이지의 32자리 영숫자).", "Your Spotify app's Client ID (developer.spotify.com › Dashboard › your app; its redirect URI: {0})": "내 Spotify 앱의 Client ID(developer.spotify.com › Dashboard › 앱, 리디렉션 URI: {0})", "CONNECTED": "연결됨", "CONNECTED AS {0}": "{0}(으)로 연결됨", "LOG IN IN THE BROWSER …": "브라우저에서 로그인하세요 …", "DISCONNECT": "연결 해제", "CONNECT SPOTIFY": "SPOTIFY 연결",
+    // 2.0: QQ Music
+    "06 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "06 온라인에는 작은 로컬 브리지가 필요합니다(Node.js와 음악 서비스 라이브러리, 약 160MB).", "CONNECT QQ MUSIC": "QQ MUSIC 연결", "SEARCH QQ MUSIC": "QQ MUSIC 검색", "Open the QQ Music app": "QQ Music 앱 열기", "Scan with the app's own scanner": "앱의 스캐너로 스캔", "Open QQ on the phone": "휴대폰에서 QQ 열기", "Scan with QQ's scanner": "QQ 스캐너로 스캔", "Open WeChat on the phone": "휴대폰에서 WeChat 열기", "Scan with WeChat's scanner": "WeChat 스캐너로 스캔", "SCAN WITH": "스캔 방법", "QQ MUSIC APP": "QQ MUSIC 앱", "WECHAT": "WECHAT",
+    "ONLINE": "온라인", "Online view": "온라인 보기", "SEARCH NETEASE": "NETEASE 검색", "ONLINE  ·  06": "온라인  ·  06",
+    "NOT CONNECTED": "연결 안 됨", "COMING": "준비 중", "IMPORT · COMING": "가져오기 · 준비 중", "SECTION": "섹션", "HOME": "홈",
+    "LIKED SONGS": "좋아요 한 곡", "MY PLAYLISTS": "내 플레이리스트", "SEARCH": "검색", "BRIDGE": "브리지", "ACCOUNT": "계정",
+    "STANDARD": "일반", "LOG OUT": "로그아웃", "ABSENT": "미설치", "READY": "준비됨", "ERROR": "오류", "NOT INSTALLED": "설치되지 않음",
+    "INSTALLING": "설치 중", "STARTING": "시작 중", "It is installed beside the foobar2000 profile and runs only while foobar2000 does.": "foobar2000 프로필 옆에 설치되며 foobar2000이 실행 중일 때만 동작합니다.",
+    "Downloading…": "다운로드 중…", "Something went wrong.": "문제가 발생했습니다.", "Waiting for the bridge…": "브리지를 기다리는 중…",
+    "INSTALL": "설치", "TRY AGAIN": "다시 시도", "CONNECT NETEASE": "NETEASE 연결", "Open the NetEase Cloud Music app": "NetEase Cloud Music 앱 열기",
+    "Scan with the app's own scanner (not the camera or WeChat)": "앱 안의 스캐너로 스캔(카메라나 위챗 말고)", "Confirm the login on the phone": "휴대폰에서 로그인 확인",
+    "No password: the login is kept on this computer only, encrypted, and goes when you log out.": "비밀번호 불필요: 로그인 정보는 이 컴퓨터에만 암호화되어 저장되며 로그아웃하면 삭제됩니다.",
+    "SCANNED · CONFIRM ON THE PHONE": "스캔됨 · 휴대폰에서 확인", "EXPIRED": "만료됨", "WAITING FOR SCAN": "스캔 대기 중",
+    "NEW CODE": "새 코드", "GOOD NIGHT": "좋은 밤", "GOOD MORNING": "좋은 아침", "GOOD AFTERNOON": "좋은 오후", "GOOD EVENING": "좋은 저녁",
+    "DAILY · FOR YOU": "데일리 · 추천", "{0} SONGS": "{0}곡", "PLAY ALL": "모두 재생", "SEE ALL  ›": "모두 보기  ›",
+    "YOUR PLAYLISTS": "내 플레이리스트", "RECOMMENDED": "추천", "‹  BACK": "‹  뒤로", "BY": "만든 이", "SONGS": "곡", "PLAYABLE": "재생 가능",
+    "TRIAL / LOCKED": "미리듣기 / 잠김", "PLAY {0}": "{0}곡 재생", "#": "#", "STATE": "상태", "VIP · TRIAL": "VIP · 미리듣기",
+    "THE LIST DID NOT LOAD": "목록을 불러오지 못했습니다", "Search · {0}": "검색 · {0}", "Daily": "데일리",
+    "ADDED TO {0}": "{0}에 추가됨", "Add track to playlist": "곡을 재생목록에 추가", "Add album to playlist": "앨범을 재생목록에 추가",
+    "Add folder to playlist": "폴더를 재생목록에 추가", "Properties (edit tags)…": "속성 (태그 편집)…",
+    "Artist file: look artists up online": "아티스트 파일: 온라인에서 찾기",
+    "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "온라인 검색이 꺼져 있습니다(우클릭으로 켤 수 있습니다). 앨범 파일 옆의 artist.txt가 여기에 표시되고, artist.jpg가 사진으로 쓰입니다.",
+    "Light / dark switch in the bottom bar": "하단 바의 라이트 / 다크 스위치", "Full: LIGHT / DARK": "전체: 라이트 / 다크", "Compact: one button": "간단히: 버튼 하나", "Hidden": "숨김",
+    "CASE & COLOUR": "케이스와 색상", "PRESETS": "프리셋", "YOURS": "내 프리셋", "SAVE THIS LOOK": "이 모양 저장", "Name of the preset": "프리셋 이름", "Save current look": "현재 모양 저장", "PRESET": "프리셋",
+    "Colour": "색상", "Black": "블랙", "White": "화이트", "Follow light / dark": "라이트 / 다크에 맞춤",
 };

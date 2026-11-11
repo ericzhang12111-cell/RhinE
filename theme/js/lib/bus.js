@@ -12,7 +12,8 @@ const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, s
                 lyricsSource: "auto", lyricsTrans: "off", lyricsNeteaseAuto: false, lyricsRoma: false,
                 textScale: 1, arrayScale: 1, inspectScale: 1.3, wallpaper: null, halftone: "bottom", halftoneLevel: "mid",
                 emblem: "ring", tag: "plastic", tagShape: "tab", tagColours: "scheme", tagCustom: null, tagOpacity: 50, tagBody: "solid", tagFactory: null, font: "geist",
-                sides: null, modeSystem: false, borderless: false };
+                sides: null, modeSystem: false, borderless: false, roomMat: "cream", roomLight: {},
+                mini: false, miniCorner: "br", miniShow: "lrc", miniSkin: "dark" };   // the mini player (mini.js): on, its screen corner, LRC | TRK
 
 // text size, Array scale and inspection size: the choices offered in MENU › Audio Archive and the Style view (frame.js keeps the value)
 const TEXT_SCALES = [.9, 1, 1.1, 1.2, 1.35, 1.5], ARRAY_SCALES = [.8, .9, 1, 1.15, 1.3], INSPECT_SCALES = [1, 1.15, 1.3, 1.5];
@@ -58,6 +59,25 @@ const lyrNetease = () => STATE.lyricsSource === "netease" || (STATE.lyricsSource
 // the header's emblem (05 STYLE, lib/emblem.js): the Möbius ring or nested triangles
 const EMBLEMS = [["ring", "RING"], ["delta", "DELTA"]];
 const pickEmblem = v => EMBLEMS.some(f => f[0] === v) ? v : "ring";
+// the Archive room's cases (05 STYLE › ARCHIVE › ROOM; room.js): cream polymer, jade glass, white or blackout, or the
+// RhinE Lab original's own case (with the camera and light of its own room)
+const ROOM_MATS = [["cream", "FROST"], ["glass", "GLASS"], ["white", "WHITE"], ["blackout", "BLACKOUT"], ["rhine", "RHINE LAB"]];
+const pickRoomMat = v => ROOM_MATS.some(f => f[0] === v) ? v : "cream";
+// the opaque ones are lit by lights of their own (cream and jade glow from the floor below), one of these each
+// (STATE.roomLight: material -> its light; the first when none was picked); their assets are room/<material>-<light>/
+const ROOM_LIGHTS = { white: [["l2", "TOP LIGHT"], ["l3", "BACKLIGHT"], ["l5", "TWO-TONE"]],
+                      blackout: [["l1", "WARM KEY"], ["l5", "TWO-TONE"], ["l6", "SOFTBOX"]] };
+const roomLightOf = (mat = STATE.roomMat) => { const L = ROOM_LIGHTS[mat]; if (!L) return ""; const v = STATE.roomLight && STATE.roomLight[mat]; return L.some(f => f[0] === v) ? v : L[0][0]; };
+const roomSet = (mat = STATE.roomMat) => roomLightOf(mat) ? `${mat}-${roomLightOf(mat)}` : mat;
+// A track's front cover, as utils.GetAlbumArtAsyncV2 gives it ({ image }); for a song of 06 ONLINE (the bridge's
+// address, lib/online.js) the cover the bridge saved beside its tag: foobar2000 reads no pictures from a stream
+const ONLINE_ART = fb.ProfilePath + "audio-archive-online\\data\\art\\";
+function albumArtAsync(handle) {
+    // (the bridge's art\<id>.jpg; a QQ Music song's: qq-<mid>.jpg)
+    const m = handle && /^http:\/\/127\.0\.0\.1:\d+\/(ne|qq)\/play\/(\w+)/.exec(handle.RawPath), file = m ? ONLINE_ART + (m[1] === "qq" ? "qq-" : "") + m[2] + ".jpg" : "";
+    if (file && utils.IsFile(file)) return d2d.LoadImageAsyncV2(0, file).then(image => ({ image }));
+    return utils.GetAlbumArtAsyncV2(window.ID, handle, 0);
+}
 // the title tag on the signal profile card and the album file (05 STYLE, lib/tag.js): its finish, or off (plain text),
 // its shape and where its colours come from (TAG_SHAPES, TAG_COLOUR_SOURCES in lib/tag.js); FACTORY: one of the tags
 // rendered in their own materials and colours (TAG_FACTORY in lib/tag.js, the one in use: tagFactory)
@@ -150,12 +170,12 @@ function openFolder(h) {
 
 // Keys shared by every scripted panel (the focused panel receives them): 1 – 5 views, T light/dark, P playlist preset,
 // B intro film, S shuffle the library, F the playing (else focused) track's folder, H its heart (lib/favourite.js),
-// / search, F11 borderless full screen. A panel calls globalKey(vk) for keys it does not use itself.
+// / search, F11 borderless full screen, M the mini player. A panel calls globalKey(vk) for keys it does not use itself.
 function globalKey(vk) {
     if (vk === 0xBF) { startSearchFwd(); return true; }   // "/"
     // Ctrl+1–5: rate the playing (else focused) track; Ctrl+0: clear its rating (lib/rating.js)
     if (vk >= 0x30 && vk <= 0x35 && utils.IsKeyPressed(0x11)) { setRating(fb.GetNowPlaying() || fb.GetFocusItem(), vk - 0x30, false); return true; }
-    if (vk >= 0x31 && vk <= 0x35) send("view", ["archive", "playlists", "lyrics", "signal", "style"][vk - 0x31]);
+    if (vk >= 0x31 && vk <= 0x36) send("view", ["archive", "playlists", "lyrics", "signal", "style", "online"][vk - 0x31]);
     else if (vk === 0x54) send("mode");
     else if (vk === 0x50) send("preset");
     else if (vk === 0x42) send("boot-play");   // B
@@ -163,6 +183,7 @@ function globalKey(vk) {
     else if (vk === 0x46) openFolder(fb.GetNowPlaying() || fb.GetFocusItem());   // F
     else if (vk === 0x48) setFav(fb.GetNowPlaying() || fb.GetFocusItem());       // H
     else if (vk === 0x7A) send("borderless");   // F11
+    else if (vk === 0x4D) send("mini");         // M
     else return false;
     return true;
 }

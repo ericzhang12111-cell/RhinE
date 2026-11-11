@@ -9,7 +9,7 @@
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
 
 const M = TOKENS.metrics;
-const VIEWS = ["archive", "playlists", "lyrics", "signal", "style"];
+const VIEWS = ["archive", "playlists", "lyrics", "signal", "style", "online"];
 // z-order: index 0 is the bottom window; fx (the transition overlay) must stay on top
 const CHILDREN = ["header", "transport", "stage", "manager", "head", "playlist", "card", "tip", "fx"];
 const PRESETS = ["album", "index"];
@@ -36,6 +36,8 @@ STATE.wallpaper = pickWallpaper(getSetting("wallpaper", null));
 STATE.halftone = pickHalftone(getSetting("halftone", "bottom"));
 STATE.halftoneLevel = pickHalftoneLevel(getSetting("halftoneLevel", "mid"));
 STATE.emblem = pickEmblem(getSetting("emblem", "ring"));
+STATE.roomMat = pickRoomMat(getSetting("roomMat", "cream"));
+STATE.roomLight = (v => v && typeof v === "object" && !Array.isArray(v) ? v : {})(getSetting("roomLight", null));
 STATE.tag = pickTag(getSetting("tag", "plastic"));
 STATE.tagShape = pickTagShape(getSetting("tagShape", "tab"));
 STATE.tagColours = pickTagColours(getSetting("tagColours", "scheme"));
@@ -46,6 +48,11 @@ STATE.tagFactory = pickTagFactory(getSetting("tagFactory", null));
 STATE.font = pickFont(getSetting("font", "geist"));
 STATE.sides = pickSides(getSetting("sides", null));
 STATE.borderless = getSetting("borderless", false) === true;
+// the mini player (mini.js): kept like borderless, so foobar2000 starts as it was closed
+STATE.mini = getSetting("miniPlayer", false) === true;
+STATE.miniCorner = ["tl", "tr", "bl", "br"].includes(getSetting("miniCorner", "br")) ? getSetting("miniCorner", "br") : "br";
+STATE.miniShow = getSetting("miniShow", "lrc") === "trk" ? "trk" : "lrc";
+STATE.miniSkin = ["dark", "white", "auto"].includes(getSetting("miniSkin", "dark")) ? getSetting("miniSkin", "dark") : "dark";
 REDUCE_MOTION = STATE.reduce;
 RELOAD_ON_LANG = false;   // see lib/bus.js
 const P = {};          // child name -> PanelObject
@@ -56,7 +63,8 @@ const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, 
                                    textScale: STATE.textScale, arrayScale: STATE.arrayScale, inspectScale: STATE.inspectScale, floor: STATE.floor, wallpaper: STATE.wallpaper,
                                    halftone: STATE.halftone, halftoneLevel: STATE.halftoneLevel, emblem: STATE.emblem, tag: STATE.tag,
                                    tagShape: STATE.tagShape, tagColours: STATE.tagColours, tagCustom: STATE.tagCustom, tagOpacity: STATE.tagOpacity, tagBody: STATE.tagBody, tagFactory: STATE.tagFactory, font: STATE.font,
-                                   sides: STATE.sides, modeSystem: STATE.modeSystem, borderless: STATE.borderless });
+                                   sides: STATE.sides, modeSystem: STATE.modeSystem, borderless: STATE.borderless, roomMat: STATE.roomMat, roomLight: STATE.roomLight,
+                                   mini: STATE.mini, miniCorner: STATE.miniCorner, miniShow: STATE.miniShow, miniSkin: STATE.miniSkin });
 
 // One-off: settings written before this change kept three switches for the lyrics (lyricsOnline, lyricsNetease,
 // lyricsTranslate). They map onto lyricsSource and lyricsTrans, and lyricsNeteaseAuto keeps the permission the old
@@ -94,7 +102,7 @@ function findPanels(attempt = 0) {
     ready = true;
     restoreLook();
     readModeSystem();
-    if (STATE.borderless) applyWindow();
+    if (STATE.borderless || STATE.mini) applyWindow();
     // the boot covers the window before anything else is laid out (the panels have already drawn once by now: foobar2000
     // shows its window before any script runs, and JSplitter does not keep a child panel's visibility across restarts)
     if (STATE.boot && !REDUCE_MOTION && !rebuilt()) startBoot(); else P.fx.Show(false);
@@ -120,6 +128,8 @@ onMessage("boot-end", () => {
 
 // rectangles of the frame and of the active view's children, in px
 function regions() {
+    // the mini player: the stage panel alone, the whole (small) window
+    if (STATE.mini) return { stage: [0, 0, W, H] };
     const top = dp(M.header), bottom = H - dp(M.transport + M.status), vh = bottom - top;
     const r = { header: [0, 0, W, top], transport: [0, bottom, W, H - bottom] };
     // Archive, Lyrics and Signal are all drawn by the stage panel
@@ -238,13 +248,62 @@ function readModeSystem() {
 // BORDERLESS (05 STYLE › DISPLAY › WINDOW, or F11): foobar2000's main window without its title bar and frame, over the
 // whole monitor it is on. A script cannot restyle a window, so tools\window.ps1 does it, given this panel's window; it
 // keeps the window's place for the way back. Applied again at every start while it is on.
-function applyWindow() {
-    const ps1 = THEME_ROOT + "tools\\window.ps1", state = fb.ProfilePath + "audio-archive-cache\\window.json";
-    if (!utils.IsFile(ps1)) return;
+// window.ps1 stays running beside foobar2000 once started (-Serve, one per window, gone with it) and takes its orders
+// from audio-archive-cache\window-cmd.txt: a switch is then a matter of milliseconds (a PowerShell start is ≈ 0.4 s),
+// and the mini player can be dragged (only something outside the script can hand the window to Windows' own move). It
+// says it is there by the time it writes to window-serve.txt every 2 s; not there, it is started, and carries out the
+// order it finds (orders over 10 s old are left).
+const WIN_DIR = fb.ProfilePath + "audio-archive-cache\\";
+let winSeq = 0, winStarted = 0;
+// (its beat: "<Unix ms> <panel>"; one from a foobar2000 that has just closed names another panel)
+function winServing() {
     try {
-        new ActiveXObject("WScript.Shell").Run(`cmd /c set "PSModulePath=" && powershell -NoProfile -ExecutionPolicy Bypass -File "${ps1}" -Panel ${window.ID} -Mode ${STATE.borderless ? "borderless" : "window"} -State "${state}"`, 0, false);
+        if (!utils.IsFile(WIN_DIR + "window-serve.txt")) return false;
+        const [ms, id] = utils.ReadTextFile(WIN_DIR + "window-serve.txt", 65001).trim().split(/\s+/);
+        return +id === window.ID && Date.now() - (+ms || 0) < 5000;
+    } catch (e) { return false; }
+}
+function winCommand(cmd) {
+    const ps1 = THEME_ROOT + "tools\\window.ps1";
+    if (!utils.IsFile(ps1)) { console.log("audio-archive window: " + ps1 + " is missing (run install.cmd again or the updater)"); return; }
+    try { utils.WriteTextFile(WIN_DIR + "window-cmd.txt", `${++winSeq}-${Date.now()} ${cmd}`, false); }
+    catch (e) { console.log("audio-archive window: " + e); return; }
+    if (winServing() || Date.now() - winStarted < 8000) return;
+    winStarted = Date.now();
+    // (start /b: cmd ends at once, PowerShell carries on without it; PSModulePath cleared for Windows PowerShell)
+    try {
+        new ActiveXObject("WScript.Shell").Run(`cmd /c set "PSModulePath=" && start "" /b powershell -NoProfile -ExecutionPolicy Bypass -File "${ps1}" -Serve -Panel ${window.ID} -State "${WIN_DIR}window.json"`, 0, false);
     } catch (e) { console.log("audio-archive window: " + e); }
 }
+// the mini player over borderless over the normal window; the mini one in its corner (or where it was dragged; snap: the
+// corner again), 560 × 136 dp (mini.js)
+function applyWindow(mini = STATE.mini, snap = false) {
+    winCommand(mini ? `mini ${STATE.miniCorner} 560x136${snap ? " snap" : ""}` : STATE.borderless ? "borderless" : "window");
+}
+// the mini player on or off (on: true / false, or none to switch): the stage panel alone in a small window on top
+// The window first (tools/window.ps1, ≈ 0.4 s), the layout once the window has its new size (on_size): switched at once,
+// the mini player stood in the middle of the big window, or the views were squeezed into the small one, until the
+// window followed. After 2 s it switches anyway (no window.ps1, or a window that kept its size).
+let MINI_WANT = null, MINI_TIMER = 0;
+function toggleMini(on) {
+    const now = MINI_WANT == null ? STATE.mini : MINI_WANT, next = on == null ? !now : !!on;
+    if (next === now) return;
+    MINI_WANT = next;
+    setSetting("miniPlayer", next);
+    applyWindow(next);
+    window.ClearTimeout(MINI_TIMER);
+    MINI_TIMER = window.SetTimeout(miniSettle, 2000);
+}
+function miniSettle() {
+    window.ClearTimeout(MINI_TIMER);
+    if (MINI_WANT == null) return;
+    STATE.mini = MINI_WANT;
+    MINI_WANT = null;
+    broadcast();
+    layout();
+}
+// the window at the size it was asked for: about the mini player's (560 dp wide), or larger
+const miniSized = (mini, w) => mini ? w <= dp(560) * 1.15 : w > dp(560) * 1.15;
 // on: true / false, or none (a message without data comes as null) to switch
 function toggleBorderless(on) {
     STATE.borderless = on == null ? !STATE.borderless : !!on;
@@ -309,6 +368,14 @@ onMessage("view", v => setView(v));
 onMessage("mode", toggleMode);
 onMessage("mode-to", setModeTo);
 onMessage("borderless", toggleBorderless);
+onMessage("mini", toggleMini);
+// a corner picked (the same one too: back to it after a drag)
+onMessage("mini-corner", c => { if (["tl", "tr", "bl", "br"].includes(c)) { STATE.miniCorner = c; setSetting("miniCorner", c); broadcast(); if (STATE.mini) applyWindow(true, true); } });
+// the mini player dragged by its plate (mini.js): the button is down now, window.ps1 hands the window to Windows' move
+// (no helper yet: it is started, for the next drag)
+onMessage("window-drag", () => { if (!STATE.mini) return; if (winServing()) winCommand("drag"); else winCommand("mini " + STATE.miniCorner + " 560x136"); });
+onMessage("mini-skin", v => { STATE.miniSkin = ["dark", "white", "auto"].includes(v) ? v : "dark"; setSetting("miniSkin", STATE.miniSkin); broadcast(); });
+onMessage("mini-show", v => { STATE.miniShow = v === "trk" ? "trk" : "lrc"; setSetting("miniShow", STATE.miniShow); broadcast(); });
 onMessage("scheme", setScheme);
 onMessage("preset", togglePreset);
 onMessage("reduce", setReduce);
@@ -319,13 +386,37 @@ onMessage("lyrics-source", v => { STATE.lyricsSource = pickLyricsSource(v); setS
 onMessage("lyrics-trans", v => { STATE.lyricsTrans = pickLyricsTrans(v); setSetting("lyricsTrans", STATE.lyricsTrans); broadcast(); });
 onMessage("lyrics-netease-auto", on => { STATE.lyricsNeteaseAuto = !!on; setSetting("lyricsNeteaseAuto", STATE.lyricsNeteaseAuto); broadcast(); });
 onMessage("lyrics-roma", on => { STATE.lyricsRoma = !!on; setSetting("lyricsRoma", STATE.lyricsRoma); broadcast(); });
-onMessage("text-scale", v => { STATE.textScale = textScaleOf(v); setSetting("textScale", STATE.textScale); setTextScale(STATE.textScale); broadcast(); layout(); });
+onMessage("text-scale", v => { STATE.textScale = textScaleOf(v); setSetting("textScale", STATE.textScale); setTextScale(STATE.textScale); broadcast(); layout(); importFonts(); });
+// The playlist view is Columns UI's own list, so its fonts are not ours to scale: they are imported, like a preset, from
+// the file made for the nearest text size (columns/fonts-<per cent>.fcl, tools/build-layout.py). `listFontScale` is the
+// size last imported, so nothing is imported at a start unless the size changed without this panel (an update).
+const FONT_STEPS = [90, 100, 110, 120, 135, 150];
+let fontsTimer = 0;
+function importFonts() {
+    window.ClearTimeout(fontsTimer);
+    fontsTimer = window.SetTimeout(() => {
+        const pct = FONT_STEPS.reduce((a, b) => Math.abs(b - STATE.textScale * 100) < Math.abs(a - STATE.textScale * 100) ? b : a);
+        if (pct === getSetting("listFontScale", 100)) return;
+        const file = `${THEME_ROOT}columns\\fonts-${pct}.fcl`;
+        if (!utils.IsFile(file)) return;
+        setSetting("listFontScale", pct);
+        utils.Run(fb.FoobarPath + "foobar2000.exe", `/columnsui:import-quiet "${file}"`, "", "", 0, false);
+    }, 700);
+}
+importFonts();
 onMessage("inspect-scale", v => { STATE.inspectScale = pickScale(+v, INSPECT_SCALES); setSetting("inspectScale", STATE.inspectScale); broadcast(); });
 onMessage("array-scale", v => { STATE.arrayScale = pickScale(+v, ARRAY_SCALES); setSetting("arrayScale", STATE.arrayScale); broadcast(); });
 onMessage("floor", v => { STATE.floor = pickFloor(v); setSetting("floor", STATE.floor); broadcast(); });
 onMessage("halftone", v => { STATE.halftone = pickHalftone(v); setSetting("halftone", STATE.halftone); broadcast(); });
 onMessage("halftone-level", v => { STATE.halftoneLevel = pickHalftoneLevel(v); setSetting("halftoneLevel", STATE.halftoneLevel); broadcast(); });
 onMessage("emblem", v => { STATE.emblem = pickEmblem(v); setSetting("emblem", STATE.emblem); broadcast(); });
+onMessage("room-mat", v => { STATE.roomMat = pickRoomMat(v); setSetting("roomMat", STATE.roomMat); broadcast(); });
+// the light of the room's material now (an opaque one's: ROOM_LIGHTS)
+onMessage("room-light", v => {
+    if (!ROOM_LIGHTS[STATE.roomMat] || !ROOM_LIGHTS[STATE.roomMat].some(f => f[0] === v)) return;
+    STATE.roomLight = { ...STATE.roomLight, [STATE.roomMat]: v };
+    setSetting("roomLight", STATE.roomLight, true); broadcast();
+});
 onMessage("tag", v => { STATE.tag = pickTag(v); setSetting("tag", STATE.tag); broadcast(); });
 onMessage("tag-shape", v => { STATE.tagShape = pickTagShape(v); setSetting("tagShape", STATE.tagShape); broadcast(); });
 onMessage("tag-colours", v => { STATE.tagColours = pickTagColours(v); setSetting("tagColours", STATE.tagColours); broadcast(); });
@@ -362,7 +453,8 @@ function on_key_down(vk) {
 // ----------------------------------------------------------------------------------------------------- frame
 function on_size(w, h) {
     W = w; H = h;
-    if (ready) layout(); else findPanels();
+    if (ready && MINI_WANT != null && miniSized(MINI_WANT, w)) miniSettle();   // (lays out too)
+    else if (ready) layout(); else findPanels();
 }
 
 // only the gaps between panels show the root

@@ -104,7 +104,7 @@ function drawCard(gr, w, h, kind = "pager", ghost = "INFO") {
     // top row: ■ SIGNAL PROFILE ——— [FILE 003]
     gr.FillSolidRect(px, y + dp(5.5), dp(5), dp(5), C.fg);
     const lw = label(gr, tr("SIGNAL PROFILE"), npSt(NP_ST.lbl, C["text-muted"]), px + dp(15), y + dp(2));
-    const chipText = `${tr("FILE")} ${T.file ? pad(T.file, 3) : "—"}`;
+    const chipText = tr("FILE {0}", T.file ? pad(T.file, 3) : "—");
     const cw = labelWidth(chipText, { size: 8, weight: 600, track: .1, colour: 0, bg: 0 }) + dp(16);
     chip(gr, chipText, w - px - cw, y, dp(16), "inv", 8);
     CARD_HITS.folder = [w - px - cw, y, cw, dp(16)];
@@ -198,7 +198,7 @@ function drawQueue(gr, x, y, w, h) {
         const [title, len] = TF_QUEUE.EvalWithMetadb(it.handle).split("\u0001");
         const pos = it.index >= 0 ? pad(it.index + 1, 3) : "—";
         gr.DrawText(pos, font(11, 500), it.queued ? C.accent : C["text-muted"], x, y, dp(36), rowH, DT_SINGLE);
-        gr.DrawText(title, fontFor(title, 12, 500), C.fg, x + dp(40), y, w - dp(40) - dp(52), rowH, DT_SINGLE | DT_ELLIPSIS);
+        text(gr, title, 12, 500, C.fg, x + dp(40), y, w - dp(40) - dp(52), rowH);
         gr.DrawText(len, font(11, 400), C["fg-soft"], x + w - dp(50), y, dp(50), rowH, DT_RIGHT_SINGLE);
         if (it.index >= 0) CARD_HITS.queue.push([{ pl: it.pl, index: it.index }, x - dp(4), y, w + dp(8), rowH]);
         y += rowH;

@@ -252,12 +252,13 @@ if ($linked) {
         Remove-Item $target -Recurse -Force
     }
     New-Item -ItemType Directory -Force $target | Out-Null
-    foreach ($part in 'js', 'tokens', 'columns', 'assets') { Copy-Item (Join-Path $source $part) $target -Recurse }
+    foreach ($part in 'js', 'tokens', 'columns', 'assets', 'online') { if (Test-Path (Join-Path $source $part)) { Copy-Item (Join-Path $source $part) $target -Recurse } }
     foreach ($file in 'README.md', 'LICENSE', 'VERSION') { if (Test-Path (Join-Path $source $file)) { Copy-Item (Join-Path $source $file) $target } }
-    # the updater, which the theme starts from its UPDATE chip
-    if (Test-Path (Join-Path $source 'tools\update.ps1')) {
-        New-Item -ItemType Directory -Force (Join-Path $target 'tools') | Out-Null
-        Copy-Item (Join-Path $source 'tools\update.ps1') (Join-Path $target 'tools')
+    # the scripts the theme runs itself: the updater (its UPDATE chip), borderless full screen (F11) and the online
+    # bridge's installer (06 ONLINE). (Only update.ps1 used to be copied: F11 then found no window.ps1 and did nothing.)
+    New-Item -ItemType Directory -Force (Join-Path $target 'tools') | Out-Null
+    foreach ($tool in 'update.ps1', 'window.ps1', 'online.ps1') {
+        if (Test-Path (Join-Path $source "tools\$tool")) { Copy-Item (Join-Path $source "tools\$tool") (Join-Path $target 'tools') }
     }
     Say (T "copied the theme to $target" "已复制主题到 $target")
 }

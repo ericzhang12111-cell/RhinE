@@ -3,6 +3,75 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
+## 2.0.0 — 2026-11-11
+
+**Added · 新增**
+- `06 ONLINE`: NetEase Cloud Music and QQ Music inside the theme. Log in by scanning a QR code with the service's app
+  (no password; the login stays on this computer, encrypted, and goes when you log out), then browse the day's
+  recommendations, your liked songs and playlists, search the service from the header's search box, and play: a
+  playlist becomes a foobar2000 playlist, with titles, artists and covers. It plays what your account may play, at the
+  quality your account gets; nothing is decrypted or unlocked. The first time, the view installs a small local bridge
+  (Node.js and the services' community libraries, about 160 MB) beside the foobar2000 profile; it runs only while
+  foobar2000 does. `06 在线`：在主题里使用网易云音乐和 QQ 音乐。用对应 App 扫码登录（无需密码；登录信息只加密保存在这台电脑上，
+  退出登录即删除），之后可以浏览每日推荐、我喜欢的音乐和歌单，用顶栏搜索框搜索该平台，并直接播放：歌单会成为一个 foobar2000
+  播放列表，带歌名、艺人和封面。能播放的就是你的账号本来能播放的内容，音质也取决于账号；不做任何解密或解锁。第一次使用时，
+  这个页面会在 foobar2000 配置文件夹旁安装一个本地小服务（Node.js 和各平台的社区接口库，约 160 MB），只在 foobar2000 运行时工作。
+- Playlist import (`06 ONLINE` › `IMPORT`, no account needed): paste a NetEase or QQ Music playlist link, or open a
+  file (Exportify's CSV for Spotify, Spotify's own `Playlist1.json`, a CSV, or "artist - title" lines). The songs your
+  library has become a foobar2000 playlist; the rest are written to a list of what is missing. With a Spotify app of
+  your own (Premium required by Spotify) a Spotify link can be read directly. 歌单导入（`06 在线` › `导入`，无需账号）：
+  粘贴网易云或 QQ 音乐的歌单链接，或者打开文件（Exportify 导出的 Spotify CSV、Spotify 自己的 `Playlist1.json`、CSV，或每行
+  “歌手 - 歌名”的文本）。曲库里有的歌会建成一个 foobar2000 播放列表，其余的写进缺失清单。如果你有自己的 Spotify 应用
+  （Spotify 要求 Premium），也可以直接读取 Spotify 链接。
+- Archive `LAYOUT` › `ROOM`: the cases stand in rows in a rendered room, the selected one lifted out with its cover.
+  Five materials in `05 STYLE` › `DISPLAY`: `FROST`, `GLASS`, `WHITE` and `BLACKOUT` (these two with a choice of
+  lighting), and `RHINE LAB`, a frosted translucent case after the original (light mode). 曲库 `布局` › `展室`：
+  唱片盒成排立在渲染出来的展室里，选中的一张带着封面抬起。`05 外观` › `显示` 中有五种材质：`磨砂`、`玻璃`、`纯白`、`墨黑`
+  （后两种可选灯光），以及 `RHINE LAB`：仿照原版的磨砂半透明唱片盒（浅色模式）。
+- Mini player (`M`, or `MENU › Audio Archive › Mini player`): a small always-on-top rack unit with the cover, the
+  current lyric line or the track, level meters, seek, volume and the transport keys. Drag it anywhere; it remembers
+  its corner; right-click for a black or a white unit (or one that follows light / dark). A double-click or `⤢` goes back to the full window. 迷你播放器（按 `M`，或 `菜单 › Audio Archive ›
+  迷你播放器`）：一个置顶的小机架面板，有封面、当前歌词或曲目、电平表、进度、音量和播放按键。可以拖到任何位置，并记住停靠的角落；右键可以选黑色或白色外观（也可以跟随深浅色）；
+  双击或点 `⤢` 回到完整窗口。
+- `05 STYLE` in four tabs (`CASE & COLOUR`, `TITLE TAG`, `DISPLAY`, `PRESETS`). A preset is a whole look (case, scheme,
+  mode, background, tag, font, wallpaper): eight come with the theme, and `SAVE THIS LOOK` keeps up to twelve of your
+  own. `05 外观` 分成四页（`唱片盒与配色`、`标签`、`显示`、`预设`）。预设是一整套外观（唱片盒、配色、深浅色、背景、标签、字体、
+  壁纸）：主题自带八套，`保存当前外观` 可以保存最多十二套你自己的。
+- Archive right-click: add the album, track or folder to a playlist (a new or an existing one), and `Properties (edit
+  tags)…`. Tracks can also be dragged onto a playlist in `02 PLAYLISTS`. 曲库右键菜单：把专辑、曲目或文件夹添加到播放列表
+  （新建或已有的），以及 `属性（编辑标签）…`。在 `02 播放列表` 中也可以把曲目拖到左侧的某个播放列表上。
+- A jump list of the shelves: click (or wheel over) the shelf name under the Archive. 排的跳转列表：点击曲库下方的排名称
+  （或在上面滚动滚轮）。
+- The artist lookups can be switched off (Archive right-click › `Artist file: look artists up online`); cached files
+  and your own `artist.txt` / `artist.jpg` still show (#52). 可以关闭艺人资料的联网查找（曲库右键 › `艺人资料：联网查找`）；
+  已缓存的资料和你自己的 `artist.txt` / `artist.jpg` 仍然显示（#52）。
+- The light / dark switch in the bottom bar can be full, one button, or hidden (`MENU › Audio Archive`). 底栏的深浅色
+  开关可以设为完整、单个按钮或隐藏（`菜单 › Audio Archive`）。
+
+**Changed · 改进**
+- Mixed Chinese / Japanese / Korean and Latin text: letters and figures keep the interface font instead of falling
+  back to the CJK font with the rest of the line, both sit on one baseline, and CJK is set slightly smaller and
+  tighter. 中西文混排：一行里的英文和数字保持界面字体，不再跟着整行换成中文字体；两者对齐到同一条基线，汉字略小、字距略紧。
+- The text size now reaches the playlist's own list too (Columns UI's fonts are switched with it). 字号设置现在也作用于
+  播放列表本身（会同时切换 Columns UI 的字体）。
+- The Simplified and Traditional Chinese interfaces are reworded in plain player language (`曲库`, `可视化`, `唱片盒`
+  …) instead of literal translations. 简体和繁体中文界面改用更直白的播放器用语（`曲库`、`可视化`、`唱片盒` 等），不再逐字直译。
+- The Archive's top bar folds its controls into menus when the window is narrow; `Compact top bar` in the Archive's
+  menu keeps it folded. 窗口较窄时，曲库顶栏的选项会收进下拉菜单；曲库菜单里的 `精简顶栏` 可以让它一直保持收起。
+- The NO LYRICS / SEARCHING notice is neutral; the accent is kept for a missing file. “无歌词 / 搜索中”提示改为中性色，
+  强调色只留给文件丢失的警告。
+
+**Fixed · 修复**
+- `05 STYLE`, the artist page and `06 ONLINE`'s side rail scroll when the window is too low for them (#51). 窗口太矮时，
+  `05 外观`、艺人页和 `06 在线` 的侧栏可以滚动（#51）。
+- Lyrics no longer run under the `SOURCE` switch. 歌词不再压到 `来源` 开关下面。
+- The playlist's name always shows in its header; the figures beside it give way first. 播放列表标题栏里的名称始终显示，
+  先让位的是旁边的统计数字。
+- A thin white line at the edge of some covers. 部分封面边缘的一条白线。
+- `F11` did nothing on an installed copy (`window.ps1` was not copied by the installer). 安装版按 `F11` 没有反应
+  （安装程序没有复制 `window.ps1`）。
+- Uninstalling also removes the online bridge and its saved logins. 卸载时会一并删除在线功能的本地服务和保存的登录信息。
+
 ## 1.11.0 — 2026-11-02
 
 **Added · 新增**

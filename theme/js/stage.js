@@ -13,7 +13,7 @@
 // view repaints ten times a second (and every frame while lines scroll); nothing runs while paused, stopped or hidden.
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
-for (const f of ["emblem", "audio", "ring", "lyrics", "translate", "roman", "waveform", "artist", "album", "playlists", "nowplaying", "library"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
+for (const f of ["emblem", "audio", "ring", "lyrics", "translate", "roman", "waveform", "artist", "album", "playlists", "nowplaying", "library", "online"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
 include(fb.ProfilePath + "themes\\audio-archive\\js\\archive.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\artist.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\grid.js");
@@ -21,6 +21,8 @@ include(fb.ProfilePath + "themes\\audio-archive\\js\\room.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\customcase.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\style.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\signal.js");
+include(fb.ProfilePath + "themes\\audio-archive\\js\\online.js");
+include(fb.ProfilePath + "themes\\audio-archive\\js\\mini.js");
 
 const ST = {
     sbar: { size: 11, weight: 600, track: .14 },
@@ -187,10 +189,11 @@ function npChanged(same, h, what) {
 
 // the archive's file panel marks the playing track
 const playingChanged = () => { AR.tracks.key = ""; AR.listVer++; AR.dirtyInfo = true; AF.dirty = true; inspectFollow(); if (STATE.view === "archive") window.Repaint(); };
-function on_playback_new_track() { loadTrack(); playingChanged(); }
+function on_playback_new_track() { loadTrack(); playingChanged(); onlineTrack(); if (STATE.view === "online") window.Repaint(); }
 function on_playback_starting() { clock.wake(); }
 function on_playback_pause() { dirty.card = true; clock.wake(); window.Repaint(); }
 function on_playback_stop(reason) { if (reason !== 2) { loadTrack(); playingChanged(); } }
+function on_volume_change() { if (STATE.mini) window.Repaint(); }   // (the mini player's fader)
 function on_playback_seek() { lyrIdx = -2; clock.wake(); }
 function on_playback_queue_changed() { if (T.handle) { T.next = nextTitle(); dirty.left = dirty.card = true; window.Repaint(); } }
 function on_playlist_items_reordered(i) { plDirty(i); }
@@ -215,15 +218,28 @@ onMessage("fav-playlist", () => { favPlaylist(libHandles); send("view", "playlis
 
 // ----------------------------------------------------------------------------------------------- animation clock
 let lastPaint = 0, lastLeft = 0, alertShown = false, lyrBar = null, specRect = null, LEFT_SPEC = null;   // lyrBar: the karaoke rule's rect, repainted every frame
-const visible = () => (STATE.view === "lyrics" || STATE.view === "signal") && W > 0;
+const visible = () => (STATE.view === "lyrics" || STATE.view === "signal" || STATE.mini) && W > 0;
 const clock = Clock((dt, now) => {
     if (W <= 0) return false;
+    // the mini player: the meters every frame while playing, the rest (lyric line, progress) with them
+    if (STATE.mini) {
+        const playing = fb.IsPlaying && !fb.IsPaused;
+        if (playing) { analyseAudio(dt); miniUpdate(dt); }
+        if (playing || now - lastPaint > 500) { lastPaint = now; window.Repaint(); }
+        return playing || MINI.level[0] > .01 || MINI.level[1] > .01;
+    }
     if (STATE.view === "archive") {
         let more = archiveUpdate(dt);
         if (AR.layout === "grid") more = gridUpdate(dt) || more;
         else if (AR.layout === "room") more = roomUpdate(dt) || more;
         window.RepaintRect(0, 0, AR.dirtyInfo ? W : arrayW(), H);
         return more;
+    }
+    // 06 ONLINE: its now-playing column (the time) twice a second while playing
+    if (STATE.view === "online") {
+        const on = fb.IsPlaying && !fb.IsPaused;
+        if (on && OV.nowRect && now - lastPaint > 500) { lastPaint = now; window.RepaintRect(...OV.nowRect); }
+        return on;
     }
     if (!visible()) return false;
     const playing = fb.IsPlaying && !fb.IsPaused;
@@ -241,7 +257,7 @@ const clock = Clock((dt, now) => {
     return anim || playing || alertShown || (LYR_SCROLL.n !== 0 && lyrSynced());
 });
 let arrayScaleWas = STATE.arrayScale;
-let halftoneWas = "";
+let halftoneWas = "", miniWas = false;
 // the lyrics settings the current track's lyrics were read with (npChanged)
 const lyricsKey = () => [STATE.lyricsSource, STATE.lyricsTrans, STATE.lyricsNeteaseAuto, STATE.lyricsRoma].join("|");
 let lyricsWas = "";
@@ -261,8 +277,10 @@ onMessage("state", () => {
     // the ring's image is kept only while the Signal view is shown
     if (STATE.view !== "signal" && Ring.img.mode) Ring.img = { mode: "", still: null, shadow: null };
     styleShown(STATE.view === "style");
+    onlineShown(STATE.view === "online");
     if (on) clock.wake();
     if (visible()) { loadTrack(); clock.wake(); }
+    if (STATE.mini !== miniWas) { miniWas = STATE.mini; if (STATE.mini) { loadTrack(); clock.wake(); } }
     window.Repaint();
 });
 // (no transition watcher on STATE.lyricsSource: setLyricsSource above and the "lyrics-source" message cover every change,
@@ -300,11 +318,13 @@ function on_paint(gr) {
     gr.FillSolidRect(0, 0, W, H, C.bg);
     // the wallpaper (lib/wallpaper.js) where it is on: LABEL_LIVE then also tells the views they draw over it
     LABEL_LIVE = STATE.view !== "style" && wallpaperOn(STATE.view) && drawWallpaper(gr, "stage", 0, 0, W, H);
+    if (STATE.mini) { drawMini(gr); return; }
     try {
         if (STATE.view === "archive") AR.layout === "grid" ? drawGrid(gr) : roomOn() ? drawRoom(gr) : drawArchive(gr);
         else if (STATE.view === "signal") drawSignal(gr);
         else if (STATE.view === "lyrics") drawLyricsView(gr);
         else if (STATE.view === "style") drawStyle(gr);
+        else if (STATE.view === "online") drawOnline(gr);
     } finally { LABEL_LIVE = false; }
     drawGrain(gr, 0, 0, W, H);
     drawSideEdges(gr);
@@ -404,7 +424,8 @@ function drawLyricsView(gr) {
         // skipping NetEase)
         if (STATE.lyricsSource === "auto" && !STATE.lyricsNeteaseAuto && LYR.state === "NOT FOUND") remote.push([tr("NETEASE · OFF IN AUTO · CLICK TO ALLOW"), 0, "lyr-ne-auto"]);
         const lines = lyrFixed() ? [...remote, ...done] : lyrOnline() ? [...file, ...remote, ...done] : [...file, ...done];
-        drawAlert(gr, g, { head: [tr("SYSTEM NOTICE"), tr("LYRICS · 03")], title: tr(searching ? "SEARCHING" : "NO LYRICS"), wait: tr(searching ? "QUERYING {0}" : "AWAITING INPUT", srcName), lines });
+        drawAlert(gr, g, { head: [tr("SYSTEM NOTICE"), tr("LYRICS · 03")], title: tr(searching ? "SEARCHING" : "NO LYRICS"), wait: tr(searching ? "QUERYING {0}" : "AWAITING INPUT", srcName), lines,
+            tone: C["fg-soft"], mark: C.fg });   // a notice, not a fault: the accent stays with WARNING
     }
 }
 
@@ -589,12 +610,18 @@ function drawLyrics(gr, g) {
     // the current line on two lines pushes the ones after it down
     const curFit = cur ? lyricFit(gr, cur.a || cur.b, 30, 22, 2, 700, g.cw, 3, 18) : null, extra = curFit ? (curFit.lines.length - 1) * curFit.lh : 0;
     lyrBar = null;
-    gr.PushClip(g.x0 + HAIR, dp(52), g.x1 - g.x0 - HAIR, H - dp(122));   // under the LYRICS MONITOR head
+    // under the LYRICS MONITOR head and its SOURCE switch (whose plate ends at 72 dp); on a short window the lines that
+    // come near the edges fade out there, and a row can be hit only where it shows
+    const top = dp(76), bot = H - dp(70);
+    gr.PushClip(g.x0 + HAIR, top, g.x1 - g.x0 - HAIR, bot - top);
     for (let k = -4; k <= 5; k++) {
         const line = L[i + k];
         if (!line) continue;
         const off = k * pitch + (k > 0 ? dp(8 + 26 * subs) + extra : 0), y = cy + off + o, a = line.a || line.b;
-        if (y > dp(60) && y < H - dp(90)) hits.add("lyric", left, Math.round(y - pitch / 2), g.cw, pitch, i + k);   // a whole row each
+        const edge = k === 0 ? 1 : clamp((Math.min(y - top, bot - y) - dp(12)) / dp(22), 0, 1);
+        if (!edge) continue;
+        const hy0 = Math.max(top, Math.round(y - pitch / 2)), hy1 = Math.min(bot - dp(20), Math.round(y + pitch / 2));
+        if (hy1 > hy0) hits.add("lyric", left, hy0, g.cw, hy1 - hy0, i + k);   // a whole row each
         // the sung line, when scrolled away from the middle: an orange mark to its left
         if (scrolled && i + k === sung && k !== 0) {
             const tw = Math.min(g.cw, gr.CalcTextWidth(a, fontFor(a, 17, 500)));
@@ -604,8 +631,8 @@ function drawLyrics(gr, g) {
             // the line shrinks (down to 22 dp) when it is wider than the column, then wraps onto a second line
             const fa = curFit.f;
             drawFit(gr, curFit, scrolled ? C["fg-soft"] : C.fg, left, y - dp(1) + extra / 2, g.cw);
-            if (hasRo) gr.DrawText(line.r, fontFor(line.r, 13, 400), C["fg-soft"], left, y + dp(22) + extra, g.cw, dp(22), DT_CENTER_SINGLE | DT_ELLIPSIS);
-            if (hasTr) gr.DrawText(line.b.toUpperCase(), fontFor(line.b, 13, 500), C["fg-soft"], left, y + dp(22 + 22 * hasRo) + extra, g.cw, dp(22), DT_CENTER_SINGLE | DT_ELLIPSIS);
+            if (hasRo) text(gr, line.r, 13, 400, C["fg-soft"], left, y + dp(22) + extra, g.cw, dp(22), 1);
+            if (hasTr) text(gr, line.b.toUpperCase(), 13, 500, C["fg-soft"], left, y + dp(22 + 22 * hasRo) + extra, g.cw, dp(22), 1);
             const wa = Math.min(g.cw, Math.max(...curFit.lines.map(t => gr.CalcTextWidth(t, fa))));
             if (!synced) continue;
             // karaoke rule under the line (and its translation): a hairline, filled in orange through the line's time
@@ -623,7 +650,7 @@ function drawLyrics(gr, g) {
                 gr.DrawText(`${fmtTime(line.t)}.${pad(Math.floor(line.t % 1 * 100), 2)}`, font(9, 500), C["text-muted"], cx - wa / 2 - dp(170), y - dp(9), dp(118), dp(16), DT_RIGHT_SINGLE);
         } else {
             const d = Math.abs(off + o) / pitch;
-            drawFit(gr, lyricFit(gr, a, k < 0 ? 17 : 18, 14, 1, 500, g.cw, 2, 12), withAlpha(k < 0 ? C["text-muted"] : C["fg-soft"], clamp(1.05 - d * .19, .1, .85)), left, y, g.cw);
+            drawFit(gr, lyricFit(gr, a, k < 0 ? 17 : 18, 14, 1, 500, g.cw, 2, 12), withAlpha(k < 0 ? C["text-muted"] : C["fg-soft"], clamp(1.05 - d * .19, .1, .85) * edge), left, y, g.cw);
         }
     }
     gr.PopClip();
@@ -638,12 +665,17 @@ function drawLyrics(gr, g) {
 
 // a warning pop-up: a framed window with a filled title strip and a hatched drop shadow; inside, the triangle, the title
 // in an outlined bar, a checklist and a last line that waits with cycling dots. `a`: { head: [left, right], title,
-// lines: [[text, marked]], wait, tone }. The dots need repaints, so the clock keeps ticking while one is shown.
+// lines: [[text, marked]], wait, tone, mark }. The dots need repaints, so the clock keeps ticking while one is shown.
+// tone: the window's colour (the accent unless given); mark: the marked lines' and the switches' (the tone unless given)
 function drawAlert(gr, g, a) {
-    const tone = a.tone || C.accent, pad = dp(28), w = Math.min(dp(440), g.cw - 2 * pad), cx = g.cx, x = Math.round(cx - w / 2);
-    const headH = dp(24), triH = dp(34), barH = dp(58), lh = dp(24), t2 = Math.max(HAIR, dp(1.5));
-    const body = triH + dp(18) + barH + dp(22) + a.lines.length * lh + dp(14) + lh;
-    const fx = x - pad, fw = w + 2 * pad, fh = headH + pad + body + dp(22), fy = Math.round(g.cy - fh / 2);
+    const tone = a.tone || C.accent, mark = a.mark || tone, pad = dp(28), w = Math.min(dp(440), g.cw - 2 * pad), cx = g.cx, x = Math.round(cx - w / 2);
+    const headH = dp(24), barH = dp(58), lh = dp(24), t2 = Math.max(HAIR, dp(1.5));
+    // It keeps clear of the head row and the SOURCE switch under it (down to dp(72)), which is what a NO LYRICS notice
+    // sends one to: in a low view the window gives up its triangle first, then sits right under the switch instead of
+    // in the middle.
+    const top = dp(80), rest = headH + pad + barH + dp(22) + a.lines.length * lh + dp(14) + lh + dp(22);
+    const triH = rest + dp(52) <= H - top - dp(12) ? dp(34) : 0, triGap = triH ? dp(18) : 0;
+    const fx = x - pad, fw = w + 2 * pad, fh = rest + triH + triGap, fy = Math.max(top, Math.round(g.cy - fh / 2));
     // hatched shadow down and to the right, then the window
     const off = dp(8);
     gr.PushClip(fx + off, fy + off, fw, fh);
@@ -659,11 +691,13 @@ function drawAlert(gr, g, a) {
     label(gr, a.head[1], hs, fx + fw - dp(10), hy, 2);
     // triangle with "!"
     const ty = fy + headH + pad, tw = dp(19);
-    gr.DrawPolygon(tone, dp(2), [cx, ty, cx + tw, ty + triH, cx - tw, ty + triH]);
-    gr.FillSolidRect(Math.round(cx - dp(1)), ty + dp(11), dp(2), dp(12), tone);
-    gr.FillSolidRect(Math.round(cx - dp(1)), ty + dp(26), dp(2), dp(3), tone);
+    if (triH) {
+        gr.DrawPolygon(tone, dp(2), [cx, ty, cx + tw, ty + triH, cx - tw, ty + triH]);
+        gr.FillSolidRect(Math.round(cx - dp(1)), ty + dp(11), dp(2), dp(12), tone);
+        gr.FillSolidRect(Math.round(cx - dp(1)), ty + dp(26), dp(2), dp(3), tone);
+    }
     // the title in an outlined bar
-    const by = ty + triH + dp(18);
+    const by = ty + triH + triGap;
     box(gr, x, by, w, barH, tone, t2);
     box(gr, x + dp(5), by + dp(5), w - dp(10), barH - dp(10), withAlpha(tone, .45), HAIR);
     const ts = { size: 26, weight: 300, track: .32, colour: tone, bg: C.bg };
@@ -672,11 +706,11 @@ function drawAlert(gr, g, a) {
     let ly = by + barH + dp(22);
     for (const [text, marked, id] of a.lines) {
         // a line with an id is a switch: it answers a click and lights up under the pointer
-        const lit = id && hover && hover.id === id, col = marked || lit ? tone : C["fg-soft"], s = dp(7), sx = x + w - dp(4) - s;
+        const lit = id && hover && hover.id === id, col = marked || lit ? mark : C["fg-soft"], s = dp(7), sx = x + w - dp(4) - s;
         if (id) hits.add(id, x, ly, w, lh);
-        if (lit) box(gr, x - dp(4), ly, w + dp(8), lh, tone);
-        label(gr, text, st(ST.anaL, col), x + dp(4), ly + Math.round((lh - labelHeight(ST.anaL)) / 2));
-        if (marked) gr.FillSolidRect(sx, ly + Math.round((lh - s) / 2), s, s, tone); else box(gr, sx, ly + Math.round((lh - s) / 2), s, s, C["fg-soft"]);
+        if (lit) box(gr, x - dp(4), ly, w + dp(8), lh, mark);
+        label(gr, fitLabel(text, st(ST.anaL, col), sx - dp(8) - x - dp(4)), st(ST.anaL, col), x + dp(4), ly + Math.round((lh - labelHeight(ST.anaL)) / 2));
+        if (marked) gr.FillSolidRect(sx, ly + Math.round((lh - s) / 2), s, s, mark); else box(gr, sx, ly + Math.round((lh - s) / 2), s, s, C["fg-soft"]);
         ly += lh;
     }
     // waiting: a dashed rule, then the last line with dots that fill in one by one and a blinking block
@@ -694,20 +728,25 @@ function drawAlert(gr, g, a) {
 
 // ------------------------------------------------------------------------------------------------------- mouse
 function on_mouse_lbtn_down(x, y, mask) {
+    if (STATE.mini) { miniDown(x, y); return; }
     if ((STATE.view === "lyrics" || STATE.view === "archive") && sideDragStart(x)) return;
     const a = hits.at(x, y);
-    if (STATE.view === "style") styleDown(x, a, mask);
+    if (STATE.view === "style") styleDown(x, a, mask, y);
     if (STATE.view === "archive" && AR.layout === "grid" && a && a.id === "grid-bar") gridBarDown(y, a);
     if (STATE.view === "archive" && AR.layout !== "grid" && a && a.id === "ar-ruler") rulerDown(x);
+    if (STATE.view === "archive" && a && a.id === "art-bar") artBarDown(y, a);
 }
 function on_mouse_move(x, y, mask) {
+    if (STATE.mini) { miniMouseMove(x, mask, hits.at(x, y), y); return; }
     // (a drag whose button went up outside the panel ends at the next move)
     if (GRID.drag) { if (mask & 0x0001) gridBarMove(y); else gridBarUp(); return; }
     if (AR.rulerDrag) { if (mask & 0x0001) rulerMove(x); else rulerUp(); return; }
-    if (STATE.view === "style" && styleDrag(x, mask)) return;
+    if (AF.drag) { if (mask & 0x0001) artBarMove(y); else artBarUp(); return; }
+    if (STATE.view === "style" && styleDrag(x, mask, y)) return;
     if (sideMove(x, mask)) return;
     const a = hits.at(x, y), onCase = STATE.view === "archive" && archiveMouseMove(x, y, a);
     if (STATE.view === "style") styleMouseMove(a);
+    if (STATE.view === "online") onlineMouseMove(a, x);
     window.SetCursor(a || onCase ? 32649 : 32512);
     if ((a && a.id) !== (hover && hover.id) && (STATE.view === "lyrics" || STATE.view === "signal")) window.Repaint();
     hover = a;
@@ -725,17 +764,21 @@ function on_mouse_leave() {
     if (hover) { hover = null; if (STATE.view === "lyrics" || STATE.view === "signal") window.Repaint(); }
 }
 function on_mouse_lbtn_dblclk(x, y) {
+    // the mini player: a double-click off its keys goes back to the full window
+    if (STATE.mini) { if (!hits.at(x, y)) send("mini", false); return; }
     // an edge: its column back to the width it came with
     const e = (STATE.view === "lyrics" || STATE.view === "archive") && sideEdgeAt(x);
     if (e) { STATE.sides = pickSides(Object.assign({}, STATE.sides, { [e.key]: SIDES_START[e.key] })); sidesChanged(); sendSide(e.key, SIDES_START[e.key], true); return; }
     if (STATE.view === "style") { styleDblClick(x, hits.at(x, y)); return; }
     if (STATE.view === "archive" && AR.layout === "grid" && !hits.at(x, y)) gridDblClick(x, y);
-    if (STATE.view === "archive" && roomOn() && !hits.at(x, y)) roomDoubleClick(x, y);
+    if (STATE.view === "archive" && roomOn() && !hits.at(x, y)) roomDoubleClick();
 }
 function on_mouse_wheel_h(step) { if (STATE.view === "archive") archiveWheelH(step); }   // a sideways wheel: shelves
 function on_mouse_wheel(step) {
+    if (STATE.mini) { miniWheel(step); return; }   // the mini player: the volume
     if (STATE.view === "archive") { archiveWheel(step); return; }
     if (STATE.view === "style") { styleWheel(step); return; }
+    if (STATE.view === "online") { onlineWheel(step); return; }
     if (STATE.view === "lyrics" && T.lyrics) {
         LYR_SCROLL.n -= step;
         LYR_SCROLL.until = performance.now() + LYR_BACK_MS;
@@ -744,17 +787,21 @@ function on_mouse_wheel(step) {
 }
 function on_mouse_rbtn_up(x, y, mask) {
     if (mask & 0x0004) return false;   // Shift: JSplitter's own menu
+    if (STATE.mini) { miniMenu(x, y); return true; }
     if (STATE.view === "archive") { archiveMenu(x, y); return true; }
     if (STATE.view === "lyrics") { lyricsTransMenu(x, y); return true; }   // the state chip's menu, with Edit lyrics
     return false;
 }
 function on_mouse_lbtn_up(x, y) {
+    if (STATE.mini) { miniClick(x, hits.at(x, y)); return; }
     if (SIDE_DRAG) { sideEnd(x); return; }
     if (GRID.drag) { gridBarUp(); return; }
     if (AR.rulerDrag) { rulerUp(); return; }
+    if (AF.drag) { artBarUp(); return; }
     const a = hits.at(x, y);
     if (STATE.view === "archive") { archiveClick(x, y, a); return; }
     if (STATE.view === "style") { styleClick(a); return; }
+    if (STATE.view === "online") { onlineClick(a); return; }
     if (!a) return;
     if (a.id === "vis") visMenu(a.x, a.y + a.h);
     else if (a.id === "model" && a.data !== Ring.mode) { Ring.mode = a.data; setSetting("ringMode", a.data); window.Repaint(); }
@@ -779,9 +826,10 @@ function on_mouse_lbtn_up(x, y) {
 }
 function on_char(code) { if (!styleChar(code)) searchChar(code); }
 // online lyrics (lib/lyrics.js) arrive as downloads
-function on_download_file_done(path, success) { if (lyricsDownloaded(path, success)) window.Repaint(); else artistDownloaded(path, success); }
+function on_download_file_done(path, success) { if (lyricsDownloaded(path, success)) window.Repaint(); else if (!onlineDownloaded(path, success)) artistDownloaded(path, success); }
 function on_locations_added(task, handles) { libLocationsAdded(task, handles); }   // CUE sheets read for the archive (lib/library.js)
 function on_key_down(vk) {
+    if (STATE.mini) { if (vk === 0x20) fb.PlayOrPause(); else if (vk === 0x1B) send("mini", false); else globalKey(vk); return; }   // Space, Esc
     if (styleKey(vk)) return;   // the text size being typed (style.js)
     if (searchKey(vk)) return;
     if (STATE.view === "archive" && archiveKey(vk)) return;

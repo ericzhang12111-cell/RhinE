@@ -8,7 +8,7 @@ I18N["ja"] = {
     "JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC": "1月 2月 3月 4月 5月 6月 7月 8月 9月 10月 11月 12月",
     "{0} · {1} {2} {3}": "{3}年{2}{1}日（{0}）",
     "ARCHIVE SECTION · BROWSE": "アーカイブ · ブラウズ", "LYRICS SECTION · PLAYBACK": "歌詞 · 再生",
-    "SIGNAL SECTION · MONITOR": "シグナル · モニター", "STYLE SECTION · APPEARANCE": "スタイル · 外観",
+    "SIGNAL SECTION · MONITOR": "シグナル · モニター", "STYLE SECTION · APPEARANCE": "スタイル · 外観", "ONLINE SECTION · STREAMING": "オンライン · ストリーミング",
     "PLAYLIST SECTION": "プレイリスト", "SIGNAL SECTION": "シグナル", "CLASSIC DISPLAY": "クラシック表示",
     "START": "開始", "NOW PLAYING": "再生中", "LIGHT": "ライト", "DARK": "ダーク", "ORDER": "再生順",
     "SHUFFLE ALL": "すべてシャッフル", "VOL": "音量", "{0} FILES · {1} ALBUMS": "{0} ファイル · {1} アルバム",
@@ -45,14 +45,14 @@ I18N["ja"] = {
     "NOTHING MATCHES \"{0}\"": "「{0}」に一致するものはありません",
     "NO ALBUMS · THE MEDIA LIBRARY AND THE PLAYLISTS ARE EMPTY": "アルバムなし · メディアライブラリとプレイリストが空です",
     "INDEXING LIBRARY …": "ライブラリを読み込み中 …", "INDEXING …": "読み込み中 …", "FILTER": "絞り込み",
-    "ALBUM / SELECT": "アルバム / 選択", "TRACK / SELECT": "曲 / 選択", "SHELF": "棚", "INSPECTION": "詳細",
+    "ALBUM / SELECT": "選択中のアルバム", "TRACK / SELECT": "選択中のトラック", "SHELF": "棚", "INSPECTION": "詳細",
     "ALBUM NO.": "アルバム番号", "PROFILE": "プロフィール", "FORMAT": "形式", "RES": "解像度", "DISCS": "枚数", "PLAYS": "再生回数",
     "NO TRACKS": "曲がありません", "+ {0} MORE  ·  OPEN ALBUM": "ほか {0} 曲  ·  アルバムを開く", "PLAY ALBUM": "アルバムを再生",
     "PLAY TRACK": "曲を再生", "OPEN ALBUM": "アルバムを開く",
     "SOURCE · ALL PLAYLISTS (NO MEDIA LIBRARY FOLDERS)": "ソース · すべてのプレイリスト（メディアライブラリのフォルダ未設定）",
     "Group by genre": "ジャンルでグループ化", "Group by decade": "年代でグループ化", "Group by artist initial": "アーティストの頭文字でグループ化",
     "No groups": "グループなし", "Artist": "アーティスト", "Album title": "アルバム名", "Year": "年", "Date added (newest first)": "追加日（新しい順）",
-    "Sort by": "並べ替え", "Show every track as its own item": "曲ごとに表示", "Grid: covers per page": "グリッド：1ページのカバー数",
+    "Sort by": "並べ替え", "Show every track as its own item": "曲ごとに表示", "Compact top bar": "上部バーをコンパクトに", "Grid: covers per page": "グリッド：1ページのカバー数",
     "{0} covers": "{0} 枚", "Play album": "アルバムを再生", "Open album in playlist": "アルバムをプレイリストで開く",
     "Re-index library": "ライブラリを再読み込み", "Case array": "ケース配列", "Cover grid": "カバーグリッド",
 
@@ -65,14 +65,15 @@ I18N["ja"] = {
     "Playlist name": "プレイリスト名", "Rename playlist": "プレイリスト名の変更",
 
     // profile card
-    "SIGNAL PROFILE": "シグナルプロフィール", "FILE": "ファイル", "STANDBY": "待機中", "HI-RES": "ハイレゾ", "LOSSLESS": "ロスレス", "LOSSY": "非可逆",
-    "NO SIGNAL": "信号なし", "TRACK INFORMATION LOADED": "曲情報を読み込みました", "AWAITING SIGNAL": "信号待ち",
+    "FILE {0}": "トラック {0}", "LOCAL FILE": "ローカルファイル",
+    "SIGNAL PROFILE": "トラック情報", "FILE": "ファイル", "STANDBY": "待機中", "HI-RES": "ハイレゾ", "LOSSLESS": "ロスレス", "LOSSY": "非可逆",
+    "NO SIGNAL": "停止中", "TRACK INFORMATION LOADED": "曲情報を読み込みました", "AWAITING SIGNAL": "再生待ち",
     "BITRATE": "ビットレート", "GAIN": "ゲイン", "QUEUE": "キュー", "QUEUE / NEXT": "キュー / 次", "END OF PLAYLIST": "プレイリストの終わり",
     "INFO": "情報",
 
     // lyrics
     "SYSTEM WARNING": "システム警告", "SYSTEM NOTICE": "システム通知", "PLAYBACK · 03": "再生 · 03", "LYRICS · 03": "歌詞 · 03",
-    "WARNING": "警告", "ADVANCING": "スキップ中", "FILE NOT FOUND": "ファイルが見つかりません", "DECODER · NO INPUT": "デコーダー · 入力なし",
+    "WARNING": "警告", "ADVANCING": "次の曲へ", "FILE NOT FOUND": "ファイルが見つかりません", "DECODER · NO INPUT": "デコーダー · 入力なし",
     "ADVANCING TO NEXT TRACK": "次の曲へ", "NO TRACK LOADED": "曲が読み込まれていません", "OUTPUT · IDLE": "出力 · 待機",
     "OFF": "オフ", "NOT FOUND": "見つかりません", "SEARCHING": "検索中", "OFFLINE": "オフライン", "NO LYRICS": "歌詞なし",
     "QUERYING {0}": "{0} に問い合わせ中", "AWAITING INPUT": "入力待ち", "LRC FILE · NOT FOUND": "LRC ファイル · なし",
@@ -108,8 +109,8 @@ I18N["ja"] = {
     "Your own: pick the page, the text and the accent": "カスタム：背景・文字・アクセントを自分で選ぶ", "CUSTOM SCHEME": "カスタム配色", "Pick the page, the text and the accent; the rest follows.": "背景・文字・アクセントを選ぶと、残りの色は自動で決まります。", "PAGE": "背景", "ACCENT": "アクセント", "GOOD": "良好", "READABLE": "読める", "HARD TO READ": "読みにくい", "TEXT ON PAGE": "文字のコントラスト", "ACCENT ON PAGE": "アクセントのコントラスト", "RESET TO ARCHIVE COLOURS": "ARCHIVE の配色に戻す",
     "Black anodised aluminium, black-on-black etching, topographic lines, one white light": "黒いアルマイト仕上げのアルミ、黒の刻印、等高線の模様、白いランプがひとつ",
     "RANDOM PICK": "ランダムピック", "PICKING …": "選んでいます …", "Random pick": "ランダムピック", "Titles on the cases' top edges": "ケースの上端にタイトルを表示", "Show the shelves in front (see-through)": "手前の棚を表示（半透明）",
-    "Case under the mouse": "マウスの下のケース", "Outline it": "枠線を表示", "Show its title": "タイトルを表示", "Nothing": "表示しない",
-    "White marble specimen case, frosted polymer edges, orange index tab": "白い大理石の標本ケース、すりガラス調の縁、オレンジのインデックスタブ",
+    "Case under the mouse": "マウスを重ねたケース", "Outline it": "枠線を表示", "Show its title": "タイトルを表示", "Nothing": "表示しない",
+    "White marble specimen case, frosted polymer edges, orange index tab": "白い大理石のケース、すりガラス調の縁、オレンジのインデックスタブ",
     "Carbon body, black rubber edges, yellow-and-black stripe band, signal yellow tab": "カーボンのボディ、黒いラバーの縁、黄と黒のストライプ、シグナルイエローのタブ",
     "Soft matte white plastics and white metal, frosted silver tab": "やわらかなマットの白い樹脂と白い金属、すりガラス調のシルバータブ",
     "Clear glass frame with frosted edges, caustic glass behind the cover, green glass tab": "すりガラスの縁の透明なガラス枠、カバーの奥にコースティクスのガラス、緑のガラスタブ",
@@ -127,7 +128,7 @@ I18N["ja"] = {
 
     // intro film overlays
     "IGNITION": "点火", "TRANSFER": "転送", "DEPLOY": "展開", "LOCK": "固定", "LINK": "接続",
-    "RAIL ONLINE": "レール起動", "SPECIMEN  ·  SLOT 01": "標本  ·  スロット 01", "SPECIMEN  ·  LOWERING": "標本  ·  降下中",
+    "RAIL ONLINE": "レール起動", "SPECIMEN  ·  SLOT 01": "ディスク  ·  スロット 01", "SPECIMEN  ·  LOWERING": "ディスク  ·  収納中",
     "OUTPUT DEVICE": "出力デバイス", "DECODER CHAIN": "デコーダーチェーン", "LIBRARY INDEX": "ライブラリ索引", "EMPTY": "空",
     "ARTWORK CACHE": "アートワークキャッシュ", "LYRICS ENGINE": "歌詞エンジン", "SIGNAL PATH  ·  48 BANDS": "信号経路  ·  48 バンド",
     "RAIL 02  ·  SLOT 01  ·  LOCK": "レール 02  ·  スロット 01  ·  固定", "SESSION LINK": "セッション接続",
@@ -215,7 +216,7 @@ I18N["ja"] = {
     "TICKET": "チケット",
     "TAG BODY": "タグの中央",
     "SOLID": "不透明",
-    "Over the Signal": "シグナルの向こうへ",
+    "Over the Signal": "Over the Signal",
     "Glossy plastic, coloured band by band.": "光沢のあるプラスチック。帯ごとに色をつけます。",
     "Matte card stock, its fibres showing.": "繊維の見えるマットな厚紙。",
     "Brushed aluminium: its grain along the tag, the light a band across it.": "ヘアライン仕上げのアルミ。筋目はタグに沿い、光は筋目を横切る帯になります。",
@@ -223,7 +224,7 @@ I18N["ja"] = {
     "Clear acrylic: the panel shows through, tinted by the band colours.": "透明アクリル。後ろのパネルが帯の色に染まって透けます。",
     "The Tide case's blue gradient glass, see-through.": "タイドケースの青いグラデーションガラス。透けます。",
     "The Aurora case's pastel gradient glass, see-through.": "オーロラケースのパステルグラデーションガラス。透けます。",
-    "ON THE SIGNAL PROFILE CARD": "シグナルプロファイルカードでは",
+    "ON THE SIGNAL PROFILE CARD": "トラック情報カードに表示",
     "ITS OWN COLOURS": "固有の色",
     "TAG OPACITY": "タグの不透明度",
     "TAG COLOURS": "タグの色",
@@ -288,7 +289,7 @@ I18N["ja"] = {
     // 1.10.2: the frosted glass on the cases
     "GLASS": "ガラス", "Frosted glass on the cases": "ケースのすりガラス",
     // 1.11: folders as cases (SHOW FOLDERS, GROUP › FOLDER)
-    "FOLDERS": "フォルダ", "FOLDER": "フォルダ", "{0} FOLDER": "{0} フォルダ", "{0} FOLDERS": "{0} フォルダ", "FOLDER GRID": "フォルダ一覧", "FOLDER / SELECT": "フォルダ / 選択", "Group by folder": "フォルダでグループ化", "Show every folder as one item": "フォルダごとにまとめて表示", "Favourite folder": "お気に入りのフォルダ", "{0} · LOOSE TRACKS": "{0} · 直下の曲", "FOLDER NO.": "フォルダ番号", "PLAY FOLDER": "フォルダを再生", "OPEN IN PLAYLIST": "リストで開く", "Play folder": "フォルダを再生", "Open folder in playlist": "フォルダをプレイリストで開く",
+    "FOLDERS": "フォルダ", "FOLDER": "フォルダ", "{0} FOLDER": "{0} フォルダ", "{0} FOLDERS": "{0} フォルダ", "FOLDER GRID": "フォルダ一覧", "FOLDER / SELECT": "選択中のフォルダー", "Group by folder": "フォルダでグループ化", "Show every folder as one item": "フォルダごとにまとめて表示", "Favourite folder": "お気に入りのフォルダ", "{0} · LOOSE TRACKS": "{0} · 直下の曲", "FOLDER NO.": "フォルダ番号", "PLAY FOLDER": "フォルダを再生", "OPEN IN PLAYLIST": "リストで開く", "Play folder": "フォルダを再生", "Open folder in playlist": "フォルダをプレイリストで開く",
     // 1.11: light / dark following Windows (#46), borderless full screen
     "SYSTEM": "システム", "Follow Windows light / dark": "ライト / ダークを Windows に合わせる", "WINDOW": "ウィンドウ", "NORMAL": "通常", "BORDERLESS": "枠なし", "Borderless full screen": "枠なし全画面",
     // 1.11: the factory tags (05 STYLE › TITLE TAG › FACTORY)
@@ -307,5 +308,44 @@ I18N["ja"] = {
     "BLACK ANODISED": "黒アルマイト", "Black anodised aluminium, laser-etched, an orange band.": "黒のアルマイト処理アルミ、レーザー刻印、オレンジの帯。",
     "BRUSHED BRASS": "ヘアライン真鍮", "Brushed brass, engraved and filled in black.": "ヘアライン仕上げの真鍮、彫刻に黒の墨入れ。",
     // 1.12: the Archive room (LAYOUT › ROOM)
-    "ROOM": "資料室", "Archive room": "資料室", "PAGE {0} / {1}": "ページ {0} / {1}",
+    "ROOM": "資料室", "Archive room": "資料室",
+   
+    // 2.0: 06 ONLINE (NetEase through the local bridge)
+    // 2.0: import
+    "IMPORT": "インポート", "IMPORT A PLAYLIST": "プレイリストをインポート", "A NetEase or QQ Music playlist link, or a file: Exportify's CSV (Spotify), Spotify's data export (Playlist1.json), a CSV, or \"artist - title\" lines.": "NetEase / QQ Music のプレイリストのリンク、またはファイル：Exportify の CSV（Spotify）、Spotify のデータエクスポート（Playlist1.json）、CSV、「アーティスト - タイトル」の行。", "What your library has becomes a foobar2000 playlist; the rest goes on a list of what is missing.": "ライブラリにある曲は foobar2000 のプレイリストに、残りは見つからなかった曲のリストになります。", "PASTE A LINK": "リンクを貼り付け", "OPEN A FILE": "ファイルを開く", "READING…": "読み込み中…", "IMPORTED": "インポート済み", "{0} MISSING": "{0} 曲なし", "ALL FOUND": "すべて見つかりました", "OPEN ONLINE": "オンラインで開く", "MISSING LIST": "見つからない曲", "PLAY": "再生", "A NetEase or QQ Music playlist link (a share text will do):": "NetEase / QQ Music のプレイリストのリンク（共有テキストのままでも可）：", "Import": "インポート", "not in the library": "曲がライブラリにありません", "No link in that text.": "テキストにリンクがありません。", "Not a NetEase or QQ Music playlist link.": "NetEase / QQ Music のプレイリストのリンクではありません。", "The playlist was not found (a private one needs that account logged in here).": "プレイリストが見つかりません（非公開のものはそのアカウントでここにログインが必要です）。", "The file was not found.": "ファイルが見つかりません。", "The file is too large.": "ファイルが大きすぎます。", "No songs were found in the file.": "ファイルに曲が見つかりませんでした。", "The bridge did not answer.": "ブリッジが応答しません。",
+    // 2.0: the online home
+    "LAST SYNC {0}": "同期 {0}", "{0} LISTS": "プレイリスト {0}", "RECENT SEARCHES": "最近の検索", "QUALITY": "音質", "LIKED": "お気に入り", "LISTS": "プレイリスト", "PLAYABLE TODAY": "今日の再生可能", "{0}, {1}": "{0}、{1}", "SHUFFLE": "シャッフル", "+{0} MORE  ›": "ほか {0} 曲  ›", "JUMP BACK IN": "続きから再生", "FROM": "再生元", "UP NEXT": "次の曲",
+    "Nothing in “{0}” can be played here now.": "「{0}」には今ここで再生できる曲がありません。",
+    "Reading “{0}”…": "「{0}」を読み込み中…", "Playing “{0}”": "「{0}」を再生", "“{0}” did not load. Try again.": "「{0}」を読み込めませんでした。もう一度お試しください。", "NOTHING PLAYABLE NOW": "現在再生できる曲なし",
+    // 2.0: the room's opaque cases and their lights
+    "WHITE": "ホワイト", "BLACKOUT": "ブラック", "ROOM LIGHT": "照明", "TOP LIGHT": "トップライト", "BACKLIGHT": "逆光", "TWO-TONE": "ツートーン", "WARM KEY": "ウォーム", "SOFTBOX": "ソフトボックス", "FROM BELOW": "下から",
+    // 2.0: the mini player
+    "Mini player": "ミニプレーヤー", "Corner": "表示位置", "Top left": "左上", "Top right": "右上", "Bottom left": "左下", "Bottom right": "右下", "Show lyrics": "歌詞を表示", "Back to the full window": "通常のウィンドウに戻る",
+    // 2.0: Spotify (import)
+    "Spotify answers an app of your own only while its owner has Premium. Without it: export the playlist with Exportify (a CSV) or ask Spotify for your data (Playlist1.json), then OPEN A FILE.": "Spotify は、所有者が Premium のアプリにしかデータを返しません。Premium がない場合は、Exportify でプレイリストを書き出す（CSV）か、Spotify にデータを請求して（Playlist1.json）、「ファイルを開く」から読み込んでください。",
+    "Connect Spotify first (below), or open a file exported from it: Exportify's CSV or Spotify's own Playlist1.json.": "先に下で Spotify に接続するか、Spotify から書き出したファイル（Exportify の CSV、Spotify の Playlist1.json）を開いてください。", "Spotify did not give the playlist: {0}": "Spotify がプレイリストを返しませんでした：{0}", "Spotify did not log in: {0}": "Spotify にログインできませんでした：{0}", "That is not a Client ID (32 letters and digits, from developer.spotify.com › your app).": "Client ID ではありません（developer.spotify.com のアプリにある 32 桁の英数字）。", "Your Spotify app's Client ID (developer.spotify.com › Dashboard › your app; its redirect URI: {0})": "Spotify アプリの Client ID（developer.spotify.com › Dashboard › アプリ。リダイレクト URI：{0}）", "CONNECTED": "接続済み", "CONNECTED AS {0}": "{0} として接続中", "LOG IN IN THE BROWSER …": "ブラウザーでログインしてください …", "DISCONNECT": "接続を解除", "CONNECT SPOTIFY": "SPOTIFY に接続",
+    // 2.0: QQ Music
+    "06 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "06 オンラインには小さなローカルブリッジが必要です（Node.js と各音楽サービスのライブラリ、約 160 MB）。", "CONNECT QQ MUSIC": "QQ MUSIC に接続", "SEARCH QQ MUSIC": "QQ MUSIC を検索", "Open the QQ Music app": "QQ Music アプリを開く", "Scan with the app's own scanner": "アプリ内のスキャナーで読み取る", "Open QQ on the phone": "スマートフォンで QQ を開く", "Scan with QQ's scanner": "QQ のスキャナーで読み取る", "Open WeChat on the phone": "スマートフォンで WeChat を開く", "Scan with WeChat's scanner": "WeChat のスキャナーで読み取る", "SCAN WITH": "スキャン方法", "QQ MUSIC APP": "QQ MUSIC アプリ", "WECHAT": "WECHAT",
+    "ONLINE": "オンライン", "Online view": "オンラインビュー", "SEARCH NETEASE": "NETEASE を検索", "ONLINE  ·  06": "オンライン  ·  06",
+    "NOT CONNECTED": "未接続", "COMING": "近日対応", "IMPORT · COMING": "インポート · 近日対応", "SECTION": "セクション", "HOME": "ホーム",
+    "LIKED SONGS": "お気に入りの曲", "MY PLAYLISTS": "マイプレイリスト", "SEARCH": "検索", "BRIDGE": "ブリッジ", "ACCOUNT": "アカウント",
+    "STANDARD": "標準", "LOG OUT": "ログアウト", "ABSENT": "未インストール", "READY": "準備完了", "ERROR": "エラー", "NOT INSTALLED": "未インストール",
+    "INSTALLING": "インストール中", "STARTING": "起動中", "It is installed beside the foobar2000 profile and runs only while foobar2000 does.": "foobar2000 のプロファイルの隣にインストールされ、foobar2000 の実行中だけ動きます。",
+    "Downloading…": "ダウンロード中…", "Something went wrong.": "問題が発生しました。", "Waiting for the bridge…": "ブリッジを待っています…",
+    "INSTALL": "インストール", "TRY AGAIN": "再試行", "CONNECT NETEASE": "NETEASE に接続", "Open the NetEase Cloud Music app": "NetEase Cloud Music アプリを開く",
+    "Scan with the app's own scanner (not the camera or WeChat)": "アプリ内のスキャナーで読み取る（カメラや WeChat ではなく）",
+    "Confirm the login on the phone": "スマートフォンでログインを確認する", "No password: the login is kept on this computer only, encrypted, and goes when you log out.": "パスワード不要：ログイン情報はこのコンピューターにだけ暗号化して保存され、ログアウトで消えます。",
+    "SCANNED · CONFIRM ON THE PHONE": "スキャン済み · スマホで確認", "EXPIRED": "期限切れ", "WAITING FOR SCAN": "スキャン待ち",
+    "NEW CODE": "新しいコード", "GOOD NIGHT": "こんばんは", "GOOD MORNING": "おはよう", "GOOD AFTERNOON": "こんにちは", "GOOD EVENING": "こんばんは",
+    "DAILY · FOR YOU": "デイリー · おすすめ", "{0} SONGS": "{0} 曲", "PLAY ALL": "すべて再生", "SEE ALL  ›": "すべて表示  ›",
+    "YOUR PLAYLISTS": "あなたのプレイリスト", "RECOMMENDED": "おすすめ", "‹  BACK": "‹  戻る", "BY": "作成", "SONGS": "曲",
+    "PLAYABLE": "再生可能", "TRIAL / LOCKED": "試聴 / ロック", "PLAY {0}": "{0} 曲を再生", "#": "#", "STATE": "状態", "VIP · TRIAL": "VIP · 試聴",
+    "THE LIST DID NOT LOAD": "リストを読み込めませんでした", "Search · {0}": "検索 · {0}", "Daily": "デイリー",
+    "ADDED TO {0}": "{0} に追加しました", "Add track to playlist": "曲をプレイリストに追加", "Add album to playlist": "アルバムをプレイリストに追加",
+    "Add folder to playlist": "フォルダーをプレイリストに追加", "Properties (edit tags)…": "プロパティ（タグを編集）…",
+    "Artist file: look artists up online": "アーティストファイル：オンラインで検索",
+    "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "オンライン検索はオフです（右クリックでオンにできます）。アルバムのファイルと同じ場所にある artist.txt がここに表示され、artist.jpg が写真になります。",
+    "Light / dark switch in the bottom bar": "下部バーのライト / ダーク切り替え", "Full: LIGHT / DARK": "フル：ライト / ダーク", "Compact: one button": "コンパクト：ボタン 1 つ", "Hidden": "非表示",
+    "CASE & COLOUR": "ケースと配色", "PRESETS": "プリセット", "YOURS": "マイプリセット", "SAVE THIS LOOK": "この外観を保存", "Name of the preset": "プリセットの名前", "Save current look": "現在の外観を保存", "PRESET": "プリセット",
+    "Colour": "カラー", "Black": "ブラック", "White": "ホワイト", "Follow light / dark": "ライト / ダークに合わせる",
 };

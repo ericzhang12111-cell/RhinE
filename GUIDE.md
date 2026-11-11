@@ -247,6 +247,32 @@ of the first artist named. A file is kept in `<profile>\audio-archive-cache\arti
 days. A text file `artist.txt` or a picture `artist.jpg` / `artist.png` beside the album's files is shown instead of
 the biography or the picture.
 
+**Room layout.** `LAYOUT` › `ROOM` shows the Archive as a rendered room: the cases stand in rows, the selected one is
+lifted out with its cover, and the keys, the wheel and the search move through it as in the other layouts. The
+material (`FROST`, `GLASS`, `WHITE`, `BLACKOUT`, `RHINE LAB`) and, for `WHITE` and `BLACKOUT`, the lighting are chosen
+in `05 STYLE` › `DISPLAY`. The room is a set of pictures rendered beforehand, so it shows the theme's cases, not a
+custom one; `RHINE LAB` exists in light mode.
+
+**06 Online.** NetEase Cloud Music and QQ Music, and playlist import. The view talks to a small local bridge: on first
+use `INSTALL` downloads Node.js (pinned version, checked against its SHA-256) and the services' community libraries
+into `<profile>\audio-archive-online\` (about 160 MB); it listens on `127.0.0.1` only and runs only while foobar2000
+does. Logging in is a QR code scanned with the service's app: no password is typed anywhere, the session is stored
+encrypted for your Windows account (DPAPI) in that folder, and `LOG OUT` deletes it. The bridge asks the service for
+the stream your account may play and hands it to foobar2000 with tags and cover; it does not decrypt, unlock or
+download protected files, so songs your account or region cannot play are marked and skipped. `IMPORT` needs no
+account: a NetEase / QQ Music playlist link, or a file (Exportify's CSV, Spotify's `Playlist1.json`, a CSV, text
+lines) is matched against your library by title, artist and length; what is found becomes a playlist `Import ·
+<name>`, the rest goes to a text list of what is missing. Spotify gives playlists only to an app of your own whose
+owner has Premium (`CONNECT SPOTIFY` asks for its Client ID; no client secret is used).
+
+**Mini player.** `M` (or `MENU › Audio Archive › Mini player`) shrinks the window to a small always-on-top unit:
+cover, the current lyric line (`LRC`) or the track (`TRK`), level meters, a seek line, volume, previous / play /
+next. Drag it by its body; right-click for the corner it snaps to and its colour (black, white, or following light / dark). A double-click, `⤢` or `M` returns to the full
+window.
+
+**Presets.** `05 STYLE` › `PRESETS` applies a whole look at once and `SAVE THIS LOOK` keeps your own (up to twelve;
+the `×` on a saved one deletes it).
+
 **Search** updates an autoplaylist called *Search* 300 ms after you stop typing: every word must appear in the title,
 artist, album artist, album, genre or date. It searches foobar2000's **media library** (*Preferences › Media
 Library*), so folders must be added there first. `Esc` clears the field and returns to the playlist you were on.
@@ -312,8 +338,10 @@ installed. Columns UI and JSplitter stay installed.
 - The column titles in the playlist head follow the preset's column widths. If you resize columns by hand in
   Columns UI's settings, re-import the theme layout (or switch the preset twice) to line them up again.
 - The window title bar is the system one.
-- The text size applies to the theme's own panels. The native playlist keeps Columns UI's fonts (*Preferences ›
-  Display › Columns UI › Colours and fonts*).
+- The text size also switches the native playlist's fonts, to the nearest of six sizes (90–150 %); fonts you set by
+  hand in *Preferences › Display › Columns UI › Colours and fonts* are replaced the next time the size changes.
+- `06 ONLINE` depends on community libraries for services that change without notice: a service may stop answering
+  until the theme is updated. Songs without a stream for your account or region cannot be played.
 - Archive cover thumbnails are not refreshed when you change an album's artwork; delete
   `<profile>\audio-archive-cache\covers\` to rebuild them. The first start with a large library extracts every
   album's cover once in the background (≈ 30 s for 600 albums).

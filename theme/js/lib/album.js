@@ -55,7 +55,7 @@ function cover(handle, onLoad) {
     const entry = { img: null, blur: null, loading: true };
     COVERS.set(key, entry);
     if (COVERS.size > 8) COVERS.delete(COVERS.keys().next().value);
-    utils.GetAlbumArtAsyncV2(window.ID, handle, 0).then(r => {
+    albumArtAsync(handle).then(r => {
         entry.loading = false;
         if (r && r.image) {
             // cut square from the middle like the library thumbnails, so a cover that is not square is not

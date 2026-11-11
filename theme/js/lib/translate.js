@@ -62,7 +62,7 @@ const sameLang = (src, target) => target.split("-")[0] === src;
 
 // ---------------------------------------------------------------------------------------------------------- http
 // asynchronous request through Windows' XMLHTTP, polled on a timer so the panel never waits; onDone(status, text)
-function trHttp(method, url, body, headers, onDone) {
+function trHttp(method, url, body, headers, onDone, timeout = 20000) {
     let x;
     try { x = new ActiveXObject("MSXML2.XMLHTTP.6.0"); } catch (e) { onDone(0, ""); return; }
     try {
@@ -75,7 +75,7 @@ function trHttp(method, url, body, headers, onDone) {
         let rs = 0;
         try { rs = x.readyState; } catch (e) { rs = 4; }
         if (rs === 4) { let st = 0, txt = ""; try { st = x.status; txt = x.responseText; } catch (e) { /* none */ } onDone(st, txt); return; }
-        if (Date.now() - t0 > 20000) { try { x.abort(); } catch (e) { /* gone */ } onDone(0, ""); return; }
+        if (Date.now() - t0 > timeout) { try { x.abort(); } catch (e) { /* gone */ } onDone(0, ""); return; }
         window.SetTimeout(poll, 80);
     };
     window.SetTimeout(poll, 80);

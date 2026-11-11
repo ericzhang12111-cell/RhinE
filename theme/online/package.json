@@ -1,0 +1,10 @@
+{
+  "name": "audio-archive-online",
+  "private": true,
+  "description": "The Audio Archive theme's online bridge (bridge.js): NetEase Cloud Music and QQ Music through community libraries",
+  "main": "bridge.js",
+  "dependencies": {
+    "@neteasecloudmusicapienhanced/api": "4.41.1",
+    "@yakult-green-tea/qq-music-api": "3.3.5"
+  }
+}

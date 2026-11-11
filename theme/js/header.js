@@ -8,8 +8,13 @@ include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\emblem.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\translate.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\update.js");
 
-const VIEWS = ["archive", "playlists", "lyrics", "signal", "style"];
-const NAV = { archive: ["01", tr("ARCHIVE")], playlists: ["02", tr("PLAYLISTS")], lyrics: ["03", tr("LYRICS")], signal: ["04", tr("SIGNAL")], style: ["05", tr("STYLE")] };
+const VIEWS = ["archive", "playlists", "lyrics", "signal", "style", "online"];
+const MODE_SWITCHES = ["full", "compact", "hidden"];   // the bottom bar's LIGHT / DARK switch (transport.js)
+// the service 06 ONLINE shows (its SOURCE cards, lib/online.js): what the search box searches there
+let ONLINE_SRC = String(getSetting("onlineSource", "ne"));
+onMessage("online-source", v => { ONLINE_SRC = String(v); window.Repaint(); });
+onMessage("online-search-set", t => { if (STATE.view === "online") { setSearchText(t); window.Repaint(); } });
+const NAV = { archive: ["01", tr("ARCHIVE")], playlists: ["02", tr("PLAYLISTS")], lyrics: ["03", tr("LYRICS")], signal: ["04", tr("SIGNAL")], style: ["05", tr("STYLE")], online: ["06", tr("ONLINE")] };
 const ST = {
     ident: { size: 18.5, weight: 700, track: -.02, fixed: true },   // the wordmark keeps its size at any text size
     spread: { size: 7.5, weight: 500, track: .04, fixed: true },
@@ -226,7 +231,7 @@ function drawRight(gr, navEnd, L) {
     const ly = sy + Math.round((sh - labelHeight(ST.search)) / 2);
     // the placeholder while empty (also with the caret in it); the query itself is plain text (no tracking), so long
     // queries stay readable
-    if (!SF.text) label(gr, tr("SEARCH ARCHIVE"), st(ST.search, C["text-muted"]), sx, ly);
+    if (!SF.text) label(gr, tr(STATE.view !== "online" ? "SEARCH ARCHIVE" : ONLINE_SRC === "qq" ? "SEARCH QQ MUSIC" : "SEARCH NETEASE"), st(ST.search, C["text-muted"]), sx, ly);
     if (focus || SF.text) fieldDraw(gr, SF, sx, sy, avail, sh, fontFor(SF.text || "x", 11, 400), C.fg, focus, search.caret);
     hits.add("search", sx, sy - dp(4), avail + dp(4), sh + dp(8));
     // at the right end a magnifier, or with a query a cross that clears it
@@ -346,7 +351,8 @@ function setSearchText(t) { SF.text = String(t || ""); SF.caret = SF.anchor = SF
 function clearSearch() {
     fieldSetText(SF, "");
     window.ClearTimeout(search.timer);
-    if (archiveFiltered) filterArchive(""); else leaveSearch();
+    if (STATE.view === "online") send("online-search", "");
+    else if (archiveFiltered) filterArchive(""); else leaveSearch();
     window.Repaint();
 }
 
@@ -354,7 +360,7 @@ function queueSearch() {
     search.caret = true;
     repaintSearch();
     window.ClearTimeout(search.timer);
-    search.timer = window.SetTimeout(applySearch, STATE.view === "archive" ? 150 : 300);
+    search.timer = window.SetTimeout(applySearch, STATE.view === "archive" ? 150 : STATE.view === "online" ? 600 : 300);
 }
 // in the Archive the search filters the albums in place (lib/library.js) instead of filling the "Search" playlist
 let archiveFiltered = false;
@@ -380,6 +386,8 @@ function leaveSearch() {
 
 function applySearch() {
     if (STATE.view === "archive") { filterArchive(SF.text); return; }
+    // in 06 ONLINE it searches NetEase (lib/online.js)
+    if (STATE.view === "online") { send("online-search", SF.text); return; }
     const q = searchQuery(SF.text);
     if (!q) return;
     // removing and re-creating "Search" at the same index leaves every other playlist where it was
@@ -406,12 +414,17 @@ function showMenu(a) {
     });
     root.AppendMenuSeparator();
     const theme = window.CreatePopupMenu();
-    ["Archive view", "Playlists view", "Lyrics view", "Signal view", "Style view"].forEach((t, i) => theme.AppendMenuItem(0, 21 + i, `${tr(t)}\t${i + 1}`));
-    theme.CheckMenuRadioItem(21, 25, 21 + VIEWS.indexOf(STATE.view));
+    ["Archive view", "Playlists view", "Lyrics view", "Signal view", "Style view", "Online view"].forEach((t, i) => theme.AppendMenuItem(0, 21 + i, `${tr(t)}\t${i + 1}`));
+    theme.CheckMenuRadioItem(21, 26, 21 + VIEWS.indexOf(STATE.view));
     theme.AppendMenuSeparator();
     theme.AppendMenuItem(0, 4, tr(MODE === "dark" ? "Light mode" : "Dark mode") + "\tT");
     theme.AppendMenuItem(STATE.modeSystem ? 0x8 : 0, 17, tr("Follow Windows light / dark"));
+    const mtm = window.CreatePopupMenu(), mtv = Math.max(0, MODE_SWITCHES.indexOf(getSetting("modeToggle", "full")));
+    ["Full: LIGHT / DARK", "Compact: one button", "Hidden"].forEach((t, i) => mtm.AppendMenuItem(0, 520 + i, tr(t)));
+    mtm.CheckMenuRadioItem(520, 522, 520 + mtv);
+    mtm.AppendTo(theme, 0, tr("Light / dark switch in the bottom bar"));
     theme.AppendMenuItem(STATE.borderless ? 0x8 : 0, 16, tr("Borderless full screen") + "\tF11");
+    theme.AppendMenuItem(STATE.mini ? 0x8 : 0, 18, tr("Mini player") + "\tM");
     theme.AppendMenuItem(0, 5, tr("Playlist preset: {0}", tr(STATE.preset === "album" ? "Index" : "Album")) + "\tP");
     theme.AppendMenuItem(STATE.reduce ? 0x8 : 0, 6, tr("Reduce motion"));   // MF_CHECKED
     theme.AppendMenuItem(STATE.grain ? 0x8 : 0, 9, tr("Grain texture"));
@@ -483,9 +496,10 @@ function showMenu(a) {
     const id = root.TrackPopupMenu(a.x - dp(8), a.y + a.h, 0);
     const k = Math.floor(id / 1000) - 1;
     if (k >= 0 && managers[k]) managers[k].ExecuteByID(id - 1000 * (k + 1));
-    else if (id >= 21 && id <= 25) send("view", VIEWS[id - 21]);
+    else if (id >= 21 && id <= 26) send("view", VIEWS[id - 21]);
     else if (id === 4) send("mode");
     else if (id === 16) send("borderless");
+    else if (id === 18) send("mini");
     else if (id === 17) send("mode-to", STATE.modeSystem ? MODE : "system");
     else if (id === 5) send("preset");
     else if (id === 6) send("reduce", !STATE.reduce);
@@ -495,6 +509,7 @@ function showMenu(a) {
     else if (id === 13) setSetting("updateCheck", getSetting("updateCheck", true) === false, true);
     else if (id >= 450 && id < 450 + UI_LANGS.length) { if (UI_LANGS[id - 450][0] !== UI_LANG) { setSetting("uiLang", UI_LANGS[id - 450][0]); send("ui-lang"); window.Reload(); } }
     else if (id >= 500 && id < 500 + LYR_SOURCES.length) send("lyrics-source", LYR_SOURCES[id - 500][0]);
+    else if (id >= 520 && id < 520 + MODE_SWITCHES.length) { setSetting("modeToggle", MODE_SWITCHES[id - 520]); send("mode-toggle", MODE_SWITCHES[id - 520]); }
     else if (id === 510) send("lyrics-netease-auto", !STATE.lyricsNeteaseAuto);
     else if (id === 511) send("lyrics-roma", !STATE.lyricsRoma);
     else if (id >= 400 && id < 400 + LYR_TRANS.length) send("lyrics-trans", LYR_TRANS[id - 400][0]);

@@ -90,7 +90,8 @@ function drawManager(gr) {
     for (let r = 0; r < rows && scroll + r < n; r++) {
         const i = scroll + r, y = TOP() + r * ROW(), on = i === active, hov = hover && hover.id === "pl" && hover.data === i && !drag;
         if (on) gr.FillSolidRect(0, y, w, ROW(), C.fg);
-        else if (hov) gr.FillSolidRect(0, y, w, ROW(), C.panel);
+        else if (hov || dropRow === i) gr.FillSolidRect(0, y, w, ROW(), C.panel);
+        if (dropRow === i) box(gr, 0, y, w - HAIR, ROW(), C.accent, dp(2));   // tracks dragged over it land here
         const fg = on ? C.bg : C.fg, cy = y + ROW() / 2;
         // rail line: log(count)
         const L = Math.round(dp(6 + 18 * Math.log10(counts[i] + 1) / maxLog));
@@ -99,7 +100,7 @@ function drawManager(gr) {
         if (i === playingPl) gr.FillSolidRect(0, y, dp(4), ROW(), C.accent);   // the playing playlist: an orange tab
         gr.DrawText(pad(i + 1, 2), font(11, 500), on ? C.bg : C["text-muted"], dp(50), y, dp(24), ROW(), DT_SINGLE);
         const name = plman.GetPlaylistName(i), cnt = fmtCount(counts[i]), cf = font(10.5, 400), cw = Math.ceil(gr.CalcTextWidth(cnt, cf));
-        gr.DrawText(name, fontFor(name, 12, on ? 600 : 400), fg, dp(76), y, w - dp(76) - dp(18) - cw - dp(10), ROW(), DT_SINGLE | DT_ELLIPSIS);
+        text(gr, name, 12, on ? 600 : 400, fg, dp(76), y, w - dp(76) - dp(18) - cw - dp(10), ROW());
         gr.DrawText(cnt, cf, on ? C.bg : C["text-muted"], w - dp(18) - cw, y, cw + dp(2), ROW(), DT_SINGLE);
         hits.add("pl", 0, y, w, ROW(), i);
     }
@@ -111,7 +112,7 @@ function drawManager(gr) {
     if (hidden > 0) label(gr, tr("+ {0} MORE", hidden), mst(MST.count, C["text-muted"]), w - dp(24), TOP() + rows * ROW() + dp(4), 2);
     // + NEW PLAYLIST
     const ay = H - dp(38), nh = hover && hover.id === "new";
-    const aw = label(gr, tr("+ NEW PLAYLIST"), mst(MST.action, nh ? C.fg : C["text-muted"]), x, ay);
+    const aw = label(gr, tr("+ NEW PLAYLIST"), mst(MST.action, dropRow === -1 ? C.accent : nh ? C.fg : C["text-muted"]), x, ay);
     hits.add("new", x - dp(6), ay - dp(6), aw + dp(12), labelHeight(MST.action) + dp(12));
     vline(gr, w - HAIR, 0, H, C.hair);
 }
@@ -150,7 +151,7 @@ function showTip(k) {
     const w = dp(300), h = dp(78), y = clamp(Math.round(TOP() + k * PITCH() + PITCH() / 2 - dp(30)), dp(8), H - h - dp(8));
     sendTip({
         x: W + dp(6), y, w, h,
-        file: `${tr("FILE")} ${pad(i + 1, 3)}${album ? " · " + album.toUpperCase() : ""}`,
+        file: `${tr("FILE {0}", pad(i + 1, 3))}${album ? " · " + album.toUpperCase() : ""}`,
         title, meta: [artist.toUpperCase(), len].filter(Boolean).join(" · ") + (share > 1 ? `  ·  ${tr("+ {0} MORE", share - 1)}` : ""),
         playing: i === m.playing,
     });
@@ -283,6 +284,35 @@ function on_mouse_wheel(step) {
     const n = plman.PlaylistCount, rows = visibleRows();
     const s = clamp(scroll - step * 3, 0, Math.max(0, n - rows));
     if (s !== scroll) { scroll = s; window.Repaint(); }
+}
+
+// --------------------------------------------------------------------------------------------- drag and drop
+// Tracks dragged over the list (from the playlist beside it, another window, Explorer) are added to the end of the
+// playlist under the mouse; below the rows they make a new playlist. Autoplaylists, locked playlists and the theme's
+// own (lib/bus.js OWN_PLAYLISTS) take none. The tracks stay where they came from: always a copy.
+let dropRow = -2;            // -2: nothing dragged over the list, -1: a new playlist, else the playlist's index
+function dropTarget(x, y) {
+    if (x >= MW() || y < TOP()) return -2;
+    const a = hits.at(x, y);
+    if (!a || a.id !== "pl") return -1;
+    const i = a.data;
+    return plman.IsAutoPlaylist(i) || plman.IsPlaylistLocked(i) || OWN_PLAYLISTS.has(plman.GetPlaylistName(i)) ? -2 : i;
+}
+const dropEffect = (action, t) => t === -2 ? 0 : action.Effect & 1 ? 1 : action.Effect & 4;   // copy, else link (some sources allow only that)
+function dropMark(t) { if (t !== dropRow) { dropRow = t; window.RepaintRect(0, 0, MW(), H); } }
+function on_drag_enter(action, x, y) { const t = dropTarget(x, y); action.Effect = dropEffect(action, t); dropMark(t); }
+function on_drag_over(action, x, y) { const t = dropTarget(x, y); action.Effect = dropEffect(action, t); dropMark(t); }
+function on_drag_leave() { dropMark(-2); }
+function on_drag_drop(action, x, y) {
+    const t = dropTarget(x, y), effect = dropEffect(action, t);
+    drag = null;             // the mouse-up that would end a reorder does not arrive after a drop
+    dropMark(-2);
+    if (!effect) { action.Effect = 0; return; }
+    const to = t >= 0 ? t : plman.CreatePlaylist(plman.PlaylistCount, "");
+    action.Playlist = to;
+    action.Base = plman.PlaylistItemCount(to);
+    action.ToSelect = false; // the playlist on screen stays
+    action.Effect = effect;
 }
 
 // ---------------------------------------------------------------------------------------------------- keys

@@ -102,6 +102,7 @@ function sectionText() {
     if (STATE.view === "lyrics") return tr("LYRICS SECTION · PLAYBACK");
     if (STATE.view === "signal") return tr("SIGNAL SECTION · MONITOR");
     if (STATE.view === "style") return tr("STYLE SECTION · APPEARANCE");
+    if (STATE.view === "online") return tr("ONLINE SECTION · STREAMING");
     const ap = plman.ActivePlaylist;
     return ap < 0 ? tr("PLAYLIST SECTION") : `${tr("PLAYLIST SECTION")} · ${pad(ap + 1, 3)} ${plman.GetPlaylistName(ap).toUpperCase()}`;
 }
@@ -143,7 +144,7 @@ function nowCover() {
     const v = h ? TF_NOW.EvalWithMetadb(h).split("\u0001") : ["", ""];
     NOW.title = v[0]; NOW.artist = v[1];
     if (!h) return;
-    utils.GetAlbumArtAsyncV2(window.ID, h, 0).then(r => {
+    albumArtAsync(h).then(r => {
         if (NOW.key !== key || !r || !r.image) return;
         const s = dp(COVER_S) * 2, src = r.image;
         NOW.img = src.Width > s || src.Height > s ? src.Resize(s, s) : src;
@@ -252,30 +253,48 @@ function on_dsp_preset_changed() { if (readDsp()) window.Repaint(); }
 const vol2pos = db => clamp((Math.pow(10, db / 50) - 0.01) / 0.99, 0, 1);
 const pos2vol = p => p <= 0 ? -100 : 50 * Math.log10(0.99 * p + 0.01);
 
+// the LIGHT / DARK switch: "full" (two labels), "compact" (one square) or "hidden" (MENU › Audio Archive)
+const MODE_TOGGLES = ["full", "compact", "hidden"];
+let modeToggle = getSetting("modeToggle", "full");
+if (!MODE_TOGGLES.includes(modeToggle)) modeToggle = "full";
+onMessage("mode-toggle", v => { modeToggle = MODE_TOGGLES.includes(v) ? v : "full"; togRects = {}; tog.placed = false; hover = null; window.Repaint(); });
+
 // right group, right to left: LIGHT / DARK toggle, ORDER, VOL. Returns its left edge.
 function drawRight(gr) {
     const cy = dp(ROW_Y), keyH = labelHeight(ST.key), ky = cy - Math.round(keyH / 2);
-    // toggle
-    const items = [["light", tr("LIGHT")], ["dark", tr("DARK")]];
-    const iw = items.map(([, t]) => dp(10) + dp(5) + dp(7) + labelWidth(t, st(ST.key, 0)) + dp(10));
-    const th = dp(26), ty = cy - th / 2, tw = iw[0] + iw[1], tx = W - dp(24) - tw;
-    if (!togRects.light) { togRects.light = [tx, iw[0]]; togRects.dark = [tx + iw[0], iw[1]]; placeToggle(false); }
-    box(gr, tx, ty, tw, th, C["line-faint"]);
-    // as in the header navigation: page labels, the sliding plate, then inverted labels clipped to the plate
-    const px = Math.round(tog.x.x), pw = Math.round(tog.w.x);
-    const drawItems = inverse => items.forEach(([m, t]) => {
-        const [x] = togRects[m], hov = !inverse && hover && hover.id === "mode" && hover.data === m;
-        const col = inverse ? C.bg : hov ? C.fg : C["text-muted"];
-        toggleMark(gr, x + dp(10), cy, inverse, col);
-        label(gr, t, st(ST.key, col, inverse ? C.fg : C.bg), x + dp(22), ky);
-    });
-    drawItems(false);
-    gr.FillSolidRect(px, ty, pw, th, C.fg);
-    gr.PushClip(px, ty, pw, th);
-    drawItems(true);
-    gr.PopClip();
-    items.forEach(([m]) => hits.add("mode", togRects[m][0], ty, togRects[m][1], th, m));
-    let x = tx - dp(18);
+    const th = dp(26), ty = cy - th / 2;
+    let x = W - dp(24);
+    if (modeToggle === "compact") {
+        // one square with a half-filled mark: a click turns to the other mode
+        const bx = x - th, hov = hover && hover.id === "mode", s = dp(10), mx = bx + Math.round((th - s) / 2), my = Math.round(cy - s / 2);
+        const col = hov ? C.fg : C["fg-soft"];
+        box(gr, bx, ty, th, th, hov ? C.accent : C["line-faint"]);
+        box(gr, mx, my, s, s, col);
+        gr.FillSolidRect(mx, my, Math.round(s / 2), s, col);
+        hits.add("mode", bx, ty, th, th, MODE === "dark" ? "light" : "dark");
+        x = bx - dp(18);
+    } else if (modeToggle !== "hidden") {   // hidden: T and MENU › Audio Archive still switch
+        const items = [["light", tr("LIGHT")], ["dark", tr("DARK")]];
+        const iw = items.map(([, t]) => dp(10) + dp(5) + dp(7) + labelWidth(t, st(ST.key, 0)) + dp(10));
+        const tw = iw[0] + iw[1], tx = x - tw;
+        if (!togRects.light) { togRects.light = [tx, iw[0]]; togRects.dark = [tx + iw[0], iw[1]]; placeToggle(false); }
+        box(gr, tx, ty, tw, th, C["line-faint"]);
+        // as in the header navigation: page labels, the sliding plate, then inverted labels clipped to the plate
+        const px = Math.round(tog.x.x), pw = Math.round(tog.w.x);
+        const drawItems = inverse => items.forEach(([m, t]) => {
+            const [x] = togRects[m], hov = !inverse && hover && hover.id === "mode" && hover.data === m;
+            const col = inverse ? C.bg : hov ? C.fg : C["text-muted"];
+            toggleMark(gr, x + dp(10), cy, inverse, col);
+            label(gr, t, st(ST.key, col, inverse ? C.fg : C.bg), x + dp(22), ky);
+        });
+        drawItems(false);
+        gr.FillSolidRect(px, ty, pw, th, C.fg);
+        gr.PushClip(px, ty, pw, th);
+        drawItems(true);
+        gr.PopClip();
+        items.forEach(([m]) => hits.add("mode", togRects[m][0], ty, togRects[m][1], th, m));
+        x = tx - dp(18);
+    }
     // ORDER
     const order = clamp(plman.PlaybackOrder, 0, ORDERS.length - 1), ohov = hover && hover.id === "order";
     const ow = labelWidth(ORDERS[order], st(ST.val, 0));

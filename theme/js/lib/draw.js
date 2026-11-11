@@ -35,6 +35,12 @@ function Hits() {
         add(id, x, y, w, h, data) { list.push({ id, x, y, w, h, data }); },
         at(x, y) { for (let i = list.length - 1; i >= 0; i--) { const a = list[i]; if (x >= a.x && x < a.x + a.w && y >= a.y && y < a.y + a.h) return a; } return null; },
         get(id) { return list.find(a => a.id === id) || null; },
+        size() { return list.length; },
+        // the areas added since `from` cut to y0 … y1 (a part that scrolls: what is out of sight cannot be hit)
+        clipY(from, y0, y1) {
+            list = list.slice(0, from).concat(list.slice(from).filter(a => a.y < y1 && a.y + a.h > y0)
+                .map(a => { const t = Math.max(a.y, y0); a.h = Math.min(a.y + a.h, y1) - t; a.y = t; return a; }));
+        },
     };
 }
 

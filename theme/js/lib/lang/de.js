@@ -8,7 +8,7 @@ I18N["de"] = {
     "JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC": "JAN FEB MÄR APR MAI JUN JUL AUG SEP OKT NOV DEZ",
     "{0} · {1} {2} {3}": "{0} · {1}. {2} {3}",
     "ARCHIVE SECTION · BROWSE": "ARCHIV · STÖBERN", "LYRICS SECTION · PLAYBACK": "LYRICS · WIEDERGABE",
-    "SIGNAL SECTION · MONITOR": "SIGNAL · MONITOR", "STYLE SECTION · APPEARANCE": "STIL · DARSTELLUNG",
+    "SIGNAL SECTION · MONITOR": "SIGNAL · MONITOR", "STYLE SECTION · APPEARANCE": "STIL · DARSTELLUNG", "ONLINE SECTION · STREAMING": "ONLINE · STREAMING",
     "PLAYLIST SECTION": "PLAYLISTS", "SIGNAL SECTION": "SIGNAL", "CLASSIC DISPLAY": "KLASSISCHE ANZEIGE",
     "START": "START", "NOW PLAYING": "LÄUFT GERADE", "LIGHT": "HELL", "DARK": "DUNKEL", "ORDER": "REIHENFOLGE",
     "SHUFFLE ALL": "ALLES MISCHEN", "VOL": "VOL", "{0} FILES · {1} ALBUMS": "{0} DATEIEN · {1} ALBEN",
@@ -45,13 +45,13 @@ I18N["de"] = {
     "NOTHING MATCHES \"{0}\"": "KEIN TREFFER FÜR „{0}“",
     "NO ALBUMS · THE MEDIA LIBRARY AND THE PLAYLISTS ARE EMPTY": "KEINE ALBEN · MEDIENBIBLIOTHEK UND PLAYLISTS SIND LEER",
     "INDEXING LIBRARY …": "BIBLIOTHEK WIRD INDIZIERT …", "INDEXING …": "INDIZIERUNG …", "FILTER": "FILTER",
-    "ALBUM / SELECT": "ALBUM / AUSWAHL", "TRACK / SELECT": "TITEL / AUSWAHL", "SHELF": "REGAL", "INSPECTION": "DETAIL",
+    "ALBUM / SELECT": "GEWÄHLTES ALBUM", "TRACK / SELECT": "GEWÄHLTER TITEL", "SHELF": "REGAL", "INSPECTION": "DETAIL",
     "ALBUM NO.": "ALBUM NR.", "PROFILE": "PROFIL", "FORMAT": "FORMAT", "RES": "AUFL.", "DISCS": "DISCS", "PLAYS": "WIEDERG.",
     "NO TRACKS": "KEINE TITEL", "SOURCE · ALL PLAYLISTS (NO MEDIA LIBRARY FOLDERS)": "QUELLE · ALLE PLAYLISTS (KEINE ORDNER IN DER MEDIENBIBLIOTHEK)", "+ {0} MORE  ·  OPEN ALBUM": "+ {0} WEITERE  ·  ALBUM ÖFFNEN", "PLAY ALBUM": "ALBUM SPIELEN",
     "PLAY TRACK": "TITEL SPIELEN", "OPEN ALBUM": "ÖFFNEN",
     "Group by genre": "Nach Genre gruppieren", "Group by decade": "Nach Jahrzehnt gruppieren", "Group by artist initial": "Nach Anfangsbuchstaben gruppieren",
     "No groups": "Keine Gruppen", "Artist": "Künstler", "Album title": "Albumtitel", "Year": "Jahr", "Date added (newest first)": "Hinzugefügt (neueste zuerst)",
-    "Sort by": "Sortieren nach", "Show every track as its own item": "Jeden Titel einzeln zeigen", "Grid: covers per page": "Raster: Cover pro Seite",
+    "Sort by": "Sortieren nach", "Show every track as its own item": "Jeden Titel einzeln zeigen", "Compact top bar": "Kompakte obere Leiste", "Grid: covers per page": "Raster: Cover pro Seite",
     "{0} covers": "{0} Cover", "Play album": "Album spielen", "Open album in playlist": "Album in Playlist öffnen",
     "Re-index library": "Bibliothek neu indizieren", "Case array": "Hüllenreihen", "Cover grid": "Coverraster",
 
@@ -64,8 +64,9 @@ I18N["de"] = {
     "Playlist name": "Name der Playlist", "Rename playlist": "Playlist umbenennen",
 
     // profile card
-    "SIGNAL PROFILE": "SIGNALPROFIL", "FILE": "DATEI", "STANDBY": "STANDBY", "HI-RES": "HI-RES", "LOSSLESS": "VERLUSTFREI", "LOSSY": "VERLUSTBEHAFTET",
-    "NO SIGNAL": "KEIN SIGNAL", "TRACK INFORMATION LOADED": "TITELINFOS GELADEN", "AWAITING SIGNAL": "WARTE AUF SIGNAL",
+    "FILE {0}": "TITEL {0}", "LOCAL FILE": "LOKALE DATEI",
+    "SIGNAL PROFILE": "TITELINFO", "FILE": "DATEI", "STANDBY": "STANDBY", "HI-RES": "HI-RES", "LOSSLESS": "VERLUSTFREI", "LOSSY": "VERLUSTBEHAFTET",
+    "NO SIGNAL": "KEINE WIEDERGABE", "TRACK INFORMATION LOADED": "TITELINFOS GELADEN", "AWAITING SIGNAL": "WARTET AUF WIEDERGABE",
     "BITRATE": "BITRATE", "GAIN": "GAIN", "QUEUE": "WARTESCHLANGE", "QUEUE / NEXT": "WARTESCHLANGE / NÄCHSTER", "END OF PLAYLIST": "ENDE DER PLAYLIST",
     "INFO": "INFO",
 
@@ -108,7 +109,7 @@ I18N["de"] = {
     "Black anodised aluminium, black-on-black etching, topographic lines, one white light": "Schwarz eloxiertes Aluminium, Ätzung schwarz auf schwarz, Höhenlinien, ein weißes Licht",
     "RANDOM PICK": "ZUFALLSGRIFF", "PICKING …": "WÄHLE …", "Random pick": "Zufallsgriff", "Titles on the cases' top edges": "Titel auf den Oberkanten der Hüllen", "Show the shelves in front (see-through)": "Vordere Regale anzeigen (durchscheinend)",
     "Case under the mouse": "Hülle unter der Maus", "Outline it": "Umranden", "Show its title": "Titel zeigen", "Nothing": "Nichts",
-    "White marble specimen case, frosted polymer edges, orange index tab": "Probenhülle aus weißem Marmor, mattierte Polymerkanten, orangefarbener Reiter",
+    "White marble specimen case, frosted polymer edges, orange index tab": "Hülle aus weißem Marmor, mattierte Polymerkanten, orangefarbener Reiter",
     "Carbon body, black rubber edges, yellow-and-black stripe band, signal yellow tab": "Carbon-Gehäuse, schwarze Gummikanten, gelb-schwarzes Streifenband, signalgelber Reiter",
     "Soft matte white plastics and white metal, frosted silver tab": "Weicher, matter weißer Kunststoff und weißes Metall, mattsilberner Reiter",
     "Clear glass frame with frosted edges, caustic glass behind the cover, green glass tab": "Klarer Glasrahmen mit mattierten Kanten, Kaustikglas hinter dem Cover, grüner Glasreiter",
@@ -126,7 +127,7 @@ I18N["de"] = {
 
     // intro film overlays
     "IGNITION": "ZÜNDUNG", "TRANSFER": "TRANSFER", "DEPLOY": "AUSROLLEN", "LOCK": "SPERRE", "LINK": "VERBINDUNG",
-    "RAIL ONLINE": "SCHIENE ONLINE", "SPECIMEN  ·  SLOT 01": "PROBE  ·  FACH 01", "SPECIMEN  ·  LOWERING": "PROBE  ·  ABSENKEN",
+    "RAIL ONLINE": "SCHIENE ONLINE", "SPECIMEN  ·  SLOT 01": "DISC  ·  FACH 01", "SPECIMEN  ·  LOWERING": "DISC  ·  WIRD EINGELEGT",
     "OUTPUT DEVICE": "AUSGABEGERÄT", "DECODER CHAIN": "DECODERKETTE", "LIBRARY INDEX": "BIBLIOTHEKSINDEX", "EMPTY": "LEER",
     "ARTWORK CACHE": "COVER-CACHE", "LYRICS ENGINE": "LYRICS-ENGINE", "SIGNAL PATH  ·  48 BANDS": "SIGNALWEG  ·  48 BÄNDER",
     "RAIL 02  ·  SLOT 01  ·  LOCK": "SCHIENE 02  ·  FACH 01  ·  SPERRE", "SESSION LINK": "SITZUNGSVERBINDUNG",
@@ -214,7 +215,7 @@ I18N["de"] = {
     "TICKET": "TICKET",
     "TAG BODY": "MITTELTEIL",
     "SOLID": "VOLL",
-    "Over the Signal": "Über dem Signal",
+    "Over the Signal": "Over the Signal",
     "Glossy plastic, coloured band by band.": "Glänzender Kunststoff, Band für Band gefärbt.",
     "Matte card stock, its fibres showing.": "Matter Karton mit sichtbaren Fasern.",
     "Brushed aluminium: its grain along the tag, the light a band across it.": "Gebürstetes Aluminium: der Schliff längs, das Licht als Band quer darüber.",
@@ -222,7 +223,7 @@ I18N["de"] = {
     "Clear acrylic: the panel shows through, tinted by the band colours.": "Klares Acryl: das Panel scheint durch, getönt von den Bandfarben.",
     "The Tide case's blue gradient glass, see-through.": "Das blaue Verlaufsglas der Tide-Hülle, durchsichtig.",
     "The Aurora case's pastel gradient glass, see-through.": "Das Pastell-Verlaufsglas der Aurora-Hülle, durchsichtig.",
-    "ON THE SIGNAL PROFILE CARD": "AUF DER SIGNALPROFIL-KARTE",
+    "ON THE SIGNAL PROFILE CARD": "AUF DER TITELINFO-KARTE",
     "ITS OWN COLOURS": "EIGENE FARBEN",
     "TAG OPACITY": "DECKKRAFT",
     "TAG COLOURS": "FARBEN",
@@ -287,7 +288,7 @@ I18N["de"] = {
     // 1.10.2: the frosted glass on the cases
     "GLASS": "GLAS", "Frosted glass on the cases": "Mattglas auf den Hüllen",
     // 1.11: folders as cases (SHOW FOLDERS, GROUP › FOLDER)
-    "FOLDERS": "ORDNER", "FOLDER": "ORDNER", "{0} FOLDER": "{0} ORDNER", "{0} FOLDERS": "{0} ORDNER", "FOLDER GRID": "ORDNERRASTER", "FOLDER / SELECT": "ORDNER / AUSWAHL", "Group by folder": "Nach Ordner gruppieren", "Show every folder as one item": "Jeden Ordner als ein Element zeigen", "Favourite folder": "Lieblingsordner", "{0} · LOOSE TRACKS": "{0} · EINZELTITEL", "FOLDER NO.": "ORDNER NR.", "PLAY FOLDER": "ORDNER ABSPIELEN", "OPEN IN PLAYLIST": "IN WIEDERGABELISTE", "Play folder": "Ordner abspielen", "Open folder in playlist": "Ordner in Wiedergabeliste öffnen",
+    "FOLDERS": "ORDNER", "FOLDER": "ORDNER", "{0} FOLDER": "{0} ORDNER", "{0} FOLDERS": "{0} ORDNER", "FOLDER GRID": "ORDNERRASTER", "FOLDER / SELECT": "GEWÄHLTER ORDNER", "Group by folder": "Nach Ordner gruppieren", "Show every folder as one item": "Jeden Ordner als ein Element zeigen", "Favourite folder": "Lieblingsordner", "{0} · LOOSE TRACKS": "{0} · EINZELTITEL", "FOLDER NO.": "ORDNER NR.", "PLAY FOLDER": "ORDNER ABSPIELEN", "OPEN IN PLAYLIST": "IN WIEDERGABELISTE", "Play folder": "Ordner abspielen", "Open folder in playlist": "Ordner in Wiedergabeliste öffnen",
     // 1.11: light / dark following Windows (#46), borderless full screen
     "SYSTEM": "SYSTEM", "Follow Windows light / dark": "Hell / Dunkel wie Windows", "WINDOW": "FENSTER", "NORMAL": "NORMAL", "BORDERLESS": "RAHMENLOS", "Borderless full screen": "Rahmenloser Vollbildmodus",
     // 1.11: the factory tags (05 STYLE › TITLE TAG › FACTORY)
@@ -306,5 +307,46 @@ I18N["de"] = {
     "BLACK ANODISED": "SCHWARZ ELOXIERT", "Black anodised aluminium, laser-etched, an orange band.": "Schwarz eloxiertes Aluminium, lasergraviert, ein oranges Band.",
     "BRUSHED BRASS": "GEBÜRSTETES MESSING", "Brushed brass, engraved and filled in black.": "Gebürstetes Messing, graviert und schwarz ausgelegt.",
     // 1.12: the Archive room (LAYOUT › ROOM)
-    "ROOM": "ARCHIVRAUM", "Archive room": "Archivraum", "PAGE {0} / {1}": "SEITE {0} / {1}",
+    "ROOM": "ARCHIVRAUM", "Archive room": "Archivraum",
+   
+    // 2.0: 06 ONLINE (NetEase through the local bridge)
+    // 2.0: import
+    "IMPORT": "IMPORT", "IMPORT A PLAYLIST": "PLAYLIST IMPORTIEREN", "A NetEase or QQ Music playlist link, or a file: Exportify's CSV (Spotify), Spotify's data export (Playlist1.json), a CSV, or \"artist - title\" lines.": "Ein Playlist-Link von NetEase oder QQ Music oder eine Datei: Exportifys CSV (Spotify), Spotifys Datenexport (Playlist1.json), eine CSV oder Zeilen „Künstler - Titel“.", "What your library has becomes a foobar2000 playlist; the rest goes on a list of what is missing.": "Was deine Bibliothek hat, wird eine foobar2000-Playlist; der Rest kommt auf eine Liste der fehlenden Titel.", "PASTE A LINK": "LINK EINFÜGEN", "OPEN A FILE": "DATEI ÖFFNEN", "READING…": "LESE…", "IMPORTED": "IMPORTIERT", "{0} MISSING": "{0} FEHLEN", "ALL FOUND": "ALLE GEFUNDEN", "OPEN ONLINE": "ONLINE ÖFFNEN", "MISSING LIST": "FEHLENDE TITEL", "PLAY": "ABSPIELEN", "A NetEase or QQ Music playlist link (a share text will do):": "Ein Playlist-Link von NetEase oder QQ Music (ein Teilen-Text geht auch):", "Import": "Import", "not in the library": "nicht in der Bibliothek", "No link in that text.": "Kein Link in diesem Text.", "Not a NetEase or QQ Music playlist link.": "Kein Playlist-Link von NetEase oder QQ Music.", "The playlist was not found (a private one needs that account logged in here).": "Die Playlist wurde nicht gefunden (eine private braucht das Konto hier angemeldet).", "The file was not found.": "Die Datei wurde nicht gefunden.", "The file is too large.": "Die Datei ist zu groß.", "No songs were found in the file.": "In der Datei wurden keine Titel gefunden.", "The bridge did not answer.": "Die Brücke hat nicht geantwortet.",
+    // 2.0: the online home
+    "LAST SYNC {0}": "SYNC {0}", "{0} LISTS": "{0} LISTEN", "RECENT SEARCHES": "LETZTE SUCHEN", "QUALITY": "QUALITÄT", "LIKED": "FAVORITEN", "LISTS": "LISTEN", "PLAYABLE TODAY": "HEUTE ABSPIELBAR", "{0}, {1}": "{0}, {1}", "SHUFFLE": "ZUFALL", "+{0} MORE  ›": "+{0} WEITERE  ›", "JUMP BACK IN": "WEITERHÖREN", "FROM": "AUS", "UP NEXT": "ALS NÄCHSTES",
+    "Nothing in “{0}” can be played here now.": "In „{0}“ ist hier gerade nichts abspielbar.",
+    "Reading “{0}”…": "„{0}“ wird geladen …", "Playing “{0}”": "„{0}“ wird abgespielt", "“{0}” did not load. Try again.": "„{0}“ wurde nicht geladen. Bitte erneut versuchen.", "NOTHING PLAYABLE NOW": "DERZEIT NICHTS ABSPIELBAR",
+    // 2.0: the room's opaque cases and their lights
+    "WHITE": "WEISS", "BLACKOUT": "SCHWARZ", "ROOM LIGHT": "LICHT", "TOP LIGHT": "OBERLICHT", "BACKLIGHT": "GEGENLICHT", "TWO-TONE": "ZWEIFARBIG", "WARM KEY": "WARMLICHT", "SOFTBOX": "SOFTBOX", "FROM BELOW": "VON UNTEN",
+    // 2.0: the mini player
+    "Mini player": "Mini-Player", "Corner": "Ecke", "Top left": "Oben links", "Top right": "Oben rechts", "Bottom left": "Unten links", "Bottom right": "Unten rechts", "Show lyrics": "Liedtext zeigen", "Back to the full window": "Zurück zum vollen Fenster",
+    // 2.0: Spotify (import)
+    "Spotify answers an app of your own only while its owner has Premium. Without it: export the playlist with Exportify (a CSV) or ask Spotify for your data (Playlist1.json), then OPEN A FILE.": "Spotify beantwortet eine eigene App nur, solange ihr Besitzer Premium hat. Ohne Premium: Playlist mit Exportify exportieren (CSV) oder deine Daten bei Spotify anfordern (Playlist1.json), dann DATEI ÖFFNEN.",
+    "Connect Spotify first (below), or open a file exported from it: Exportify's CSV or Spotify's own Playlist1.json.": "Verbinde zuerst Spotify (unten) oder öffne eine von dort exportierte Datei: Exportifys CSV oder Spotifys Playlist1.json.", "Spotify did not give the playlist: {0}": "Spotify hat die Playlist nicht geliefert: {0}", "Spotify did not log in: {0}": "Spotify-Anmeldung fehlgeschlagen: {0}", "That is not a Client ID (32 letters and digits, from developer.spotify.com › your app).": "Das ist keine Client ID (32 Buchstaben und Ziffern, von developer.spotify.com › deine App).", "Your Spotify app's Client ID (developer.spotify.com › Dashboard › your app; its redirect URI: {0})": "Client ID deiner Spotify-App (developer.spotify.com › Dashboard › deine App; Redirect-URI: {0})", "CONNECTED": "VERBUNDEN", "CONNECTED AS {0}": "VERBUNDEN ALS {0}", "LOG IN IN THE BROWSER …": "IM BROWSER ANMELDEN …", "DISCONNECT": "TRENNEN", "CONNECT SPOTIFY": "SPOTIFY VERBINDEN",
+    // 2.0: QQ Music
+    "06 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "06 ONLINE braucht eine kleine lokale Brücke (Node.js und die Bibliotheken der Musikdienste, etwa 160 MB).", "CONNECT QQ MUSIC": "QQ MUSIC VERBINDEN", "SEARCH QQ MUSIC": "QQ MUSIC DURCHSUCHEN", "Open the QQ Music app": "Die QQ-Music-App öffnen", "Scan with the app's own scanner": "Mit dem Scanner der App scannen", "Open QQ on the phone": "QQ auf dem Handy öffnen", "Scan with QQ's scanner": "Mit dem Scanner von QQ scannen", "Open WeChat on the phone": "WeChat auf dem Handy öffnen", "Scan with WeChat's scanner": "Mit dem Scanner von WeChat scannen", "SCAN WITH": "SCANNEN MIT", "QQ MUSIC APP": "QQ-MUSIC-APP", "WECHAT": "WECHAT",
+    "ONLINE": "ONLINE", "Online view": "Online-Ansicht", "SEARCH NETEASE": "NETEASE DURCHSUCHEN", "ONLINE  ·  06": "ONLINE  ·  06",
+    "NOT CONNECTED": "NICHT VERBUNDEN", "COMING": "IN KÜRZE", "IMPORT · COMING": "IMPORT · IN KÜRZE",
+    "SECTION": "BEREICH", "HOME": "START", "LIKED SONGS": "GELIKTE SONGS", "MY PLAYLISTS": "MEINE PLAYLISTS",
+    "SEARCH": "SUCHE", "BRIDGE": "BRÜCKE", "ACCOUNT": "KONTO", "STANDARD": "STANDARD", "LOG OUT": "ABMELDEN",
+    "ABSENT": "FEHLT", "READY": "BEREIT", "ERROR": "FEHLER", "NOT INSTALLED": "NICHT INSTALLIERT", "INSTALLING": "WIRD INSTALLIERT",
+    "STARTING": "STARTET", "It is installed beside the foobar2000 profile and runs only while foobar2000 does.": "Sie wird neben dem foobar2000-Profil installiert und läuft nur, solange foobar2000 läuft.",
+    "Downloading…": "Wird geladen …", "Something went wrong.": "Etwas ist schiefgegangen.", "Waiting for the bridge…": "Warte auf die Brücke …",
+    "INSTALL": "INSTALLIEREN", "TRY AGAIN": "ERNEUT VERSUCHEN", "CONNECT NETEASE": "NETEASE VERBINDEN",
+    "Open the NetEase Cloud Music app": "Die App NetEase Cloud Music öffnen", "Scan with the app's own scanner (not the camera or WeChat)": "Mit dem Scanner der App scannen (nicht mit der Kamera oder WeChat)",
+    "Confirm the login on the phone": "Die Anmeldung auf dem Telefon bestätigen", "No password: the login is kept on this computer only, encrypted, and goes when you log out.": "Kein Passwort: Die Anmeldung bleibt verschlüsselt nur auf diesem Computer und verschwindet beim Abmelden.",
+    "SCANNED · CONFIRM ON THE PHONE": "GESCANNT · AM TELEFON BESTÄTIGEN", "EXPIRED": "ABGELAUFEN",
+    "WAITING FOR SCAN": "WARTE AUF SCAN", "NEW CODE": "NEUER CODE", "GOOD NIGHT": "GUTE NACHT", "GOOD MORNING": "GUTEN MORGEN",
+    "GOOD AFTERNOON": "GUTEN TAG", "GOOD EVENING": "GUTEN ABEND", "DAILY · FOR YOU": "TÄGLICH · FÜR DICH",
+    "{0} SONGS": "{0} SONGS", "PLAY ALL": "ALLE ABSPIELEN", "SEE ALL  ›": "ALLE  ›", "YOUR PLAYLISTS": "DEINE PLAYLISTS",
+    "RECOMMENDED": "EMPFOHLEN", "‹  BACK": "‹  ZURÜCK", "BY": "VON", "SONGS": "SONGS", "PLAYABLE": "SPIELBAR",
+    "TRIAL / LOCKED": "PROBE / GESPERRT", "PLAY {0}": "{0} ABSPIELEN", "#": "#", "STATE": "STATUS", "VIP · TRIAL": "VIP · PROBE",
+    "THE LIST DID NOT LOAD": "DIE LISTE WURDE NICHT GELADEN", "Search · {0}": "Suche · {0}", "Daily": "Täglich",
+    "ADDED TO {0}": "ZU {0} HINZUGEFÜGT", "Add track to playlist": "Titel zur Playlist hinzufügen", "Add album to playlist": "Album zur Playlist hinzufügen",
+    "Add folder to playlist": "Ordner zur Playlist hinzufügen", "Properties (edit tags)…": "Eigenschaften (Tags bearbeiten)…",
+    "Artist file: look artists up online": "Künstlerakte: Künstler online nachschlagen",
+    "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "Die Online-Suche ist aus (Rechtsklick schaltet sie ein). Eine Textdatei artist.txt neben den Dateien des Albums wird hier gezeigt, artist.jpg als Bild.",
+    "Light / dark switch in the bottom bar": "Hell-/Dunkel-Schalter in der unteren Leiste", "Full: LIGHT / DARK": "Voll: HELL / DUNKEL", "Compact: one button": "Kompakt: ein Knopf", "Hidden": "Ausgeblendet",
+    "CASE & COLOUR": "HÜLLE & FARBE", "PRESETS": "VORGABEN", "YOURS": "EIGENE", "SAVE THIS LOOK": "DIESEN LOOK SPEICHERN", "Name of the preset": "Name der Vorgabe", "Save current look": "Aktuellen Look speichern", "PRESET": "VORGABE",
+    "Colour": "Farbe", "Black": "Schwarz", "White": "Weiß", "Follow light / dark": "Wie Hell / Dunkel",
 };

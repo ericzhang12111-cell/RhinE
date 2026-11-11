@@ -22,7 +22,8 @@ const ART_ST = {
     node: { size: 13, weight: 600, track: .03 },
 };
 const ART_ROOT = THEME_ROOT + "assets\\render\\artist\\";
-const AF = { open: false, tab: "file", layer: null, dirty: true, hover: null, rel: -1, libHover: -1, img: {} };
+const AF = { open: false, tab: "file", layer: null, dirty: true, hover: null, rel: -1, libHover: -1, img: {},
+             scroll: 0, max: 0, pageKey: "", drag: null, barHover: false };   // the ARTIST page, when it is too short: its scroll
 ART.listeners.push(rec => {
     const a = curAlbum(), al = a && (albumOf(a) || a), k = artKey(rec.name);   // the album's artist, or the first one named
     if (!al || (artKey(al.artist || "") !== k && artKey(firstArtist(al.artist || "")) !== k)) return;
@@ -141,7 +142,7 @@ function drawAlbumTile(gr, al, x, y, s, hov, playing) {
     else {
         gr.FillSolidRect(x, y, s, s, C.panel);
         const t = [...String(al.title || "?")][0].toUpperCase();
-        gr.DrawText(t, fontFor(t, Math.round(s / SCALE * .3), 700), C["text-muted"], x, y, s, s, DT_CENTER_SINGLE);
+        text(gr, t, Math.round(s / SCALE * .3), 700, C["text-muted"], x, y, s, s, 1);
     }
     if (playing) { gr.FillSolidRect(x, y + s - dp(4), s, dp(4), C.accent); }
     box(gr, x, y, s, s, hov ? C.accent : withAlpha(C.fg, .15), hov ? Math.max(HAIR, dp(1.5)) : HAIR);
@@ -204,10 +205,16 @@ function picCredit(rec) {
 }
 
 // the biography in `lines` lines at most, wrapped; returns the height used
+function bioWrap(gr, rec, w) {
+    const bio = artistBio(rec);
+    const text = bio ? bio.text : rec && rec.state === "loading" ? tr("Looking the artist up …")
+        : !ART.online ? tr("Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.")
+        : tr("No biography found for this artist. A text file artist.txt beside the album's files is shown here instead.");
+    const f = fontFor(text, 11.5, 400);
+    return { f, L: gr.EstimateLineWrap(text, f, w) };
+}
 function drawBio(gr, rec, x, y, w, maxLines, colour = C["fg-soft"]) {
-    const bio = artistBio(rec), lh = dp(19);
-    let text = bio ? bio.text : rec && rec.state === "loading" ? tr("Looking the artist up …") : tr("No biography found for this artist. A text file artist.txt beside the album's files is shown here instead.");
-    const f = fontFor(text, 11.5, 400), L = gr.EstimateLineWrap(text, f, w), n = Math.min(maxLines, L.length / 2);
+    const lh = dp(19), { f, L } = bioWrap(gr, rec, w), n = Math.min(maxLines, L.length / 2);
     for (let i = 0; i < n; i++) {
         let t = L[2 * i];
         if (i === n - 1 && L.length / 2 > n) t = t.replace(/\s*\S{0,3}$/, "") + " …";
@@ -243,7 +250,7 @@ function drawRelated(gr, rec, x, y, w, max, hitList, hover) {
         if (hov) gr.FillSolidRect(x - dp(6), ry, w + dp(12), rowH, withAlpha(C.fg, .06));
         if (own) gr.FillSolidRect(x - dp(6), ry, dp(2), rowH, C.accent);
         gr.DrawText(pad(i + 1, 2), font(10, 400), C["text-muted"], x, ry, dp(28), rowH, DT_SINGLE);
-        gr.DrawText(r.name, fontFor(r.name, 11.5, own ? 600 : 400), own ? C.fg : C["fg-soft"], x + dp(28), ry, w - dp(28) - dp(84), rowH, DT_SINGLE | DT_ELLIPSIS);
+        text(gr, r.name, 11.5, own ? 600 : 400, own ? C.fg : C["fg-soft"], x + dp(28), ry, w - dp(28) - dp(84), rowH);
         label(gr, own ? tr("■ IN LIB") : tr("READ ↗"), st(ART_ST.key, own ? C.accent : C["text-muted"]), x + w, ry + Math.round((rowH - labelHeight(ART_ST.key)) / 2), 2);
         gr.FillSolidRect(x, ry + rowH - HAIR, w, HAIR, C.hair);
         hitList.push(["art-rel", x - dp(6), ry, w + dp(12), rowH, i]);
@@ -271,14 +278,32 @@ function drawInfoArtist(gr, a, x, y, iw, w, h) {
     if (ct) { const cw = labelWidth(ct, { size: 9.5, weight: 600, track: .1, colour: 0, bg: 0 }) + dp(28); chip(gr, ct, x + iw - cw, y + Math.round((hh - dp(22)) / 2), dp(22), rec.state === "none" ? "" : "acc", 9.5, C.bg); }
     y += hh + dp(14);
     gr.FillSolidRect(x, y, w - x, HEAVY, C.fg);
-    y += HEAVY + dp(18);
+    y += HEAVY;
+    const by = h - dp(22) - dp(20) - dp(40);
     if (!name || !rec) {
-        label(gr, name ? tr("VARIOUS ARTISTS · NO SINGLE FILE") : tr("UNKNOWN ARTIST"), st(AR_ST.meta, C["text-muted"]), x, y + dp(6));
-        drawArtistButtons(gr, x, h - dp(22) - dp(20) - dp(40), lib, false);
+        AF.max = 0;
+        label(gr, name ? tr("VARIOUS ARTISTS · NO SINGLE FILE") : tr("UNKNOWN ARTIST"), st(AR_ST.meta, C["text-muted"]), x, y + dp(24));
+        drawArtistButtons(gr, x, by, lib, false);
         return;
     }
+    // Under the rule: picture and name, profile, biography, genres, the artist's albums, related artists. A page with
+    // the room for them shares it between the biography and the related rows (the rows give way first); one too short
+    // for a few lines of each shows them in full and scrolls (the wheel, or the bar at the right).
+    const ps = dp(118), vy = y, vb = by - dp(14), y0 = vy + dp(18) + ps + dp(26) + dp(28) + dp(76);
+    const nRel = Math.min(6, ((rec.related) || []).length), strip = lib ? libStripH() : 0, hasG = !!(rec.genres && rec.genres.length);
+    const fixed = dp(18) + dp(26) + dp(32) + (nRel ? dp(24) : 0) + dp(18) + strip, room = by - y0 - fixed;
+    const fits = room >= dp(19) * 4 + Math.min(nRel, 2) * dp(23);
+    const rel = fits ? clamp(Math.floor((room - dp(19) * 3) / dp(23)), 0, nRel) : nRel;
+    const bioLines = fits ? clamp(Math.floor((room - rel * dp(23)) / dp(19)), 2, 14) : 8;
+    const bioN = Math.max(1, Math.min(bioLines, bioWrap(gr, rec, iw).L.length / 2));
+    const total = y0 - vy + dp(18) + bioN * dp(19) + dp(34) + (hasG ? dp(32) : 0) + strip + (rel ? dp(20) + rel * dp(23) : 0) + dp(10);
+    AF.max = fits ? 0 : Math.max(0, Math.round(total - (vb - vy)));
+    if (AF.pageKey !== name) { AF.pageKey = name; AF.scroll = 0; }
+    AF.scroll = clamp(AF.scroll, 0, AF.max);
+    const n0 = INFO_HITS.length;
+    gr.PushClip(0, vy, w, vb - vy);
+    y = vy + dp(18) - AF.scroll;
     // the picture, and the name beside it
-    const ps = dp(118);
     drawArtistPic(gr, rec, x + dp(8), y + dp(8), ps, true, A.album);
     const nx = x + ps + dp(32), nw = iw - (nx - x);
     const nf = fontFor(name, 22, 700);
@@ -286,7 +311,7 @@ function drawInfoArtist(gr, a, x, y, iw, w, h) {
     gr.DrawText(two ? lines[0] : name, nf, C.fg, nx, y + dp(4), nw, dp(32), DT_SINGLE | DT_ELLIPSIS);
     if (two) gr.DrawText(lines[2], nf, C.fg, nx, y + dp(34), nw, dp(32), DT_SINGLE | DT_ELLIPSIS);
     let ny = y + (two ? dp(72) : dp(42));
-    if (rec.mbName && artNorm(rec.mbName) !== artNorm(name)) { gr.DrawText(rec.mbName, fontFor(rec.mbName, 11, 400), C["fg-soft"], nx, ny, nw, dp(18), DT_SINGLE | DT_ELLIPSIS); ny += dp(20); }
+    if (rec.mbName && artNorm(rec.mbName) !== artNorm(name)) { text(gr, rec.mbName, 11, 400, C["fg-soft"], nx, ny, nw, dp(18)); ny += dp(20); }
     const tl = artTypeLine(rec);
     if (tl) { label(gr, fitLabel(tl, st(ART_ST.sub, 0), nw), st(ART_ST.sub, C["text-muted"]), nx, ny); ny += dp(18); }
     label(gr, fitLabel(picCredit(rec), st(ART_ST.key, 0), nw), st(ART_ST.key, C["text-muted"]), nx, y + ps - dp(2));
@@ -301,22 +326,16 @@ function drawInfoArtist(gr, a, x, y, iw, w, h) {
     artFacts(rec, lib).forEach(([k, v, kind], i) => {
         const cx = x + dp(8) + (i % 2) * colW, cy = y + Math.floor(i / 2) * dp(20);
         label(gr, k, st(ART_ST.key, C["text-muted"]), cx, cy + dp(2));
-        gr.DrawText(v, fontFor(v, 11, 400), kind === "acc" ? C.accent : C.fg, cx + dp(72), cy - dp(2), colW - dp(84), dp(18), DT_SINGLE | DT_ELLIPSIS);
+        text(gr, v, 11, 400, kind === "acc" ? C.accent : C.fg, cx + dp(72), cy - dp(2), colW - dp(84), dp(18));
         if (kind === "acc" && lib) INFO_HITS.push(["art-lib", cx, cy - dp(2), colW - dp(12), dp(20)]);   // IN LIB: the full list
     });
     y += dp(60) + dp(16);
-    // the rest of the page: biography, genres, the artist's albums, related artists, buttons (related rows give way
-    // first when tight)
-    const by = h - dp(22) - dp(20) - dp(40), nRel = Math.min(6, ((rec.related) || []).length), strip = lib ? libStripH() : 0;
-    const fixed = dp(18) + dp(26) + dp(32) + (nRel ? dp(24) : 0) + dp(18) + strip;
-    const room = by - y - fixed, rel = clamp(Math.floor((room - dp(19) * 3) / dp(23)), 0, nRel);
-    const bioLines = clamp(Math.floor((room - rel * dp(23)) / dp(19)), 2, 14);
     label(gr, tr("■ BIOGRAPHY"), st(ART_ST.sect, C.fg), x, y);
     y += dp(18);
     y += drawBio(gr, rec, x, y, iw, bioLines) + dp(8);
     drawBioSource(gr, rec, x, y, iw, INFO_HITS);
     y += dp(26);
-    if (rec.genres && rec.genres.length) { drawGenreChips(gr, rec, x, y, iw, C.bg); y += dp(32); }
+    if (hasG) { drawGenreChips(gr, rec, x, y, iw, C.bg); y += dp(32); }
     if (lib) y += drawLibStrip(gr, lib, x, y, iw);
     if (rel) {
         label(gr, tr("■ RELATED ARTISTS"), st(ART_ST.sect, C.fg), x, y);
@@ -325,8 +344,38 @@ function drawInfoArtist(gr, a, x, y, iw, w, h) {
         y += dp(20);
         drawRelated(gr, rec, x, y, iw, rel, INFO_HITS, AF.rel);
     }
+    gr.PopClip();
+    // what has scrolled out of sight cannot be hit
+    for (let i = INFO_HITS.length - 1; i >= n0; i--) {
+        const a = INFO_HITS[i], t = Math.max(a[2], vy), b = Math.min(a[2] + a[4], vb);
+        if (b <= t) INFO_HITS.splice(i, 1); else { a[2] = t; a[4] = b - t; }
+    }
+    if (AF.max > 0) {
+        const bx = x + iw + dp(10), top = vy + dp(8), th = vb - vy - dp(12), view = vb - vy;
+        const bh = Math.max(dp(24), th * view / (view + AF.max)), bt = top + (th - bh) * AF.scroll / AF.max, tw = AF.drag || AF.barHover ? dp(6) : dp(3);
+        gr.FillSolidRect(bx, top, HAIR, th, C["line-faint"]);
+        gr.FillSolidRect(Math.round(bx + HAIR / 2 - tw / 2), Math.round(bt), tw, Math.round(bh), AF.drag ? C.accent : C.fg);
+        INFO_HITS.push(["art-bar", bx - dp(8), top, dp(18), th, { top, th, bh, max: AF.max }]);
+    } else AF.drag = null;
     drawArtistButtons(gr, x, by, lib, true);
 }
+// the ARTIST page's scroll: the wheel over it (archiveWheel), or its bar held and moved (stage.js)
+function artPageScroll(s, force) {
+    s = clamp(Math.round(s), 0, AF.max);
+    if (s === AF.scroll && !force) return;
+    AF.scroll = s; AR.dirtyInfo = true;
+    window.RepaintRect(infoX() - dp(20), 0, W - infoX() + dp(20), H);
+}
+function artBarDown(y, a) {
+    const b = a.data, bt = b.top + (b.th - b.bh) * AF.scroll / b.max;
+    AF.drag = { grab: y >= bt && y < bt + b.bh ? y - bt : b.bh / 2, b };
+    artBarMove(y, true);
+}
+function artBarMove(y, force) {
+    const { grab, b } = AF.drag;
+    artPageScroll(clamp((y - grab - b.top) / Math.max(1, b.th - b.bh), 0, 1) * b.max, force);
+}
+function artBarUp() { AF.drag = null; artPageScroll(AF.scroll, true); }
 
 // ■ IN YOUR LIBRARY: the artist's albums as covers in a row, the playing one marked; a click plays one. More than fit:
 // the last tile says how many more and opens the artist file's LIBRARY.
@@ -542,7 +591,7 @@ function drawArtistCard(gr, rec, lib, name, no, x0, y0, cw, ch, album) {
     const nbW = Math.min(iw, Math.max(...Array.from({ length: nl }, (_, i) => L[2 * i + 1])) + dp(40)), nbH = nl * dp(48) + dp(16) + (sub ? dp(18) : 0);
     gr.FillSolidRect(x, y, nbW, nbH, C.fg);
     for (let i = 0; i < nl; i++) gr.DrawText(L[2 * i], nf, C.bg, x + dp(20), y + dp(8) + i * dp(48), nbW - dp(28), dp(50), DT_SINGLE | DT_ELLIPSIS);
-    if (sub) gr.DrawText(sub, fontFor(sub, 10, 500), mix(C.bg, C.fg, .35), x + dp(20), y + nl * dp(48) + dp(6), nbW - dp(28), dp(18), DT_SINGLE | DT_ELLIPSIS);
+    if (sub) text(gr, sub, 10, 500, mix(C.bg, C.fg, .35), x + dp(20), y + nl * dp(48) + dp(6), nbW - dp(28), dp(18));
     y += nbH + dp(14);
     // the loaded plate: the genre code, and ARTIST INFORMATION LOADED ■
     const lh = dp(54), lw = Math.min(iw, dp(330));
@@ -567,7 +616,7 @@ function drawArtistCard(gr, rec, lib, name, no, x0, y0, cw, ch, album) {
     facts.forEach(([k, v, kind], i) => {
         const fx = x + dp(16) + (i % 2) * colW, fy = y + dp(8) + Math.floor(i / 2) * dp(21);
         label(gr, k, st(ART_ST.key, C["text-muted"]), fx, fy + dp(2));
-        gr.DrawText(v, fontFor(v, 10.5, 400), kind === "acc" ? C.accent : C.fg, fx + dp(62), fy - dp(2), colW - dp(70), dp(18), DT_SINGLE | DT_ELLIPSIS);
+        text(gr, v, 10.5, 400, kind === "acc" ? C.accent : C.fg, fx + dp(62), fy - dp(2), colW - dp(70), dp(18));
         if (kind === "acc" && lib) AF_HITS.push(["art-tab", fx, fy - dp(2), colW - dp(8), dp(20), "lib"]);   // IN LIB: the LIBRARY tab
     });
     y += rowsH + dp(16);
@@ -597,7 +646,7 @@ function drawArtistLibrary(gr, lib, name, x0, y0, cw, ch) {
     shown.forEach((al, i) => {
         const ax = x + (i % cols) * (s + gap), ay = y + Math.floor(i / cols) * rh, hov = AF.hover && AF.hover.id === "art-alb" && AF.hover.data === i;
         drawAlbumTile(gr, al, ax, ay, s, hov, itemPlaying(al, np));
-        gr.DrawText(al.title || tr("UNTITLED"), fontFor(al.title || "x", 10, 600), hov ? C.accent : C.fg, ax, ay + s + dp(6), s, dp(16), DT_SINGLE | DT_ELLIPSIS);
+        text(gr, al.title || tr("UNTITLED"), 10, 600, hov ? C.accent : C.fg, ax, ay + s + dp(6), s, dp(16));
         label(gr, fitLabel([al.year, tr(al.tracks === 1 ? "{0} TRACK" : "{0} TRACKS", al.tracks || 0)].filter(Boolean).join("  ·  "), st(ART_ST.key, 0), s), st(ART_ST.key, C["text-muted"], bg), ax, ay + s + dp(24));
         AF_HITS.push(["art-alb", ax, ay, s, s + dp(40), i]);
     });
@@ -613,8 +662,8 @@ function drawArtistLibrary(gr, lib, name, x0, y0, cw, ch) {
         if (on) gr.FillSolidRect(tx - dp(8), ry + dp(5), dp(3), rowH - dp(10), C.accent);
         label(gr, pad(i + 1, 2), st(ART_ST.key, on ? C.accent : C["text-muted"], hov ? mix(bg, C.fg, .07) : bg), tx, ry + Math.round((rowH - labelHeight(ART_ST.key)) / 2));
         const lenW = dp(44), albW = Math.round(tw * .34);
-        gr.DrawText(r.title, fontFor(r.title, 11, on ? 600 : 400), on ? C.accent : C.fg, tx + dp(30), ry, tw - dp(30) - albW - lenW - dp(16), rowH, DT_SINGLE | DT_ELLIPSIS);
-        gr.DrawText(r.album.title || "", fontFor(r.album.title || "x", 10, 400), C["fg-soft"], tx + tw - lenW - albW - dp(8), ry, albW, rowH, DT_SINGLE | DT_ELLIPSIS);
+        text(gr, r.title, 11, on ? 600 : 400, on ? C.accent : C.fg, tx + dp(30), ry, tw - dp(30) - albW - lenW - dp(16), rowH);
+        text(gr, r.album.title || "", 10, 400, C["fg-soft"], tx + tw - lenW - albW - dp(8), ry, albW, rowH);
         label(gr, r.len, ks, tx + tw, ry + Math.round((rowH - labelHeight(ART_ST.key)) / 2), 2);
         gr.FillSolidRect(tx, ry + rowH - HAIR, tw, HAIR, withAlpha(C.fg, .08));
         AF_HITS.push(["art-trk", tx - dp(8), ry, tw + dp(8), rowH, i]);
@@ -701,7 +750,8 @@ function artistMouseMove(x, y, a) {
     if (JSON.stringify(hv) !== JSON.stringify(AF.hover)) { AF.hover = hv; AF.dirty = true; window.RepaintRect(0, 0, arrayW(), H); }
     const r = a && a.id === "art-rel" && page ? a.data : -1;
     const lh = page && a ? (a.id === "art-alb" ? a.data : a.id === "art-lib" ? -2 : -1) : -1;
-    if (r !== AF.rel || lh !== AF.libHover) { AF.rel = r; AF.libHover = lh; AR.dirtyInfo = true; window.RepaintRect(infoX() - dp(20), 0, W - infoX() + dp(20), H); }
+    const bar = !!(a && a.id === "art-bar");
+    if (r !== AF.rel || lh !== AF.libHover || bar !== AF.barHover) { AF.rel = r; AF.libHover = lh; AF.barHover = bar; AR.dirtyInfo = true; window.RepaintRect(infoX() - dp(20), 0, W - infoX() + dp(20), H); }
 }
 // a click on the file or on the ARTIST page; true when it was ours
 function artistClick(a) {

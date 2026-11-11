@@ -18,7 +18,7 @@ function on_paint(gr) {
     if (!tip) return;
     const x = dp(22), iw = W - x - dp(14);
     label(gr, fitLabel(tip.file, Object.assign({ colour: 0, bg: 0 }, TST.file), iw), Object.assign({ colour: C["text-muted"], bg: C.bg }, TST.file), x, dp(14));
-    gr.DrawText(tip.title, fontFor(tip.title, 13, 700), C.fg, x, dp(30), iw - (tip.playing ? dp(14) : 0), dp(20), DT_SINGLE | DT_ELLIPSIS);
+    text(gr, tip.title, 13, 700, C.fg, x, dp(30), iw - (tip.playing ? dp(14) : 0), dp(20));
     if (tip.playing) gr.FillSolidRect(W - dp(20), dp(37), dp(6), dp(6), C.accent);   // the playing track (orange never sets text on paper)
     label(gr, fitLabel(tip.meta, Object.assign({ colour: 0, bg: 0 }, TST.meta), iw), Object.assign({ colour: C["text-muted"], bg: C.bg }, TST.meta), x, dp(54));
     drawGrain(gr, 0, 0, W, H);

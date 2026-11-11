@@ -69,6 +69,9 @@ refreshTokens();
 const isHangul = s => /[가-힯ᄀ-ᇿ㄰-㆏]/.test(s);
 const isCJK = s => /[⺀-鿿가-힯豈-﫿＀-￯]/.test(s);
 const FONT_CACHE = new Map();
+// CJK beside the interface font: the square glyphs fill their em, so at the same size they read larger than the Latin
+// capitals next to them. They are set a little smaller (and tracked half as much, lib/text.js).
+const CJK_SCALE = .94;
 // Text size (MENU › Audio Archive › Text size, or the Style view): every font of the scripted panels is scaled by it,
 // the boxes around the text stay as designed. setTextScale() returns true when it changed (the caller then drops caches
 // that hold drawn text and repaints).
@@ -86,7 +89,7 @@ function setFontFamily(id) {
     if (id === FONT_FAMILY) return false;
     FONT_FAMILY = id;
     FONT_CACHE.clear();
-    if (typeof TEXT_CACHE !== "undefined") TEXT_CACHE.clear();
+    if (typeof TEXT_CACHE !== "undefined") { TEXT_CACHE.clear(); GLYPH_RUNS.clear(); RUNS.clear(); }
     return true;
 }
 // font(13, 600) -> D2DFont of the interface font at 13 dp (× the text size), weight 600 (static TTFs: the weight picks
@@ -98,7 +101,7 @@ function font(sizeDp, weight = 400, cjk = false) {
         const n = FONT_FAMILIES[FONT_FAMILY].name;
         const family = cjk === "ko" ? "Malgun Gothic" : cjk ? "Microsoft YaHei UI" : { 300: n + " Light", 400: n, 500: n + " Medium", 600: n + " SemiBold", 700: n }[weight] || n;
         // Direct2D refuses a size under 1 px (a tag or a card squeezed to nothing while the window is resized)
-        const px = dp(sizeDp * TEXT_SCALE);
+        const px = dp(sizeDp * TEXT_SCALE * (cjk ? CJK_SCALE : 1));
         FONT_CACHE.set(key, d2d.Font(family, px >= 1 ? px : 1, weight >= 700 || (cjk && weight >= 600) ? 1 : 0));
     }
     return FONT_CACHE.get(key);

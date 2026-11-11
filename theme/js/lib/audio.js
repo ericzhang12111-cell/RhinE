@@ -6,6 +6,7 @@
 const AUDIO = {
     bands: new Float32Array(48), energy: 0, avg: 0, surge: 0,
     peakDb: -Infinity, rmsDb: -Infinity, corr: 0, live: false,
+    l: 0, r: 0,   // the left and right channel's level, 0 (−48 dBFS and below) – 1 (0 dBFS): the mini player's meters
 };
 
 const FFT_N = 2048;
@@ -33,6 +34,7 @@ function analyseAudio(dt) {
     const B = AUDIO.bands;
     if (!got) {
         for (let b = 0; b < 48; b++) B[b] *= Math.pow(0.02, dt);   // fall away
+        AUDIO.l = AUDIO.r = 0;
         AUDIO.energy *= Math.pow(0.05, dt);
         AUDIO.surge = 0;
         return;
@@ -79,6 +81,10 @@ function analyseAudio(dt) {
     AUDIO.peakDb = 20 * Math.log10(_meter.peak + 1e-9);
     AUDIO.rmsDb = 20 * Math.log10(_meter.rms + 1e-9);
     AUDIO.corr = ch >= 2 ? _meter.corr : 1;
+    // each channel's RMS on a 48 dB scale (a mono stream: both)
+    const lvl = s2 => clamp((20 * Math.log10(Math.sqrt(s2 / Math.max(1, n)) + 1e-9) + 48) / 48, 0, 1);
+    AUDIO.l = ch >= 2 ? lvl(ll) : lvl(sum / ch);
+    AUDIO.r = ch >= 2 ? lvl(rr) : AUDIO.l;
 }
 
 const fmtDb = db => !isFinite(db) || db < -96 ? "−∞ DB" : `${db < 0 ? "−" : ""}${Math.abs(db).toFixed(1)} DB`;

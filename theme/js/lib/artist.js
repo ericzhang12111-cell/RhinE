@@ -22,6 +22,15 @@ const ART_LANGS = [...new Set([ART_WIKI[UI_LANG] || "en", "en", "ja", "ko", "zh"
 // zh.wikipedia.org keeps one article per artist and renders it in either script, so the interface decides which
 const ART_VARIANT = UI_LANG === "zh-TW" ? "zh-hant" : "zh-hans";
 const ART = { mem: new Map(), mb: [], mbBusy: false, last: 0, listeners: [], pics: new Map(), asked: new Map() };   // asked: "key|lang(|script)" -> an article fetch
+// The lookups can be switched off (the Archive's menu): nothing is asked of any service then, and the files show what
+// is already cached and the user's own artist.txt / artist.jpg.
+ART.online = getSetting("artistOnline", true) !== false;
+function artistOnline(on) {
+    ART.online = !!on;
+    setSetting("artistOnline", ART.online);
+    if (!on) ART.mb.length = 0;   // what was still waiting for MusicBrainz is not asked
+    for (const [k, rec] of ART.mem) if (rec.off || rec.state === "loading") ART.mem.delete(k);   // read (or looked up) again
+}
 const TF_MBID = fb.TitleFormat("[%musicbrainz_artistid%]|[%musicbrainz artist id%]");
 
 const artKey = name => fnv(String(name).trim().toLowerCase());
@@ -47,8 +56,13 @@ function artistGet(name, handle, prefetch = false) {
         try { rec = JSON.parse(utils.ReadTextFile(artFile(name), 65001)); } catch (e) { rec = null; }
         if (rec) { for (const f of ART_TRANSIENT) delete rec[f]; ART.mem.set(k, rec); }   // (files from 1.10.0 kept them)
     }
+    if (!ART.online) {   // no lookups: the cached file however old, else an empty one (not saved) for artist.txt / artist.jpg
+        if (!rec || rec.state === "loading") { rec = { name, state: "none", log: [], off: true }; ART.mem.set(k, rec); }
+        if (handle) artLocal(rec, handle);
+        return rec;
+    }
     const age = rec ? Date.now() - (rec.t || 0) : Infinity;
-    const stale = !rec || (rec.v || 1) < ART_VER || (rec.state === "none" ? age > ART_MISS_DAYS * 864e5 : age > ART_DAYS * 864e5);
+    const stale =!rec || (rec.v || 1) < ART_VER || (rec.state === "none" ? age > ART_MISS_DAYS * 864e5 : age > ART_DAYS * 864e5);
     if (stale && !(rec && rec.state === "loading")) {
         const keep = rec && rec.state === "ok" ? rec : null;   // an old file stays on show while it is refreshed
         rec = keep || { name, state: "loading", log: [] };
@@ -262,7 +276,7 @@ function artistBio(rec) {
     // asked once per language and session; a fetch that failed is tried again two minutes later; an article kept in
     // the other script is not shown and asked for again (a record cached before the variant was remembered has none)
     const ready = w[want] && (want !== "zh" || (w[want].variant || "zh-hans") === ART_VARIANT);
-    if (!ready && rec.wikiTitles && rec.wikiTitles[want] && !(asked && (asked.busy || Date.now() - asked.t < 120000))) {
+    if (ART.online && !ready && rec.wikiTitles && rec.wikiTitles[want] && !(asked && (asked.busy || Date.now() - asked.t < 120000))) {
         ART.asked.set(ak, { busy: true, t: Date.now() });
         artWikiText(rec, want, ok => {
             ART.asked.set(ak, { busy: false, t: Date.now() });

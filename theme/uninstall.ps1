@@ -90,6 +90,9 @@ if (-not $item) {
     if (Test-Path $custom) { Remove-Item $custom -Recurse -Force; Write-Host "removed $custom" }
     $case = Join-Path $profileDir "$Name-skins\custom"   # the custom case the theme made (js/customcase.js)
     if (Test-Path $case) { Remove-Item $case -Recurse -Force; Write-Host "removed $case" }
+    # 06 ONLINE's bridge (tools/online.ps1): Node.js, the services' libraries, and the logins kept encrypted in data\
+    $online = Join-Path $profileDir "$Name-online"
+    if (Test-Path (Join-Path $online 'install.json')) { Remove-Item $online -Recurse -Force; Write-Host "removed $online" }
 } else {
     Write-Host "'$target' does not look like this theme, left in place"
 }

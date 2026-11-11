@@ -58,10 +58,19 @@ function on_paint(gr) {
     label(gr, tr("PLAYLIST NO."), hst(HST.head, C.fg), x0 + dp(14), y + Math.round((bh - labelHeight(HST.head)) / 2));
     drawRoll(gr, P.no, f, C.fg, x0 + dp(14) + lw + dp(10), y, cell, bh);
     // stats, right-aligned: 041 TRACKS · 3:02:11 · 1.9 GB
+    // (the name comes first: on a narrow panel the size, then the length, give way to it)
     let sx = x1;
+    const nx = x0 + bw + dp(22), full = P.name ? P.name.text : "", name = P.name ? scrambleText(P.name) : "", nf = fontFor(full, 17, 700);
     if (pl >= 0) {
         const s = plStats(pl), parts = [[pad(s.count, s.count > 999 ? 4 : 3), " " + tr("TRACKS")], [fmtTime(s.length), ""], [fmtSize(s.size), ""]];
-        const sy = y + Math.round((bh - labelHeight(HST.stat)) / 2);
+        const sy = y + Math.round((bh - labelHeight(HST.stat)) / 2), nameW = gr.CalcTextWidth(full, nf), need = nx + nameW + dp(24);
+        const partW = ([n, word], i) => labelWidth(n, hst(HST.statN, 0)) + (word ? labelWidth(word, hst(HST.stat, 0)) : 0) + (i ? labelWidth("  ·  ", hst(HST.stat, 0)) : 0);
+        const left = () => x1 - parts.reduce((w, p, i) => w + partW(p, i), 0);
+        while (parts.length > 1 && left() < need) parts.pop();
+        // narrower still, and the name would have no room to start: the word goes, then the count itself
+        const least = nx + Math.min(nameW, dp(120)) + dp(24);
+        if (left() < least) parts[0][1] = "";
+        if (left() < least) parts.pop();
         for (let i = parts.length - 1; i >= 0; i--) {
             const [n, word] = parts[i];
             if (word) sx -= label(gr, word, hst(HST.stat, C["text-muted"]), sx, sy, 2);
@@ -70,10 +79,10 @@ function on_paint(gr) {
         }
     }
     // the name between the bracket and the stats
-    const nx = x0 + bw + dp(22), nw = sx - dp(24) - nx, name = P.name ? scrambleText(P.name) : "";
-    if (nw > dp(40)) {
-        gr.DrawText(name, fontFor(name, 17, 700), C.fg, nx, y, nw, bh, DT_SINGLE | DT_ELLIPSIS);
-        hits.add("name", nx, y, Math.min(nw, gr.CalcTextWidth(name, fontFor(name, 17, 700))), bh);
+    const nw = (sx < x1 ? sx - dp(24) : x1) - nx;
+    if (nw > dp(24)) {
+        gr.DrawText(name, nf, C.fg, nx, y, nw, bh, DT_SINGLE | DT_ELLIPSIS);
+        hits.add("name", nx, y, Math.min(nw, gr.CalcTextWidth(name, nf)), bh);
     }
     // row 2: chips and the selection on the left, LAYOUT toggle on the right
     const cy = dp(62), ch = dp(18);

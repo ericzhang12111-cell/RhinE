@@ -11,6 +11,7 @@
 // ARRAY (the shelves of cases), GRID (covers) and ROOM (room.js: the artist file's room)
 const LAYOUTS = [["array", "ARRAY"], ["grid", "GRID"], ["room", "ROOM"]];
 AR.layout = LAYOUTS.some(([l]) => l === getSetting("archiveLayout", "array")) ? getSetting("archiveLayout", "array") : "array";
+AR.barCompact = getSetting("archiveBar", "full") === "compact";   // the top bar folded to the choices in use (drawArchiveBar)
 const GRID = { scroll: Spring(0, 10), geo: null, hover: null, reveal: true, per: getSetting("gridPerPage", 36) };
 const PER_PAGE = [10, 36, 50, 75, 100, 200];
 function setPerPage(n) {
@@ -152,7 +153,10 @@ function drawGrid(gr) {
         if (t && t.img) gr.DrawImage(t.img, x, y, c, c, 0, 0, t.img.Width, t.img.Height);
         else {
             gr.FillSolidRect(x, y, c, c, C.well);
-            label(gr, `ARC-${pad(a.no, 4)}`, st(GRID_ST.count, C["text-muted"], C.well), x + c / 2, y + c / 2 - dp(6), 1);
+            // (the number only where the cell holds it: at a large text scale it ran over the neighbouring covers)
+            const ns = st(GRID_ST.count, C["text-muted"], C.well), nt = `ARC-${pad(a.no, 4)}`;
+            if (labelWidth(nt, ns) <= c - dp(6)) label(gr, nt, ns, x + c / 2, y + c / 2 - dp(6), 1);
+            else if (labelWidth(pad(a.no, 4), ns) <= c - dp(6)) label(gr, pad(a.no, 4), ns, x + c / 2, y + c / 2 - dp(6), 1);
         }
         box(gr, x, y, c, c, hov && !sel ? C.accent : withAlpha(C.fg, .12));
         if (a.year && c >= dp(80)) {
@@ -193,13 +197,22 @@ function drawGrid(gr) {
 // The archive's top bar, in both layouts (a plate behind each control: the array's cases pass under them):
 //   ■ ALBUM GRID · 250 ALBUMS · BY GENRE (grid)   SHOW [ALBUMS | TRACKS | FOLDERS]   PER PAGE [10 … 200] (grid)   LAYOUT [ARRAY | GRID]
 //   [FILTER · "word" · 12 ALBUMS ×]     GROUP [GENRE | DECADE | A–Z | FOLDER | FAV | NONE]   SORT [ARTIST | TITLE | YEAR | ADDED]
+// A control that does not fit its row folds to the choice in use, the rest in a menu (TITLE [CURRENT ⌄]): the widest
+// first, LAYOUT last. "Compact top bar" (the archive's menu) folds all but LAYOUT whatever the width, and puts the two
+// rows on one when that fits.
 function drawArchiveBar(gr) {
     const grid = AR.layout === "grid", xr = arrayW() - dp(32), y1 = dp(22), y2 = dp(54), x0 = dp(32);
     const fw = drawFilterChip(gr, x0, grid ? y2 : y1);
-    drawPickButton(gr, x0 + (fw ? fw + dp(12) : 0), grid ? y2 : y1);
-    let lx = segToggle(gr, xr, y1, "LAYOUT", LAYOUTS, AR.layout, "ar-layout", true);
-    if (grid) lx = segToggle(gr, lx - dp(24), y1, "PER PAGE", PER_PAGE.map(n => [n, String(n)]), GRID.per, "ar-per");
-    lx = segToggle(gr, lx - dp(24), y1, "SHOW", UNITS, itemUnit(), "ar-unit");
+    const pw = drawPickButton(gr, x0 + (fw ? fw + dp(12) : 0), grid ? y2 : y1);
+    // what each row has for its controls: right of the filter chip and RANDOM PICK, or of the least of the grid's title
+    const used = x0 + (fw ? fw + dp(12) : 0) + (pw ? pw + dp(24) : 0), least = x0 + dp(14) + dp(150) + dp(32);
+    const room1 = xr - (grid ? least : used), room2 = xr - (grid ? used : x0);
+    let [r1, r2] = barControls(grid);
+    const compact = AR.barCompact, one = compact && barWidth([...r1, ...r2], barFold([...r1, ...r2], 0, true)) <= room1;
+    if (one) { r1 = [...r1, ...r2]; r2 = []; }
+    const f1 = barFold(r1, room1, compact), f2 = barFold(r2, room2, compact);
+    const row = (cs, fold, y) => cs.reduce((x, c) => (fold.has(c[0]) ? segChip(gr, x, y, c) : segToggle(gr, x, y, c[1], c[2], c[3], c[4], c[5])) - dp(24), xr) + dp(24);
+    const lx = row(r1, f1, y1);
     if (grid) {   // the title in the room left of the toggles: with the grouping when it fits, shortened when even that does not
         const room = lx - dp(32) - (x0 + dp(14)), hs = st(GRID_ST.head, C.fg), n = filteredCount();
         const base = `${tr({ albums: "ALBUM GRID", tracks: "TRACK GRID", folders: "FOLDER GRID" }[itemUnit()])}  ·  ${unitWord(n)}`, full = LIB.groupBy === "none" ? base : `${base}  ·  ${tr("BY {0}", tr(GROUP_LABEL[LIB.groupBy]))}`;
@@ -209,13 +222,67 @@ function drawArchiveBar(gr) {
             label(gr, fitLabel(t, hs, room), hs, x0 + dp(14), y1 + dp(6));
         }
     }
-    const sx = segToggle(gr, xr, y2, "SORT", SORT_BY, LIB.sortBy, "ar-sort");
-    segToggle(gr, sx - dp(24), y2, "GROUP", GROUP_BY, LIB.groupBy, "ar-group");
+    row(r2, f2, y2);
+    drawArchiveNote(gr);   // archive.js: what a menu just did
+}
+// the bar's controls, each row from the right: [key, title, items, the one in use, hit id, marks]
+function barControls(grid) {
+    const r1 = [["layout", "LAYOUT", LAYOUTS, AR.layout, "ar-layout", true]];
+    if (grid) r1.push(["per", "PER PAGE", PER_PAGE.map(n => [n, String(n)]), GRID.per, "ar-per", false]);
+    r1.push(["unit", "SHOW", UNITS, itemUnit(), "ar-unit", false]);
+    return [r1, [["sort", "SORT", SORT_BY, LIB.sortBy, "ar-sort", false], ["group", "GROUP", GROUP_BY, LIB.groupBy, "ar-group", false]]];
+}
+const barText = c => (c[2].find(([v]) => v === c[3]) || c[2][0])[1];
+// a control's width, title and plate gap included: as a row of choices, or folded
+function barItemW(c, folded) {
+    const s = st(GRID_ST.count, 0), tw = labelWidth(tr(c[1]), s) + dp(12);
+    if (folded) return tw + dp(9) + labelWidth(tr(barText(c)), s) + dp(24);
+    return tw + c[2].reduce((n, [, t]) => n + (c[5] ? dp(20) : dp(9)) + labelWidth(tr(t), s) + dp(9), 0);
+}
+const barWidth = (cs, fold) => cs.reduce((n, c, i) => n + (i ? dp(24) : 0) + barItemW(c, fold.has(c[0])), 0);
+// the keys of the controls of a row that fold so it fits `room` (all: every one but LAYOUT, to begin with)
+function barFold(cs, room, all) {
+    const fold = new Set(all ? cs.filter(c => c[0] !== "layout").map(c => c[0]) : []);
+    while (barWidth(cs, fold) > room) {
+        const open = cs.filter(c => !fold.has(c[0])).sort((a, b) => (a[0] === "layout") - (b[0] === "layout") || barItemW(b) - barItemW(a));
+        if (!open.length) break;
+        fold.add(open[0][0]);
+    }
+    return fold;
+}
+// TITLE [CURRENT ⌄] right-aligned at xr, on a plate as segToggle's: a folded control. Returns the left edge.
+function segChip(gr, xr, y, c) {
+    const hh = dp(22), s = st(GRID_ST.count, 0), ty = y + Math.round((hh - labelHeight(GRID_ST.count)) / 2);
+    const title = tr(c[1]), text = tr(barText(c)), bw = dp(9) + labelWidth(text, s) + dp(24), left = xr - bw - dp(12) - labelWidth(title, s);
+    gr.FillSolidRect(left - dp(8), y - dp(4), xr - left + dp(12), hh + dp(8), C.bg);
+    label(gr, title, st(GRID_ST.count, C["text-muted"]), left, ty);
+    label(gr, text, st(GRID_ST.count, C.fg, C.bg), xr - bw + dp(9), ty);
+    const cx = xr - dp(12), cy = y + Math.round(hh / 2), a = dp(3);
+    gr.DrawLine(cx - a, cy - a / 2, cx, cy + a / 2, HAIR, C.fg);
+    gr.DrawLine(cx, cy + a / 2, cx + a, cy - a / 2, HAIR, C.fg);
+    box(gr, xr - bw, y, bw, hh, C["line-faint"]);
+    hits.add("ar-fold", left, y, xr - left, hh, c[0]);
+    return left;
+}
+// a folded control's choices, as a menu under it
+function barMenu(key, x, y) {
+    const c = barControls(AR.layout === "grid").flat().find(v => v[0] === key);
+    if (!c) return;
+    const m = window.CreatePopupMenu(), at = c[2].findIndex(([v]) => v === c[3]);
+    c[2].forEach(([, t], i) => m.AppendMenuItem(0, i + 1, tr(t)));
+    if (at >= 0) m.CheckMenuRadioItem(1, c[2].length, at + 1);
+    const id = m.TrackPopupMenu(x, y), set = { layout: setLayout, per: setPerPage, unit: setUnit, sort: setSortBy, group: setGroupBy }[key];
+    if (id > 0) set(c[2][id - 1][0]);
+}
+function setBarCompact(on) {
+    AR.barCompact = !!on;
+    setSetting("archiveBar", on ? "compact" : "full");
+    window.Repaint();
 }
 
 // ⚂ RANDOM PICK  R (after the filter chip): a run through the shelves to a random item, which then plays (randomPick)
 function drawPickButton(gr, x, y) {
-    if (!arRows().length) return;
+    if (!arRows().length) return 0;
     const on = !!PICK.steps, h = dp(22), fg = on ? C.bg : C.fg, bg = on ? C.fg : C.bg, s = st(GRID_ST.count, fg, bg);
     const t = tr(on ? "PICKING …" : "RANDOM PICK"), ks = st(GRID_ST.count, on ? C.bg : C["text-muted"], bg), kw = labelWidth("R", ks);
     const w = dp(28) + labelWidth(t, s) + dp(14) + kw + dp(10), ty = y + Math.round((h - labelHeight(GRID_ST.count)) / 2);
@@ -228,6 +295,7 @@ function drawPickButton(gr, x, y) {
     label(gr, t, s, x + dp(28), ty);
     label(gr, "R", ks, x + w - dp(10) - kw, ty);
     hits.add("ar-pick", x, y, w, h);
+    return w;
 }
 
 // TITLE [■ A | □ B | …] right-aligned at xr, on a plate; items [[value, text]]; marks: the square toggle marks.
