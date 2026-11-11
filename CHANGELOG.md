@@ -12,7 +12,7 @@ Newest version first. Download any version from [Releases](https://github.com/er
   playlist becomes a foobar2000 playlist, with titles, artists and covers. It plays what your account may play, at the
   quality your account gets; nothing is decrypted or unlocked. The first time, the view installs a small local bridge
   (Node.js and the services' community libraries, about 160 MB) beside the foobar2000 profile; it runs only while
-  foobar2000 does. `06 在线`：在主题里使用网易云音乐和 QQ 音乐。用对应 App 扫码登录（无需密码；登录信息只加密保存在这台电脑上，
+  foobar2000 does. 在线页（`06 在线`）：在主题里使用网易云音乐和 QQ 音乐。用对应 App 扫码登录（无需密码；登录信息只加密保存在这台电脑上，
   退出登录即删除），之后可以浏览每日推荐、我喜欢的音乐和歌单，用顶栏搜索框搜索该平台，并直接播放：歌单会成为一个 foobar2000
   播放列表，带歌名、艺人和封面。能播放的就是你的账号本来能播放的内容，音质也取决于账号；不做任何解密或解锁。第一次使用时，
   这个页面会在 foobar2000 配置文件夹旁安装一个本地小服务（Node.js 和各平台的社区接口库，约 160 MB），只在 foobar2000 运行时工作。
@@ -35,7 +35,7 @@ Newest version first. Download any version from [Releases](https://github.com/er
   双击或点 `⤢` 回到完整窗口。
 - `05 STYLE` in four tabs (`CASE & COLOUR`, `TITLE TAG`, `DISPLAY`, `PRESETS`). A preset is a whole look (case, scheme,
   mode, background, tag, font, wallpaper): eight come with the theme, and `SAVE THIS LOOK` keeps up to twelve of your
-  own. `05 外观` 分成四页（`唱片盒与配色`、`标签`、`显示`、`预设`）。预设是一整套外观（唱片盒、配色、深浅色、背景、标签、字体、
+  own. 外观页 `05 外观` 分成四页（`唱片盒与配色`、`标签`、`显示`、`预设`）。预设是一整套外观（唱片盒、配色、深浅色、背景、标签、字体、
   壁纸）：主题自带八套，`保存当前外观` 可以保存最多十二套你自己的。
 - Archive right-click: add the album, track or folder to a playlist (a new or an existing one), and `Properties (edit
   tags)…`. Tracks can also be dragged onto a playlist in `02 PLAYLISTS`. 曲库右键菜单：把专辑、曲目或文件夹添加到播放列表
@@ -58,7 +58,7 @@ Newest version first. Download any version from [Releases](https://github.com/er
   …) instead of literal translations. 简体和繁体中文界面改用更直白的播放器用语（`曲库`、`可视化`、`唱片盒` 等），不再逐字直译。
 - The Archive's top bar folds its controls into menus when the window is narrow; `Compact top bar` in the Archive's
   menu keeps it folded. 窗口较窄时，曲库顶栏的选项会收进下拉菜单；曲库菜单里的 `精简顶栏` 可以让它一直保持收起。
-- The NO LYRICS / SEARCHING notice is neutral; the accent is kept for a missing file. “无歌词 / 搜索中”提示改为中性色，
+- The NO LYRICS / SEARCHING notice is neutral; the accent is kept for a missing file. 歌词页的“无歌词 / 搜索中”提示改为中性色，
   强调色只留给文件丢失的警告。
 
 **Fixed · 修复**
