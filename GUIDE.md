@@ -371,6 +371,11 @@ lyrics from [LRCLIB](https://lrclib.net); artist files from [MusicBrainz](https:
 [Wikipedia](https://www.wikipedia.org) (CC BY-SA), [ListenBrainz](https://listenbrainz.org), [Deezer](https://www.deezer.com),
 NetEase Cloud Music and [Wikimedia Commons](https://commons.wikimedia.org). The artist file's room and map cases are renders of the archive case model
 from [RhineLabUI](https://github.com/LBEILC/RhineLabUI) by LBEILC (MIT, `assets/render/artist/LICENSE-RhineLabUI.txt`).
+`06 ONLINE` reaches NetEase Cloud Music and QQ Music through the community libraries
+[@neteasecloudmusicapienhanced/api](https://www.npmjs.com/package/@neteasecloudmusicapienhanced/api) and
+[@yakult-green-tea/qq-music-api](https://www.npmjs.com/package/@yakult-green-tea/qq-music-api) (both MIT; downloaded from
+npm when the view is first used, with [Node.js](https://nodejs.org), not bundled), an approach learned from
+[Rhine-Music-Database](https://github.com/MikeQu223/Rhine-Music-Database) by MikeQu223 (MIT).
 The portable bundle carries foobar2000's unmodified installer, Columns UI
 (LGPL-3.0, its licence alongside) and [7-Zip](https://www.7-zip.org) (LGPL, its licence alongside). The 3D art was
 rendered in [Blender](https://www.blender.org), partly with materials from third-party material libraries used under
