@@ -309,7 +309,6 @@ I18N["ja"] = {
     "BRUSHED BRASS": "ヘアライン真鍮", "Brushed brass, engraved and filled in black.": "ヘアライン仕上げの真鍮、彫刻に黒の墨入れ。",
     // 1.12: the Archive room (LAYOUT › ROOM)
     "ROOM": "資料室", "Archive room": "資料室",
-   
     // 2.0: 06 ONLINE (NetEase through the local bridge)
     // 2.0: import
     "IMPORT": "インポート", "IMPORT A PLAYLIST": "プレイリストをインポート", "A NetEase or QQ Music playlist link, or a file: Exportify's CSV (Spotify), Spotify's data export (Playlist1.json), a CSV, or \"artist - title\" lines.": "NetEase / QQ Music のプレイリストのリンク、またはファイル：Exportify の CSV（Spotify）、Spotify のデータエクスポート（Playlist1.json）、CSV、「アーティスト - タイトル」の行。", "What your library has becomes a foobar2000 playlist; the rest goes on a list of what is missing.": "ライブラリにある曲は foobar2000 のプレイリストに、残りは見つからなかった曲のリストになります。", "PASTE A LINK": "リンクを貼り付け", "OPEN A FILE": "ファイルを開く", "READING…": "読み込み中…", "IMPORTED": "インポート済み", "{0} MISSING": "{0} 曲なし", "ALL FOUND": "すべて見つかりました", "OPEN ONLINE": "オンラインで開く", "MISSING LIST": "見つからない曲", "PLAY": "再生", "A NetEase or QQ Music playlist link (a share text will do):": "NetEase / QQ Music のプレイリストのリンク（共有テキストのままでも可）：", "Import": "インポート", "not in the library": "曲がライブラリにありません", "No link in that text.": "テキストにリンクがありません。", "Not a NetEase or QQ Music playlist link.": "NetEase / QQ Music のプレイリストのリンクではありません。", "The playlist was not found (a private one needs that account logged in here).": "プレイリストが見つかりません（非公開のものはそのアカウントでここにログインが必要です）。", "The file was not found.": "ファイルが見つかりません。", "The file is too large.": "ファイルが大きすぎます。", "No songs were found in the file.": "ファイルに曲が見つかりませんでした。", "The bridge did not answer.": "ブリッジが応答しません。",
@@ -345,7 +344,6 @@ I18N["ja"] = {
     "Add folder to playlist": "フォルダーをプレイリストに追加", "Properties (edit tags)…": "プロパティ（タグを編集）…",
     "Artist file: look artists up online": "アーティストファイル：オンラインで検索",
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "オンライン検索はオフです（右クリックでオンにできます）。アルバムのファイルと同じ場所にある artist.txt がここに表示され、artist.jpg が写真になります。",
-    "Light / dark switch in the bottom bar": "下部バーのライト / ダーク切り替え", "Full: LIGHT / DARK": "フル：ライト / ダーク", "Compact: one button": "コンパクト：ボタン 1 つ", "Hidden": "非表示",
     "CASE & COLOUR": "ケースと配色", "PRESETS": "プリセット", "YOURS": "マイプリセット", "SAVE THIS LOOK": "この外観を保存", "Name of the preset": "プリセットの名前", "Save current look": "現在の外観を保存", "PRESET": "プリセット",
     "Colour": "カラー", "Black": "ブラック", "White": "ホワイト", "Follow light / dark": "ライト / ダークに合わせる",
 };

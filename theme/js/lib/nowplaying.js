@@ -111,7 +111,9 @@ function drawCard(gr, w, h, kind = "pager", ghost = "INFO") {
     hline(gr, px + dp(15) + lw + dp(10), y + dp(8), w - px - cw - dp(10) - (px + dp(15) + lw + dp(10)));
     y += dp(16 + 6);
     // hero case
-    drawHeroCase(gr, 0, y, w, dp(250), T.handle ? cover(T.handle, () => npChanged(true, T.handle, "cover")) : null, clamp(heroClear.x, 0, 1), T.no);
+    drawHeroCase(gr, 0, y, w, dp(250), T.handle ? cover(T.handle, () => npChanged(true, T.handle, "cover")) : null, clamp(heroClear.x, 0, 1), T.no,
+        // (a room case whose label takes the track: RHINE LAB's, lib/album.js drawInfoLabel)
+        T.info ? { title: T.info.title, sub: T.info.artist, rows: [["ALBUM", [...(T.info.album || "—")].slice(0, 14).join("")], ["YEAR", T.info.year || "—"], ["TRACK", T.info.track ? pad(+T.info.track || 0, 2) + (T.info.total ? " / " + pad(+T.info.total || 0, 2) : "") : "—"]], foot: `ARC-${pad(T.no || 0, 4)}`, foot2: (T.info.codec || "").toUpperCase() } : null);
     y += dp(250);
     // tags
     const state = tr(!fb.IsPlaying ? "STANDBY" : fb.IsPaused ? "PAUSED" : "NOW PLAYING");

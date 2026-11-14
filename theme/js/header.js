@@ -9,7 +9,6 @@ include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\translate.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\update.js");
 
 const VIEWS = ["archive", "playlists", "lyrics", "signal", "style", "online"];
-const MODE_SWITCHES = ["full", "compact", "hidden"];   // the bottom bar's LIGHT / DARK switch (transport.js)
 // the service 06 ONLINE shows (its SOURCE cards, lib/online.js): what the search box searches there
 let ONLINE_SRC = String(getSetting("onlineSource", "ne"));
 onMessage("online-source", v => { ONLINE_SRC = String(v); window.Repaint(); });
@@ -419,10 +418,6 @@ function showMenu(a) {
     theme.AppendMenuSeparator();
     theme.AppendMenuItem(0, 4, tr(MODE === "dark" ? "Light mode" : "Dark mode") + "\tT");
     theme.AppendMenuItem(STATE.modeSystem ? 0x8 : 0, 17, tr("Follow Windows light / dark"));
-    const mtm = window.CreatePopupMenu(), mtv = Math.max(0, MODE_SWITCHES.indexOf(getSetting("modeToggle", "full")));
-    ["Full: LIGHT / DARK", "Compact: one button", "Hidden"].forEach((t, i) => mtm.AppendMenuItem(0, 520 + i, tr(t)));
-    mtm.CheckMenuRadioItem(520, 522, 520 + mtv);
-    mtm.AppendTo(theme, 0, tr("Light / dark switch in the bottom bar"));
     theme.AppendMenuItem(STATE.borderless ? 0x8 : 0, 16, tr("Borderless full screen") + "\tF11");
     theme.AppendMenuItem(STATE.mini ? 0x8 : 0, 18, tr("Mini player") + "\tM");
     theme.AppendMenuItem(0, 5, tr("Playlist preset: {0}", tr(STATE.preset === "album" ? "Index" : "Album")) + "\tP");
@@ -509,7 +504,6 @@ function showMenu(a) {
     else if (id === 13) setSetting("updateCheck", getSetting("updateCheck", true) === false, true);
     else if (id >= 450 && id < 450 + UI_LANGS.length) { if (UI_LANGS[id - 450][0] !== UI_LANG) { setSetting("uiLang", UI_LANGS[id - 450][0]); send("ui-lang"); window.Reload(); } }
     else if (id >= 500 && id < 500 + LYR_SOURCES.length) send("lyrics-source", LYR_SOURCES[id - 500][0]);
-    else if (id >= 520 && id < 520 + MODE_SWITCHES.length) { setSetting("modeToggle", MODE_SWITCHES[id - 520]); send("mode-toggle", MODE_SWITCHES[id - 520]); }
     else if (id === 510) send("lyrics-netease-auto", !STATE.lyricsNeteaseAuto);
     else if (id === 511) send("lyrics-roma", !STATE.lyricsRoma);
     else if (id >= 400 && id < 400 + LYR_TRANS.length) send("lyrics-trans", LYR_TRANS[id - 400][0]);

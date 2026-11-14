@@ -1,4 +1,4 @@
-// The online bridge (2.0): a small local server between the theme, foobar2000 and the music services (NetEase here,
+﻿// The online bridge (2.0): a small local server between the theme, foobar2000 and the music services (NetEase here,
 // QQ Music in qq.js). It listens on
 // 127.0.0.1 only; every request carries the key the theme gave it (?k=), so no other page or program can use the
 // reader's account through it.
@@ -275,7 +275,8 @@ async function id3(name, getMeta) {
     if (m.pic) try {
         const jpg = await fetchAll(m.pic)
         try { fs.mkdirSync(ART, { recursive: true }); fs.writeFileSync(path.join(ART, `${name}.jpg`), jpg) } catch (e) { /* the tag has it */ }
-        frames.push(frame('APIC', Buffer.concat([Buffer.from([0]), Buffer.from('image/jpeg\0\x03\0', 'latin1'), jpg])))
+        const mime = jpg[0] === 0x89 && jpg[1] === 0x50 ? 'image/png' : 'image/jpeg'   // (the services' "jpg" may be a PNG)
+        frames.push(frame('APIC', Buffer.concat([Buffer.from([0]), Buffer.from(mime + '\0\x03\0', 'latin1'), jpg])))
     } catch (e) { /* no cover */ }
     const body = Buffer.concat(frames), head = Buffer.from([0x49, 0x44, 0x33, 4, 0, 0, 0, 0, 0, 0])
     syncsafe(head, 6, body.length)
@@ -286,24 +287,32 @@ async function id3(name, getMeta) {
 }
 
 // /ne/play/<id>, /qq/play/<mid>: an MP3 is relayed with the tag before it, its byte ranges moved by the tag's length (so
-// seeking works); anything else (FLAC) is sent on to the service's address as it is
+// seeking works); a FLAC is relayed as it is, as audio/flac; anything else is sent on to the service's address. What a
+// stream is comes from its first bytes: the services' own types and names are not to be trusted (NetEase has sent FLACs
+// as audio/mpeg, which foobar2000 then opens with its MP3 decoder; QQ Music may call an MP3
+// application/x-www-form-urlencoded).
 async function play(src, id, req, res) {
     const s = src === 'qq' ? await qq.stream(id) : await stream(id)
     if (!s.url) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end(`no stream (${s.code || '?'})`); return }
     if (!s.size) {
-        const r = await fetchRange(s.url, 'bytes=0-0'); r.resume()
+        const r = await fetchRange(s.url, 'bytes=0-3')
+        const head = await new Promise(ok => {   // (its first 4 bytes only, should the server send all of it)
+            const c = [], done = () => { r.destroy(); ok(Buffer.concat(c)) }
+            r.on('data', b => { c.push(b); if (Buffer.concat(c).length >= 4) done() }); r.on('end', done); r.on('error', done)
+        })
+        if (r.statusCode !== 206 && r.statusCode !== 200) { s.until = 0; res.writeHead(502, { 'Content-Type': 'text/plain' }); res.end(`stream refused (${r.statusCode})`); return }
         const total = /\/(\d+)$/.exec(r.headers['content-range'] || '')
-        s.size = total ? +total[1] : +(r.headers['content-length'] || 0)
-        s.type = r.headers['content-type'] || ''
+        s.size = total ? +total[1] : r.statusCode === 200 ? +(r.headers['content-length'] || 0) : 0
+        s.kind = head.subarray(0, 4).toString('latin1') === 'fLaC' ? 'flac'
+            : head.subarray(0, 3).toString('latin1') === 'ID3' || (head[0] === 0xff && (head[1] & 0xe0) === 0xe0) ? 'mp3' : ''
     }
-    // (an MP3 by its type, or by its name: QQ Music's servers may call one application/x-www-form-urlencoded)
-    if (!(/mpeg|mp3/i.test(s.type) || /\.mp3(\?|$)/i.test(s.url)) || !s.size) { res.writeHead(302, { Location: s.url }); res.end(); return }
-    const tag = src === 'qq' ? await id3('qq-' + id, () => qq.meta(id)) : await id3(id, () => neMeta(id)), T = tag.length, N = T + s.size
+    if (!s.kind || !s.size) { res.writeHead(302, { Location: s.url }); res.end(); return }
+    const tag = s.kind !== 'mp3' ? Buffer.alloc(0) : src === 'qq' ? await id3('qq-' + id, () => qq.meta(id)) : await id3(id, () => neMeta(id)), T = tag.length, N = T + s.size
     const m = /bytes=(\d*)-(\d*)/.exec(req.headers.range || '')
     let a = 0, b = N - 1
     if (m) { if (m[1] === '') a = Math.max(0, N - +m[2]); else { a = +m[1]; if (m[2]) b = Math.min(+m[2], N - 1) } }
     if (a > b || a >= N) { res.writeHead(416, { 'Content-Range': `bytes */${N}` }); res.end(); return }
-    res.writeHead(m ? 206 : 200, { 'Content-Type': 'audio/mpeg', 'Accept-Ranges': 'bytes', 'Content-Length': b - a + 1, ...(m ? { 'Content-Range': `bytes ${a}-${b}/${N}` } : {}) })
+    res.writeHead(m ? 206 : 200, { 'Content-Type': s.kind === 'mp3' ? 'audio/mpeg' : 'audio/flac', 'Accept-Ranges': 'bytes', 'Content-Length': b - a + 1, ...(m ? { 'Content-Range': `bytes ${a}-${b}/${N}` } : {}) })
     if (req.method === 'HEAD') { res.end(); return }
     if (a < T) res.write(tag.subarray(a, Math.min(b + 1, T)))
     if (b < T) { res.end(); return }

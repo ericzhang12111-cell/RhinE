@@ -12,7 +12,7 @@
 // the others do, and a click on one goes to its shelf's album nearest it. The shelves behind sink into a haze (a
 // blurred whole case in place of the faces, darker), so that shelves coming and going back there are not seen.
 //   ← → (or the wheel): the album before / after · ↑ ↓: the shelf behind / in front
-//   click a case: select it · double-click or Space: play the album · Enter: open it in the Archive playlist
+//   click a case: select it, the selected one: inspect it · double-click or Space: play the album · Enter: inspect it
 
 const ROOM_ROOT = THEME_ROOT + "assets\\render\\room\\";
 const ROOM = { mode: "", forMode: "", dir: "", meta: null, img: null, geo: null, hov: new Map(), under: null, want: new Set() };
@@ -236,7 +236,8 @@ function drawRoom(gr) {
             if (!c) continue;
             // where the case rests without the lift under the mouse: its click area, as the array's (#7)
             const rest = [x, -(s - r.scroll.x + c.gap.to) * M.dy, roomTargets(i, r, active, row).lift];
-            place({ gi, i, slot: s, c, a: row.albums[i], isSel: active && i === r.sel, ra: Math.round(ra * roomEndFade(s - r.scroll.x)), haze: roomHaze(r.pos.x), rest },
+            const isSel = active && i === r.sel;
+            place({ gi, i, slot: s, c, a: row.albums[i], isSel, ra: Math.round(ra * roomEndFade(s - r.scroll.x)), haze: roomHaze(r.pos.x), rest },
                 x, -(s - r.scroll.x + c.gap.x) * M.dy, c.lift.x, roomBump(gi, s, r.pos.x));
         }
         const n = row.albums.length;
@@ -252,6 +253,9 @@ function drawRoom(gr) {
     items.sort((p, q) => q.gd - p.gd);
     AR.hits = [];
     let selAt = null;
+    // (the inspection is not lifted out of the room and turned, as the array's is: it fades in over the room, the case
+    // square-on: archive.js drawInspection)
+    const turn = inspTurn();
     for (const it of items) selAt = drawRoomCase(gr, it, RG) || selAt;
     // the PV's shape, baked at pack time beside the grade (rhine): the middle a little deeper, the edges dissolving
     // into the page; stretched over the render's frame, the same mapping as the plate
@@ -265,7 +269,7 @@ function drawRoom(gr) {
     // the plates led out of the cover's top corner (drawCasePlate measures from the array's cover: given that corner)
     const top = CASE_META.array.cover[1];
     const plateText = (a, txt) => { const t = [...(txt || a.title || tr("UNTITLED"))]; return t.length > 40 ? t.slice(0, 39).join("") + "…" : t.join(""); };
-    if (selAt) drawCasePlate(gr, selAt.a, selAt.x - top[0], selAt.y - top[1], 1, 255, plateText(selAt.a));
+    if (selAt && turn === 0) drawCasePlate(gr, selAt.a, selAt.x - top[0], selAt.y - top[1], 1, 255, plateText(selAt.a));
     if (AR.hoverPlate) {
         const h = AR.hoverPlate;
         drawCasePlate(gr, h.a, h.x - top[0], h.y - top[1], 1, h.alpha, plateText(h.a, h.txt));
@@ -279,7 +283,8 @@ function drawRoom(gr) {
     drawSelectNumeral(gr);
     drawRuler(gr);
     drawGroupSwitch(gr);
-    drawArchiveBar(gr);
+    if (turn === 0) drawArchiveBar(gr);
+    if (turn > 0) { drawInspection(gr, 1, turn); drawArchiveNote(gr); }
     gr.PopClip();
     drawInfoLayer(gr);
 }
@@ -393,9 +398,11 @@ function drawRoomCase(gr, it, RG) {
         const img = big && big.img ? big.img : t ? t.img : null, a = Math.round(alpha * cl);
         tintedCover(gr, Q, 0, 0, 1, a, f, img);
         roomDraw(gr, I.sel, "room-sel" + ROOM.dir, f, roomRect(map, 0, 0, Sel.size[0], Sel.size[1]), a);
+        // (a case whose label takes the album: RHINE LAB's, its paper blank in the sprite)
+        if (Sel.info && it.isSel) drawInfoLabel(gr, Sel.info.map(map), albumInfoLabel(it.a), Math.round(a * (1 - f)));
     }
     if (!it.isSel || cl < .6 || !Q) return null;
-    for (const [px, py] of Q) gr.FillSolidRect(Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), dp(6), C.accent);
+    for (const [px, py] of Q) gr.FillSolidRect(Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), dp(6), withAlpha(C.accent, alpha / 255));
     return { a: it.a, x: Q[1][0], y: Q[1][1] };
 }
 
@@ -407,6 +414,7 @@ function roomClick() {
     if (u.gi !== AR.group) { selectCase(u.gi, i); return; }
     const r = AR.rows.get(AR.group);
     if (r && i !== r.sel) moveAlbum(i - r.sel);
+    else if (r && !u.empty) { AR.inspOn = true; inspectImages(); clock.wake(); }   // the selected case: inspected, as in the array
 }
 // The covers asked for: the albums on the shelves kept nearest the selection, as many as the cover memory holds
 // (ROOM.want; the other cases show none). The room has far more cases in view than that: drawn with their covers, every
@@ -436,7 +444,7 @@ function roomKey(vk) {
         case 0x27: moveAlbum(1); return true;    // →
         case 0x26: moveGroup(1); return true;    // ↑: the shelf behind
         case 0x28: moveGroup(-1); return true;   // ↓
-        case 0x0D: if (curAlbum()) openAlbum(); return true;   // Enter: no inspection in the room
+        case 0x0D: if (curAlbum()) { AR.inspOn = true; inspectImages(); clock.wake(); } return true;   // Enter: the inspection
     }
     return false;
 }

@@ -308,7 +308,6 @@ I18N["fr"] = {
     "BRUSHED BRASS": "LAITON BROSSÉ", "Brushed brass, engraved and filled in black.": "Laiton brossé, gravé et rempli de noir.",
     // 1.12: the Archive room (LAYOUT › ROOM)
     "ROOM": "SALLE", "Archive room": "Salle d'archives",
-   
     // 2.0: 06 ONLINE (NetEase through the local bridge)
     // 2.0: import
     "IMPORT": "IMPORTER", "IMPORT A PLAYLIST": "IMPORTER UNE PLAYLIST", "A NetEase or QQ Music playlist link, or a file: Exportify's CSV (Spotify), Spotify's data export (Playlist1.json), a CSV, or \"artist - title\" lines.": "Un lien de playlist NetEase ou QQ Music, ou un fichier : le CSV d’Exportify (Spotify), l’export de données de Spotify (Playlist1.json), un CSV ou des lignes « artiste - titre ».", "What your library has becomes a foobar2000 playlist; the rest goes on a list of what is missing.": "Ce que votre bibliothèque contient devient une playlist foobar2000 ; le reste va sur une liste des titres manquants.", "PASTE A LINK": "COLLER UN LIEN", "OPEN A FILE": "OUVRIR UN FICHIER", "READING…": "LECTURE…", "IMPORTED": "IMPORTÉES", "{0} MISSING": "{0} MANQUANTS", "ALL FOUND": "TOUS TROUVÉS", "OPEN ONLINE": "OUVRIR EN LIGNE", "MISSING LIST": "TITRES MANQUANTS", "PLAY": "LIRE", "A NetEase or QQ Music playlist link (a share text will do):": "Un lien de playlist NetEase ou QQ Music (un texte de partage convient) :", "Import": "Importer", "not in the library": "absents de la bibliothèque", "No link in that text.": "Aucun lien dans ce texte.", "Not a NetEase or QQ Music playlist link.": "Ce n’est pas un lien de playlist NetEase ou QQ Music.", "The playlist was not found (a private one needs that account logged in here).": "Playlist introuvable (une playlist privée demande que ce compte soit connecté ici).", "The file was not found.": "Fichier introuvable.", "The file is too large.": "Le fichier est trop volumineux.", "No songs were found in the file.": "Aucun titre trouvé dans le fichier.", "The bridge did not answer.": "La passerelle n’a pas répondu.",
@@ -346,7 +345,6 @@ I18N["fr"] = {
     "Add folder to playlist": "Ajouter le dossier à une playlist", "Properties (edit tags)…": "Propriétés (modifier les tags)…",
     "Artist file: look artists up online": "Dossier de l'artiste : recherche en ligne",
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "La recherche en ligne est désactivée (clic droit pour l'activer). Un fichier texte artist.txt à côté des fichiers de l'album s'affiche ici, et artist.jpg sert d'image.",
-    "Light / dark switch in the bottom bar": "Bouton clair / sombre dans la barre du bas", "Full: LIGHT / DARK": "Complet : CLAIR / SOMBRE", "Compact: one button": "Compact : un bouton", "Hidden": "Masqué",
     "CASE & COLOUR": "BOÎTIER & COULEURS", "PRESETS": "PRÉRÉGLAGES", "YOURS": "LES VÔTRES", "SAVE THIS LOOK": "ENREGISTRER CE STYLE", "Name of the preset": "Nom du préréglage", "Save current look": "Enregistrer le style actuel", "PRESET": "PRÉRÉGLAGE",
     "Colour": "Couleur", "Black": "Noir", "White": "Blanc", "Follow light / dark": "Suivre clair / sombre",
 };

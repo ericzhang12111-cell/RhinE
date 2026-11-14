@@ -3,7 +3,7 @@
 // right-click: show the track in Playlists),
 // previous / play-pause / next / stop, the seek line (elapsed, remaining, START marker, orange playhead; click, drag,
 // wheel ±5 s), volume line, SHUFFLE ALL (the whole library, lib/bus.js), DSP (presets, equalizer, DSP Manager),
-// playback order, the LIGHT / DARK toggle with a sliding plate; below, the section label (per view) and the signature
+// playback order; below, the section label (per view) and the signature
 // with library counts.
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
@@ -24,8 +24,6 @@ const ORDER_NAMES = ["Default", "Repeat (playlist)", "Repeat (track)", "Random",
 let W = 0, H = 0;
 const hits = Hits();
 let hover = null, drag = null;            // drag: { id: "seek" | "vol", value }
-const tog = { x: Spring(0, 14), w: Spring(0, 14), placed: false };
-let togRects = {};
 const counts = { files: -1, albums: -1 };
 let section = { text: "", sc: null };
 
@@ -40,10 +38,9 @@ function rulerGeom() {
 
 // ------------------------------------------------------------------------------------------- animation & timers
 const clock = Clock(dt => {
-    const more = stepSpring(tog.x, dt) | stepSpring(tog.w, dt);
     const sc = section.sc && !scrambleDone(section.sc);
     window.Repaint();
-    return more || sc;
+    return sc;
 });
 
 // while playing, the controls row repaints 20 times a second so the playhead glides (it moves a few px per second)
@@ -119,7 +116,7 @@ function on_playlists_changed() { updateSection(false); }
 helloFrame();   // lib/bus.js
 
 // ------------------------------------------------------------------------------------------------------- paint
-function on_size(w, h) { W = w; H = h; togRects = {}; tog.placed = false; }
+function on_size(w, h) { W = w; H = h; }
 
 function on_paint(gr) {
     hits.clear();
@@ -253,48 +250,12 @@ function on_dsp_preset_changed() { if (readDsp()) window.Repaint(); }
 const vol2pos = db => clamp((Math.pow(10, db / 50) - 0.01) / 0.99, 0, 1);
 const pos2vol = p => p <= 0 ? -100 : 50 * Math.log10(0.99 * p + 0.01);
 
-// the LIGHT / DARK switch: "full" (two labels), "compact" (one square) or "hidden" (MENU › Audio Archive)
-const MODE_TOGGLES = ["full", "compact", "hidden"];
-let modeToggle = getSetting("modeToggle", "full");
-if (!MODE_TOGGLES.includes(modeToggle)) modeToggle = "full";
-onMessage("mode-toggle", v => { modeToggle = MODE_TOGGLES.includes(v) ? v : "full"; togRects = {}; tog.placed = false; hover = null; window.Repaint(); });
-
-// right group, right to left: LIGHT / DARK toggle, ORDER, VOL. Returns its left edge.
+// right group, right to left: ORDER, VOL. Returns its left edge.
+// (The LIGHT / DARK switch that stood at the right end is gone in 2.0.1: T, MENU › Audio Archive and 05 STYLE switch the mode.)
 function drawRight(gr) {
     const cy = dp(ROW_Y), keyH = labelHeight(ST.key), ky = cy - Math.round(keyH / 2);
     const th = dp(26), ty = cy - th / 2;
     let x = W - dp(24);
-    if (modeToggle === "compact") {
-        // one square with a half-filled mark: a click turns to the other mode
-        const bx = x - th, hov = hover && hover.id === "mode", s = dp(10), mx = bx + Math.round((th - s) / 2), my = Math.round(cy - s / 2);
-        const col = hov ? C.fg : C["fg-soft"];
-        box(gr, bx, ty, th, th, hov ? C.accent : C["line-faint"]);
-        box(gr, mx, my, s, s, col);
-        gr.FillSolidRect(mx, my, Math.round(s / 2), s, col);
-        hits.add("mode", bx, ty, th, th, MODE === "dark" ? "light" : "dark");
-        x = bx - dp(18);
-    } else if (modeToggle !== "hidden") {   // hidden: T and MENU › Audio Archive still switch
-        const items = [["light", tr("LIGHT")], ["dark", tr("DARK")]];
-        const iw = items.map(([, t]) => dp(10) + dp(5) + dp(7) + labelWidth(t, st(ST.key, 0)) + dp(10));
-        const tw = iw[0] + iw[1], tx = x - tw;
-        if (!togRects.light) { togRects.light = [tx, iw[0]]; togRects.dark = [tx + iw[0], iw[1]]; placeToggle(false); }
-        box(gr, tx, ty, tw, th, C["line-faint"]);
-        // as in the header navigation: page labels, the sliding plate, then inverted labels clipped to the plate
-        const px = Math.round(tog.x.x), pw = Math.round(tog.w.x);
-        const drawItems = inverse => items.forEach(([m, t]) => {
-            const [x] = togRects[m], hov = !inverse && hover && hover.id === "mode" && hover.data === m;
-            const col = inverse ? C.bg : hov ? C.fg : C["text-muted"];
-            toggleMark(gr, x + dp(10), cy, inverse, col);
-            label(gr, t, st(ST.key, col, inverse ? C.fg : C.bg), x + dp(22), ky);
-        });
-        drawItems(false);
-        gr.FillSolidRect(px, ty, pw, th, C.fg);
-        gr.PushClip(px, ty, pw, th);
-        drawItems(true);
-        gr.PopClip();
-        items.forEach(([m]) => hits.add("mode", togRects[m][0], ty, togRects[m][1], th, m));
-        x = tx - dp(18);
-    }
     // ORDER
     const order = clamp(plman.PlaybackOrder, 0, ORDERS.length - 1), ohov = hover && hover.id === "order";
     const ow = labelWidth(ORDERS[order], st(ST.val, 0));
@@ -333,14 +294,6 @@ function drawRight(gr) {
     const vkw = labelWidth(tr("VOL"), st(ST.key, 0));
     label(gr, tr("VOL"), st(ST.key, C["text-muted"]), lx - dp(8) - vkw, ky);
     return lx - dp(8) - vkw;
-}
-
-function placeToggle(animate) {
-    const r = togRects[MODE];
-    if (!r) return;
-    tog.x.to = r[0]; tog.w.to = r[1];
-    if (!animate || !tog.placed) { tog.x.x = r[0]; tog.w.x = r[1]; tog.placed = true; return; }
-    clock.wake();
 }
 
 function drawStatus(gr) {
@@ -413,7 +366,6 @@ function on_mouse_lbtn_up(x, y) {
     const a = hits.at(x, y);
     if (!a) return;
     if (a.id === "btn") [() => fb.Prev(), () => fb.PlayOrPause(), () => fb.Next(), () => fb.Stop()][a.data]();
-    else if (a.id === "mode" && a.data !== MODE) send("mode");
     else if (a.id === "order") orderMenu(a);
     else if (a.id === "update") updateMenu(a.x, a.y);
     else if (a.id === "dsp") { dspMenu(a.x, a.y + a.h); if (readDsp()) window.Repaint(); }
@@ -446,7 +398,7 @@ function on_key_down(vk) {
     else globalKey(vk);
 }
 
-function on_colours_changed() { refreshTokens(); placeToggle(true); window.Repaint(); }
+function on_colours_changed() { refreshTokens(); window.Repaint(); }
 
 // the toggle and the read-outs are measured from their labels: measure again after a text size change
-TOKEN_LISTENERS.push(() => { togRects = {}; tog.placed = false; TIME_W.clear(); });
+TOKEN_LISTENERS.push(() => { TIME_W.clear(); });

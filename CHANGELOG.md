@@ -3,6 +3,26 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
+## 2.1.0 — 2026-11-14
+
+**Added · 新增**
+- The Archive's `ROOM` layout inspects too: click the selected case, press `Enter`, or click the cover in the bottom bar
+  or the signal profile card, and the case is shown square-on over the room, rendered in the same room as the material,
+  light and mode in use. Before, the cover and the card switched the Archive to `ARRAY`. 曲库的 `展室` 布局也可以放大查看了：
+  点击选中的唱片盒、按 `Enter`，或点击底栏封面、曲目信息卡，唱片盒会正面显示在展室上方，按当前的材质、灯光和深浅色渲染。以前点底栏封面和曲目信息卡会把曲库切回 `陈列`。
+- While the Archive shows the room, the case on the track card is the room's case. 曲库用展室布局时，曲目信息卡上的唱片盒也换成展室的唱片盒。
+- `RHINE LAB`'s case: clear, as in the PV; its label runs down with rounded corners and carries the album (on the
+  track card, the track), with a vent etched under it. 唱片盒 `RHINE LAB` 和 PV 一样通透；标签加长、改为圆角，印着专辑信息（曲目信息卡上是当前曲目），下方刻有透气线。
+
+**Changed · 改进**
+- The `LIGHT` / `DARK` switch is gone from the bottom bar; `T`, `05 STYLE` › `MODE` and `MENU › Audio Archive` switch the
+  mode. 底栏的深浅色开关已移除；用 `T`、`05 外观` › `模式` 或 `菜单 › Audio Archive` 切换。
+
+**Fixed · 修复**
+- `WHITE` in the room looked yellow in light mode (all three lights). 展室的 `纯白` 在浅色模式下偏黄（三种灯光都是）。
+- `06 ONLINE`: some NetEase songs would not play ("Unsupported format"): they are FLAC files the service labels as MP3.
+  部分网易云歌曲在 `06 在线` 中无法播放（提示格式不支持）：这些其实是 FLAC，服务端却标成了 MP3。
+
 ## 2.0.0 — 2026-11-11
 
 **Added · 新增**

@@ -308,7 +308,6 @@ I18N["ko"] = {
     "BRUSHED BRASS": "헤어라인 황동", "Brushed brass, engraved and filled in black.": "헤어라인 황동, 조각 후 검은색 충전.",
     // 1.12: the Archive room (LAYOUT › ROOM)
     "ROOM": "자료실", "Archive room": "자료실",
-   
     // 2.0: 06 ONLINE (NetEase through the local bridge)
     // 2.0: import
     "IMPORT": "가져오기", "IMPORT A PLAYLIST": "플레이리스트 가져오기", "A NetEase or QQ Music playlist link, or a file: Exportify's CSV (Spotify), Spotify's data export (Playlist1.json), a CSV, or \"artist - title\" lines.": "NetEase 또는 QQ Music 플레이리스트 링크, 또는 파일: Exportify CSV(Spotify), Spotify 데이터 내보내기(Playlist1.json), CSV, “아티스트 - 제목” 줄.", "What your library has becomes a foobar2000 playlist; the rest goes on a list of what is missing.": "라이브러리에 있는 곡은 foobar2000 플레이리스트가 되고, 나머지는 없는 곡 목록에 적힙니다.", "PASTE A LINK": "링크 붙여넣기", "OPEN A FILE": "파일 열기", "READING…": "읽는 중…", "IMPORTED": "가져온 항목", "{0} MISSING": "{0}곡 없음", "ALL FOUND": "모두 찾음", "OPEN ONLINE": "온라인에서 열기", "MISSING LIST": "없는 곡 목록", "PLAY": "재생", "A NetEase or QQ Music playlist link (a share text will do):": "NetEase 또는 QQ Music 플레이리스트 링크(공유 문구 그대로도 됩니다):", "Import": "가져오기", "not in the library": "곡이 라이브러리에 없음", "No link in that text.": "텍스트에 링크가 없습니다.", "Not a NetEase or QQ Music playlist link.": "NetEase 또는 QQ Music 플레이리스트 링크가 아닙니다.", "The playlist was not found (a private one needs that account logged in here).": "플레이리스트를 찾을 수 없습니다(비공개는 해당 계정으로 여기서 로그인해야 합니다).", "The file was not found.": "파일을 찾을 수 없습니다.", "The file is too large.": "파일이 너무 큽니다.", "No songs were found in the file.": "파일에서 곡을 찾지 못했습니다.", "The bridge did not answer.": "브리지가 응답하지 않습니다.",
@@ -344,7 +343,6 @@ I18N["ko"] = {
     "Add folder to playlist": "폴더를 재생목록에 추가", "Properties (edit tags)…": "속성 (태그 편집)…",
     "Artist file: look artists up online": "아티스트 파일: 온라인에서 찾기",
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "온라인 검색이 꺼져 있습니다(우클릭으로 켤 수 있습니다). 앨범 파일 옆의 artist.txt가 여기에 표시되고, artist.jpg가 사진으로 쓰입니다.",
-    "Light / dark switch in the bottom bar": "하단 바의 라이트 / 다크 스위치", "Full: LIGHT / DARK": "전체: 라이트 / 다크", "Compact: one button": "간단히: 버튼 하나", "Hidden": "숨김",
     "CASE & COLOUR": "케이스와 색상", "PRESETS": "프리셋", "YOURS": "내 프리셋", "SAVE THIS LOOK": "이 모양 저장", "Name of the preset": "프리셋 이름", "Save current look": "현재 모양 저장", "PRESET": "프리셋",
     "Colour": "색상", "Black": "블랙", "White": "화이트", "Follow light / dark": "라이트 / 다크에 맞춤",
 };

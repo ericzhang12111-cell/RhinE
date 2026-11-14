@@ -292,7 +292,7 @@ function pickStep(s) {
         PICK.steps = null;
         if (!curAlbum()) return;
         selectionChanged();   // the file panel catches up
-        if (AR.layout === "array") { AR.inspOn = true; inspectImages(); }
+        if (AR.layout !== "grid") { AR.inspOn = true; inspectImages(); }
         playAlbum();
         clock.wake(); window.Repaint();
         return;
@@ -450,10 +450,19 @@ function caseWindow(r, row, pos = r.pos.x, scroll = r.scroll.x) {
 // until the inspection frames have loaded.
 const inspLift = () => easeInOut(clamp(AR.insp, 0, 1));
 const inspTurn = () => easeInOut(clamp(AR.insp - 1, 0, 1));
+const ROOM_INSP_FADE = .22;   // the room's inspection fades in and out over this (s)
 function stepInspection(dt) {
     const target = AR.inspOn ? (ARIMG.inspect ? 2 : 1) : 0;
     if (AR.insp === target) return AR.inspOn && !ARIMG.inspect;
     if (REDUCE_MOTION) { AR.insp = target; return false; }
+    if (roomOn()) {
+        // (no lift: straight to 1 going in, straight to 0 once faded out)
+        if (target >= 1 && AR.insp < 1) AR.insp = 1;
+        if (target === 0 && AR.insp <= 1) { AR.insp = 0; return false; }
+        const dir = Math.sign(Math.max(1, target) - AR.insp);
+        AR.insp = clamp(AR.insp + dir * dt / ROOM_INSP_FADE, 1, 2);
+        return true;
+    }
     const dir = Math.sign(target - AR.insp), lifting = dir > 0 ? AR.insp < 1 : AR.insp <= 1;
     const next = AR.insp + dir * dt / (lifting ? INSP_LIFT : INSP_TURN);
     AR.insp = dir > 0 ? Math.min(next, target) : Math.max(next, target);
@@ -719,18 +728,50 @@ function tinted(src, f, name) {
 }
 TOKEN_LISTENERS.push(() => { ARIMG.faded.clear(); AR.dirtyInfo = true; });
 
+// The case that turns in the inspection: the case skin's. The room shows its own case square-on (no turn): rendered in
+// the same room as the set in use (its material, its light, its mode: assets/render/room/<set>/<mode>/inspect-00.png +
+// inspect.json, .dev/pvlayout/render_room_front.sh), so that it opens as the case it stood as; a set without one
+// borrows the skin its material was made from. Its json is read once.
+const ROOM_INSPECT_SKIN = { cream: "frost", glass: "glass", white: "white", blackout: "blackout", rhine: "frost" };
+const INSP_SKINS = new Map();
+function inspSkin() {
+    if (!roomOn()) return { id: CASE_SKIN, dir: CASE_DIR, meta: CASE_META };
+    roomAssets();
+    const key = "room:" + ROOM.dir;
+    let S = INSP_SKINS.get(key);
+    if (S === undefined) {
+        const read = (id, dir, file) => { try { return utils.IsFile(dir + file) ? { id, dir, meta: JSON.parse(utils.ReadTextFile(dir + file, 65001)) } : null; } catch (e) { return null; } };
+        const f = findSkin(ROOM_INSPECT_SKIN[STATE.roomMat] || CASE_SKIN);
+        S = read(key, ROOM.dir, "inspect.json") || (f && read(f.id, f.dir, "case.json")) || null;
+        INSP_SKINS.set(key, S);
+    }
+    return S || { id: CASE_SKIN, dir: CASE_DIR, meta: CASE_META };
+}
 function inspectImages() {
+    const S = inspSkin(), last = roomOn(), key = S.id + S.dir + (last ? "|last" : "");
+    if (ARIMG.inspectSkin !== key) { ARIMG.inspect = null; ARIMG.inspectLoading = false; ARIMG.gen++; ARIMG.inspectSkin = key; }
     if (ARIMG.inspect || ARIMG.inspectLoading) return ARIMG.inspect;
     ARIMG.inspectLoading = true;
-    const n = CASE_META.inspect.length, imgs = new Array(n), gen = ARIMG.gen;
+    const L = S.meta.inspect;
+    if (last) {
+        // the room: the square-on frame alone, twice (drawInspection blends two)
+        const gen = ARIMG.gen, fail = () => { if (gen !== ARIMG.gen) return; ARIMG.gen++; ARIMG.inspectLoading = false; AR.inspOn = false; clock.wake(); };
+        d2d.LoadImageAsyncV2(0, S.dir + `inspect-${pad(L.length - 1, 2)}.png`).then(img => {
+            if (gen !== ARIMG.gen) return;
+            if (!img) { fail(); return; }
+            ARIMG.inspect = [img, img]; ARIMG.inspectMeta = [L[L.length - 1], L[L.length - 1]]; ARIMG.inspectLoading = false; clock.wake(); window.Repaint();
+        }, fail);
+        return null;
+    }
+    const n = L.length, imgs = new Array(n), gen = ARIMG.gen;
     let left = n;
     // a frame that cannot be read sends the case back into its row (rather than waiting, and ticking, forever)
     const fail = () => { if (gen !== ARIMG.gen) return; ARIMG.gen++; ARIMG.inspectLoading = false; AR.inspOn = false; clock.wake(); };
-    for (let i = 0; i < n; i++) d2d.LoadImageAsyncV2(0, CASE_DIR + `inspect-${pad(i, 2)}.png`).then(img => {
+    for (let i = 0; i < n; i++) d2d.LoadImageAsyncV2(0, S.dir + `inspect-${pad(i, 2)}.png`).then(img => {
         if (gen !== ARIMG.gen) return;
         if (!img) { fail(); return; }
         imgs[i] = img;
-        if (--left === 0) { ARIMG.inspect = imgs; ARIMG.inspectLoading = false; clock.wake(); window.Repaint(); }
+        if (--left === 0) { ARIMG.inspect = imgs; ARIMG.inspectMeta = L; ARIMG.inspectLoading = false; clock.wake(); window.Repaint(); }
     }, fail);
     return null;
 }
@@ -1193,25 +1234,32 @@ function drawGroupSwitch(gr) {
 
 // the inspected case's final scale: ×2 of its size in the row, × the inspection size (MENU › Audio Archive or the Style
 // view), but never larger than fits the array area with the caption above and the button below
-function inspectK(k0) {
-    const last = CASE_META.inspect[CASE_META.inspect.length - 1], c = last.crop || [0, 0, ...CASE_META.inspect_res];
+function inspectK(k0, meta = CASE_META) {
+    const last = meta.inspect[meta.inspect.length - 1], c = last.crop || [0, 0, ...meta.inspect_res];
     const fit = Math.min(arrayW() * .9 / c[2], (H - dp(190)) / c[3]);
     return Math.max(k0, Math.min(k0 * INSPECT_ZOOM * (STATE.inspectScale || 1), fit));
 }
 // inspection, stage 2 (e: 0 lifted above its row … 1 in front): the case moves to the middle, grows ×2 and turns
 // square-on through the evenly spaced pre-rendered frames; between two frames the next one fades in over the current
 // one and the cover and label quads are interpolated, so the turn has no visible steps
-function drawInspection(gr, e) {
-    const frames = ARIMG.inspect, a = curAlbum(), aw = arrayW(), S = swapState(), sa = Math.round(255 * S.a);
-    gr.FillSolidRect(0, 0, aw, H, withAlpha(C.bg, .82 * e));
-    if (!frames || !a) return;
-    const n = frames.length, x = e * (n - 1), i0 = Math.min(n - 2, Math.floor(x)), f = clamp(x - i0, 0, 1);
-    const M0 = CASE_META.inspect[i0], M1 = CASE_META.inspect[i0 + 1], full = CASE_META.inspect_res;
-    const k0 = arK() * CASE_META.array_ppu / CASE_META.inspect_ppu, k = lerp(k0, inspectK(k0), e);
-    const cx = lerp(AR.from[0], aw * .49, e), cy = lerp(AR.from[1], H * .5, e);
+// (fade: the whole of it faded, the room's, which shows it square-on at once, e = 1: over the room's own background
+// colour, whatever the mode (RHINE LAB's white under a dark theme), the text inked to suit it)
+// what a room case's label says of an album (lib/album.js drawInfoLabel: the inspection's frame, the room's selected case)
+const albumInfoLabel = a => ({ title: a.title || tr("UNTITLED"), sub: a.artist || "",
+    rows: [["YEAR", a.year || "—"], ["TRACKS", pad(a.tracks || 0, 2)], ["GENRE", [...(a.genre || a.grp || "—")].slice(0, 14).join("")]], foot: `ARC-${pad(a.no, 4)}`, foot2: fmtChip(a, true) });
+function drawInspection(gr, e, fade = 1) {
+    const frames = ARIMG.inspect, a = curAlbum(), aw = arrayW(), S = swapState(), sa = Math.round(255 * S.a * fade), room = roomOn();
+    const bg = room ? fadeBg() : C.bg, lit = ((bg >>> 16 & 255) * .3 + (bg >>> 8 & 255) * .59 + (bg & 255) * .11) / 255 > .5;
+    const ink = !room ? C.fg : lit ? 0xFF1B1C18 : 0xFFF2F2F2, muted = !room ? C["text-muted"] : mix(ink, bg, .4);
+    gr.FillSolidRect(0, 0, aw, H, withAlpha(bg, .82 * e * fade));
+    if (!frames || !a || !ARIMG.inspectMeta) return;
+    const n = frames.length, x = e * (n - 1), i0 = Math.min(n - 2, Math.floor(x)), f = clamp(x - i0, 0, 1), IM = inspSkin().meta;
+    const M0 = ARIMG.inspectMeta[i0], M1 = ARIMG.inspectMeta[i0 + 1], full = IM.inspect_res;
+    const k0 = arK() * (IM.array_ppu || CASE_META.array_ppu) / IM.inspect_ppu, k = lerp(k0, inspectK(k0, IM), e);
+    const from = AR.from || [aw * .49, H * .5], cx = lerp(from[0], aw * .49, e), cy = lerp(from[1], H * .5, e);   // (the room: AR.from never set)
     const ox = cx - M0.center[0] * k + S.dx, oy = cy - M0.center[1] * k;
     const mixQ = (A, B) => A.map((p, j) => [lerp(p[0], B[j][0], f), lerp(p[1], B[j][1], f)]);
-    const coverQ = mixQ(M0.cover, M1.cover), labelQ = mixQ(M0.label, M1.label);
+    const coverQ = mixQ(M0.cover, M1.cover), labelQ = M0.label && M1.label ? mixQ(M0.label, M1.label) : null;   // (RHINE LAB's case: no label)
     const big = cover(albumFirst(a), () => window.Repaint()), t = thumbOf(a);
     const cov = big && big.img ? big.img : t ? t.img : null;
     if (cov) quadImage(gr, cov, coverQ, ox, oy, k, sa);
@@ -1221,23 +1269,25 @@ function drawInspection(gr, e) {
         gr.DrawImage(img, ox + c[0] * k, oy + c[1] * k, c[2] * k, c[3] * k, 0, 0, img.Width, img.Height, 0, alpha);
     };
     frame(frames[i0], M0, sa);
-    if (f > .01) frame(frames[i0 + 1], M1, Math.round(sa * f));
-    drawSpineLabel(gr, labelQ, ox, oy, k, a.no, sa);
+    if (f > .01 && frames[i0 + 1] !== frames[i0]) frame(frames[i0 + 1], M1, Math.round(sa * f));
+    if (labelQ) drawSpineLabel(gr, labelQ, ox, oy, k, a.no, sa);
+    // (a room case whose label takes the album: RHINE LAB's, lib/album.js drawInfoLabel)
+    if (M1.info) drawInfoLabel(gr, M1.info.map(([px, py]) => [ox + px * k, oy + py * k]), albumInfoLabel(a), sa);
     if (e > .85 && !SWAP.phase) {   // (its marks, title and button wait until a swap is over)
         const q = coverQ.map(([px, py]) => [ox + px * k, oy + py * k]), al = (e - .85) / .15;
-        for (const [px, py] of q) gr.FillSolidRect(Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), dp(6), withAlpha(C.accent, al));
-        if (al > .5) {
+        for (const [px, py] of q) gr.FillSolidRect(Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), dp(6), withAlpha(C.accent, al * fade));
+        if (al > .5 && fade > .5) {
             // the text above and the button below keep clear of the case's edges (the frame's crop is the case's box)
             const c = M1.crop, left = Math.round(c ? ox + c[0] * k : q[0][0]);
             const top = c ? oy + c[1] * k : q[0][1] - dp(40), bottom = c ? oy + (c[1] + c[3]) * k : q[3][1] + dp(20);
             const y2 = Math.round(top - dp(16) - labelHeight(AR_ST.inspM)), y1 = y2 - dp(6) - labelHeight(AR_ST.insp);
-            label(gr, `${tr("INSPECTION")}  ·  ARC-${pad(a.no, 4)}`, st(AR_ST.insp, C.fg), left, y1);
+            label(gr, `${tr("INSPECTION")}  ·  ARC-${pad(a.no, 4)}`, st(AR_ST.insp, ink, bg), left, y1);
             const sub = a.album ? (albumOf(a) || {}).title || "" : tr("{0} TRACKS", pad(a.tracks, 2));
-            label(gr, `${fmtChip(a)}  ·  ${sub}  ·  ${a.grp || ""}`, st(AR_ST.inspM, C["text-muted"]), left, y2);
+            label(gr, `${fmtChip(a)}  ·  ${sub}  ·  ${a.grp || ""}`, st(AR_ST.inspM, muted, bg), left, y2);
             // ← RETURN TO ARCHIVE
-            const bx = left, by = Math.round(bottom + dp(16)), bs = st(AR_ST.btn, C.fg), bw = labelWidth("←  RETURN TO ARCHIVE", bs) + dp(22), bh = dp(26);
-            gr.FillSolidRect(bx, by, bw, bh, C.bg);
-            box(gr, bx, by, bw, bh, C.fg);
+            const bx = left, by = Math.round(bottom + dp(16)), bs = st(AR_ST.btn, ink, bg), bw = labelWidth("←  RETURN TO ARCHIVE", bs) + dp(22), bh = dp(26);
+            gr.FillSolidRect(bx, by, bw, bh, bg);
+            box(gr, bx, by, bw, bh, ink);
             label(gr, "←  RETURN TO ARCHIVE", bs, bx + dp(11), by + Math.round((bh - labelHeight(AR_ST.btn)) / 2));
             hits.add("ar-return", bx, by, bw, bh);
         }
@@ -1368,7 +1418,7 @@ function drawInfoFile(gr, a, x, y, iw, w, h) {
     label(gr, `ARC-${pad(a.no, 4)}`, st(ST.ph, C.bg, C.fg), x + iw - dp(8), phy, 2);
     y += dp(18 + 10);
     const res = a.lossless && a.bits ? `${a.bits} / ${+(a.rate / 1000).toFixed(1)}` : a.kbps ? `${a.kbps} KBPS` : "—";
-    const cells = [[tr("FORMAT"), (a.codec || "—").toUpperCase()], [tr("RES"), res], [tr("GENRE"), (a.genre || "—").toUpperCase()], [tr("DISCS"), String(a.discs)],
+    const cells = [[tr("FORMAT"), (a.codec || "—").toUpperCase()], [tr("RES"), res], ["GENRE", (a.genre || "—").toUpperCase()], [tr("DISCS"), String(a.discs)],
                    [tr("ADDED"), a.added ? a.added.slice(0, 10) : "—"], [tr("PLAYS"), a.plays ? String(a.plays) : "—"]];
     const colW = iw / 2;
     cells.forEach(([kk, v], i) => {
@@ -1514,7 +1564,7 @@ function playAlbum(at) {
 function itemPlaying(a, np = fb.GetNowPlaying()) { return !!(a && np && (a.album ? sameTrack(itemTrack(a), np) : (a.folder ? folderKeyOf(np.Path) : albumKey(np)) === a.key)); }
 // Inspect from elsewhere: the transport's cover and the signal profile card ask for the playing (else focused) track.
 // The Archive opens on its album (or on the track itself while SHOW TRACKS is on) and inspects it once the view is
-// shown and the item is listed; the inspection belongs to the case array, so the grid gives way to it.
+// shown and the item is listed; the grid gives way to the case array for it (the room inspects in place).
 const INSPECT_ASK = { key: "", timer: 0 };
 function inspectRequest() {
     const h = fb.GetNowPlaying() || fb.GetFocusItem();
@@ -1536,7 +1586,7 @@ function inspectPending(delay = 450) {
             return;
         }
         INSPECT_ASK.key = "";
-        if (AR.layout !== "array") setLayout("array");
+        if (AR.layout === "grid") setLayout("array");
         AR.inspOn = false; AR.insp = 0;
         placeSelection(key);
         if (!curAlbum()) return;

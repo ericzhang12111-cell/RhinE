@@ -308,7 +308,6 @@ I18N["zh-CN"] = {
     "BRUSHED BRASS": "拉丝黄铜", "Brushed brass, engraved and filled in black.": "拉丝黄铜，雕刻后填黑。",
     // 1.12: the Archive room (LAYOUT › ROOM)
     "ROOM": "展室", "Archive room": "展室",
-   
     // 2.0: 06 ONLINE (NetEase through the local bridge)
     // 2.0: import
     "IMPORT": "导入", "IMPORT A PLAYLIST": "导入歌单", "A NetEase or QQ Music playlist link, or a file: Exportify's CSV (Spotify), Spotify's data export (Playlist1.json), a CSV, or \"artist - title\" lines.": "网易云或 QQ 音乐的歌单链接，或者文件：Exportify 导出的 CSV（Spotify）、Spotify 数据导出（Playlist1.json）、CSV，或每行“歌手 - 歌名”的文本。", "What your library has becomes a foobar2000 playlist; the rest goes on a list of what is missing.": "曲库里有的歌会建成一个 foobar2000 播放列表，其余的写进缺失清单。", "PASTE A LINK": "粘贴链接", "OPEN A FILE": "打开文件", "READING…": "读取中…", "IMPORTED": "已导入", "{0} MISSING": "缺 {0} 首", "ALL FOUND": "全部找到", "OPEN ONLINE": "在线打开", "MISSING LIST": "缺失清单", "PLAY": "播放", "A NetEase or QQ Music playlist link (a share text will do):": "网易云或 QQ 音乐的歌单链接（直接粘贴分享文字也可以）：", "Import": "导入", "not in the library": "首不在曲库中", "No link in that text.": "文字里没有链接。", "Not a NetEase or QQ Music playlist link.": "不是网易云或 QQ 音乐的歌单链接。", "The playlist was not found (a private one needs that account logged in here).": "找不到这个歌单（私密歌单需要在这里登录对应账号）。", "The file was not found.": "找不到这个文件。", "The file is too large.": "文件太大。", "No songs were found in the file.": "文件里没有读到歌曲。", "The bridge did not answer.": "本地服务没有响应。",
@@ -344,7 +343,6 @@ I18N["zh-CN"] = {
     "Add folder to playlist": "添加文件夹到播放列表", "Properties (edit tags)…": "属性（编辑标签）…",
     "Artist file: look artists up online": "艺人资料：联网查找",
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "已关闭联网查找（右键可以重新打开）。专辑文件旁的 artist.txt 会显示在这里，artist.jpg 会用作艺人图片。",
-    "Light / dark switch in the bottom bar": "底栏的深浅色开关", "Full: LIGHT / DARK": "完整：浅色 / 深色", "Compact: one button": "精简：一个按钮", "Hidden": "隐藏",
     "CASE & COLOUR": "唱片盒与配色", "PRESETS": "预设", "YOURS": "我的预设", "SAVE THIS LOOK": "保存当前外观", "Name of the preset": "预设名称", "Save current look": "保存当前外观", "PRESET": "预设",
     "Colour": "颜色", "Black": "黑色", "White": "白色", "Follow light / dark": "跟随深浅色",
 };

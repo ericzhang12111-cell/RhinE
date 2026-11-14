@@ -70,7 +70,7 @@ Running it again keeps the foobar2000 folder and installs the theme again.
 | | Mouse | Key (any of the theme's panels focused) |
 |---|---|---|
 | Archive / Playlists / Lyrics / Signal / Style view | click `01` – `05` in the header | `1` – `5` |
-| Light / dark | `LIGHT` / `DARK` at the right of the transport; `MODE` in `05 STYLE` also offers `SYSTEM`, which follows Windows' light / dark | `T` |
+| Light / dark | `MODE` in `05 STYLE` (`LIGHT` / `DARK`, or `SYSTEM`, which follows Windows' light / dark), or `MENU › Audio Archive` | `T` |
 | Borderless full screen: no title bar or frame, over the whole monitor (the taskbar too) | `WINDOW` › `BORDERLESS` under `DISPLAY` in `05 STYLE`, or `MENU › Audio Archive › Borderless full screen`; it stays on at the next start until you switch it off, and the window then goes back where it was | `F11` |
 | foobar2000's Preferences | `PREFERENCES` in the header (just the gear on narrow windows) | — |
 | DSP: presets, equalizer, DSP Manager | `DSP` in the transport (it shows the active DSPs, or `OFF`) | — |

@@ -32,6 +32,8 @@ function setLayout(l) {
     const key = curAlbum() ? curAlbum().key : AR.selAlbum;
     AR.layout = l;
     setSetting("archiveLayout", l);
+    send("ar-layout", l);   // (the cards' hero case is the room's while the Archive shows the room: lib/album.js)
+    if (typeof dirty !== "undefined") dirty.card = true;
     if (l === "grid") { GRID.geo = null; GRID.reveal = true; }
     placeSelection(key);   // the array's rows are shelves, the grid's sections are groups: find the album again
     requestVisibleThumbs();
