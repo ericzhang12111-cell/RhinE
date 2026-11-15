@@ -1,23 +1,15 @@
 {
- "version": "2.1.0",
- "tag": "v2.1.0",
- "date": "2026-11-14",
+ "version": "2.1.1",
+ "tag": "v2.1.1",
+ "date": "2026-11-15",
  "notes": {
   "en": [
-   "The Archive's ROOM layout inspects too: click the selected case, press Enter, or click the cover in the bottom bar or the signal profile card, and the case is shown square-on over the room, rendered in the same room as the material, light and mode in use. Before, the cover and the card switched the Archive to ARRAY.",
-   "While the Archive shows the room, the case on the track card is the room's case.",
-   "RHINE LAB's case: clear, as in the PV; its label runs down with rounded corners and carries the album (on the track card, the track), with a vent etched under it.",
-   "The LIGHT / DARK switch is gone from the bottom bar; T, 05 STYLE › MODE and MENU › Audio Archive switch the mode.",
-   "WHITE in the room looked yellow in light mode (all three lights).",
-   "06 ONLINE: some NetEase songs would not play (\"Unsupported format\"): they are FLAC files the service labels as MP3."
+   "05 STYLE › PRESETS › WORLDS 2026 · SPECIAL: four League of Legends World Championship special presets (CHAMPIONS · BRONZE, STONE, NOIR, LIGHT), each with its own wallpaper and the custom colours, custom case and title tag taken from it, in dark mode with the room in WHITE, backlit; applying one replaces your custom colours and custom case. The backgrounds were generated with Image-2.6-Sunburst and laid out in Photoshop.",
+   "A wallpaper can leave the track card's column plain (the special presets do)."
   ],
   "zh": [
-   "曲库的 展室 布局也可以放大查看了：点击选中的唱片盒、按 Enter，或点击底栏封面、曲目信息卡，唱片盒会正面显示在展室上方，按当前的材质、灯光和深浅色渲染。以前点底栏封面和曲目信息卡会把曲库切回 陈列。",
-   "曲库用展室布局时，曲目信息卡上的唱片盒也换成展室的唱片盒。",
-   "唱片盒 RHINE LAB 和 PV 一样通透；标签加长、改为圆角，印着专辑信息（曲目信息卡上是当前曲目），下方刻有透气线。",
-   "底栏的深浅色开关已移除；用 T、05 外观 › 模式 或 菜单 › Audio Archive 切换。",
-   "展室的 纯白 在浅色模式下偏黄（三种灯光都是）。",
-   "部分网易云歌曲在 06 在线 中无法播放（提示格式不支持）：这些其实是 FLAC，服务端却标成了 MP3。"
+   "英雄联盟世界赛特别预设：05 外观 › 预设 中新增四套（CHAMPIONS · BRONZE、STONE、NOIR、LIGHT），各带一张壁纸，自定义配色、自定义唱片盒和标签颜色都按壁纸搭配，深色模式，展室为纯白逆光；应用后会替换你的自定义配色和自定义唱片盒。背景由 Image-2.6-Sunburst 生成，Photoshop 排版。",
+   "壁纸可以不铺在右侧曲目信息栏下（特别预设即如此）。"
   ]
  }
 }
