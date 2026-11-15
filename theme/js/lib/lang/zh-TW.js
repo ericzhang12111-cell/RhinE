@@ -352,7 +352,7 @@ I18N["zh-TW"] = {
     "Add album to playlist": "將專輯加入播放清單", "Add folder to playlist": "將資料夾加入播放清單", "Properties (edit tags)…": "內容（編輯標籤）…",
     "Artist file: look artists up online": "藝人資料：連網查找",
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "已關閉連網查找（按右鍵可以重新開啟）。專輯檔案旁的 artist.txt 會顯示在這裡，artist.jpg 會用作藝人圖片。",
-    "CASE & COLOUR": "唱片盒與配色", "PRESETS": "預設", "YOURS": "我的預設", "SAVE THIS LOOK": "儲存目前外觀", "Name of the preset": "預設名稱",
+    "CASE & COLOUR": "唱片盒與配色", "PRESETS": "預設", "WORLDS 2026 · SPECIAL": "WORLDS 2026 · 特別預設", "League of Legends World Championship special presets: applying one replaces your custom colours and custom case.": "此為英雄聯盟世界賽特別預設：套用後會取代你的自訂配色和自訂唱片盒。", "Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop.": "背景由 Image-2.6-Sunburst 生成，Photoshop 排版。", "YOURS": "我的預設", "SAVE THIS LOOK": "儲存目前外觀", "Name of the preset": "預設名稱",
     "Save current look": "儲存目前外觀", "PRESET": "預設",
     "Colour": "顏色", "Black": "黑色", "White": "白色", "Follow light / dark": "跟隨深淺色",
 };

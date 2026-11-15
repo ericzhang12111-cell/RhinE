@@ -3,6 +3,18 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
+## 2.1.1 — 2026-11-15
+
+A small special release for the League of Legends World Championship.
+
+**Added · 新增**
+- `05 STYLE` › `PRESETS` › `WORLDS 2026 · SPECIAL`: four League of Legends World Championship special presets
+  (`CHAMPIONS · BRONZE`, `STONE`, `NOIR`, `LIGHT`), each with its own wallpaper and the custom colours, custom case and
+  title tag taken from it, in dark mode with the room in `WHITE`, backlit; applying one replaces your custom colours
+  and custom case. The backgrounds were generated with Image-2.6-Sunburst and laid out in Photoshop.
+  英雄联盟世界赛特别预设：`05 外观` › `预设` 中新增四套（`CHAMPIONS · BRONZE`、`STONE`、`NOIR`、`LIGHT`），各带一张壁纸，自定义配色、自定义唱片盒和标签颜色都按壁纸搭配，深色模式，展室为纯白逆光；应用后会替换你的自定义配色和自定义唱片盒。背景由 Image-2.6-Sunburst 生成，Photoshop 排版。
+- A wallpaper can leave the track card's column plain (the special presets do). 壁纸可以不铺在右侧曲目信息栏下（特别预设即如此）。
+
 ## 2.1.0 — 2026-11-14
 
 **Added · 新增**

@@ -18,16 +18,22 @@ const WP_START = { path: "", views: ["playlists", "lyrics", "signal"], look: "cl
 // The setting keeps "theme:NAME" rather than a file path, so they still open after a portable foobar2000 moves.
 const WP_BUILTIN = [["topography", "TOPOGRAPHY"], ["streams", "STREAMS"], ["print", "PRINT"], ["survey", "SURVEY"]];
 const WP_DIR = THEME_ROOT + "assets\\wallpapers\\";
-const wpFile = path => path.startsWith("theme:") ? WP_DIR + `${path.slice(6)}-${MODE}.jpg` : path;
+// (a picture made for one mode only, as the special presets' are: NAME.jpg, the same in both)
+const wpFile = path => !path.startsWith("theme:") ? path : utils.IsFile(WP_DIR + `${path.slice(6)}-${MODE}.jpg`) ? WP_DIR + `${path.slice(6)}-${MODE}.jpg` : WP_DIR + `${path.slice(6)}.jpg`;
+// the special presets' pictures (style.js PRESETS_SPECIAL): named, not in the picker
+const WP_SPECIAL = [["champions-bronze", "CHAMPIONS · BRONZE"], ["champions-stone", "CHAMPIONS · STONE"], ["champions-noir", "CHAMPIONS · NOIR"], ["champions-light", "CHAMPIONS · LIGHT"]];
 // the name to show: a built-in picture's own, else the file's
-const wpName = path => { const b = WP_BUILTIN.find(k => "theme:" + k[0] === path); return b ? tr(b[1]) : path.slice(path.lastIndexOf("\\") + 1).toUpperCase(); };
+const wpName = path => { const b = WP_BUILTIN.concat(WP_SPECIAL).find(k => "theme:" + k[0] === path); return b ? tr(b[1]) : path.slice(path.lastIndexOf("\\") + 1).toUpperCase(); };
 function pickWallpaper(w) {
     w = w && typeof w === "object" ? w : {};
     return { path: typeof w.path === "string" ? w.path : "",
              views: Array.isArray(w.views) ? WP_VIEWS.map(v => v[0]).filter(v => w.views.includes(v)) : WP_START.views.slice(),
              look: WP_LOOKS.some(l => l[0] === w.look) ? w.look : WP_START.look,
-             veil: WP_VEILS.some(l => l[0] === w.veil) ? w.veil : WP_START.veil };
+             veil: WP_VEILS.some(l => l[0] === w.veil) ? w.veil : WP_START.veil,
+             card: w.card !== false };   // false: the track card's column keeps its plain colour (a picture with its own type behind)
 }
+// the track card's column over the picture, or plain (wallpaper "card")
+const wallpaperCard = () => !STATE.wallpaper || STATE.wallpaper.card !== false;
 
 let GEOM = { w: 0, h: 0, r: {} };   // the window's size and each panel's rect in it, in px (frame.js)
 onMessage("geom", g => { GEOM = g; window.Repaint(); });

@@ -222,6 +222,27 @@ const PRESETS_BUILTIN = [
     { name: "LIVEWIRE", skin: "glass", scheme: "livewire", floor: "deck", tag: "plastic", tagColours: "scheme", roomMat: "glass" },
     { name: "FLARE", skin: "coral", scheme: "flare", floor: "plain", tag: "plastic", tagColours: "scheme", roomMat: "white" },
 ];
+// The special presets (WORLDS 2026: League of Legends World Championship): each with its own picture (made by the user,
+// assets/wallpapers/champions-*.jpg, one per preset, not per mode) and the colours taken from it: the custom colour
+// scheme, the custom case (made from the white skin's renders, customcase.js) and the title tag's own colours.
+// Applying one writes its colours over the custom scheme and the custom case. All dark, the room in WHITE, backlit.
+// (The pictures: generated with Image-2.6-Sunburst, laid out in Photoshop, by the user.)
+const SPECIAL_BASE = { roomLight: "l3", floor: "plain", halftone: "off", halftoneLevel: "low", emblem: "ring", tag: "plastic", tagShape: "tab", tagColours: "custom", tagBody: "solid", tagOpacity: 50, font: "geist", scheme: "custom", skin: "custom" };
+const specialWp = id => ({ path: "theme:" + id, views: ["archive", "playlists", "lyrics", "signal"], look: "clear", veil: "mid", card: false });
+const PRESETS_SPECIAL = [
+    Object.assign({}, SPECIAL_BASE, { name: "CHAMPIONS · BRONZE", special: true, mode: "dark", roomMat: "white", wallpaper: specialWp("champions-bronze"),
+        customScheme: { dark: { bg: "#1e1a17", fg: "#efe7dc", accent: "#c8ad8a" }, light: { bg: "#ece6de", fg: "#221d18", accent: "#7a6248" } },
+        customCase: { base: "#2a2420", accent: "#b89c78", pattern: "band" }, tagCustom: ["#efe7dc", "#231e1a", "#b89c78"] }),
+    Object.assign({}, SPECIAL_BASE, { name: "CHAMPIONS · STONE", special: true, mode: "dark", roomMat: "white", wallpaper: specialWp("champions-stone"),
+        customScheme: { dark: { bg: "#211f1d", fg: "#ebe8e2", accent: "#d2cbbf" }, light: { bg: "#e8e6e2", fg: "#1f1d1b", accent: "#55504a" } },
+        customCase: { base: "#3a3633", accent: "#d2cbbf", pattern: "stripes" }, tagCustom: ["#ebe8e2", "#2b2826", "#a59d91"] }),
+    Object.assign({}, SPECIAL_BASE, { name: "CHAMPIONS · NOIR", special: true, mode: "dark", roomMat: "white", wallpaper: specialWp("champions-noir"),
+        customScheme: { dark: { bg: "#111213", fg: "#eceeef", accent: "#b9c0c6" }, light: { bg: "#e9eaeb", fg: "#151617", accent: "#4a5056" } },
+        customCase: { base: "#161617", accent: "#d9dcdf", pattern: "none" }, tagCustom: ["#eceeef", "#131415", "#7d848a"] }),
+    Object.assign({}, SPECIAL_BASE, { name: "CHAMPIONS · LIGHT", special: true, mode: "dark", roomMat: "white", wallpaper: specialWp("champions-light"),
+        customScheme: { light: { bg: "#e4e3e1", fg: "#1d1c1b", accent: "#3e3b38" }, dark: { bg: "#1b1a19", fg: "#ecebe9", accent: "#c9c5bf" } },
+        customCase: { base: "#eceae6", accent: "#3e3b38", pattern: "band" }, tagCustom: ["#ffffff", "#2a2826", "#8e877c"] }),
+];
 const PRESET_MAX = 12;
 // a preset's plain keys: [its key (and STATE's), the message that sets it]
 const PRESET_KEYS = [["skin", "skin"], ["floor", "floor"], ["halftone", "halftone"], ["halftoneLevel", "halftone-level"], ["emblem", "emblem"], ["roomMat", "room-mat"],
@@ -230,10 +251,15 @@ const presetMode = p => p.mode === "light" || p.mode === "dark" ? p.mode : null;
 const userPresets = () => { const v = readSettings().stylePresets; return Array.isArray(v) ? v.filter(p => p && typeof p === "object") : []; };
 const builtinPresets = () => PRESETS_BUILTIN.filter(p => listSkins().some(s => s.id === p.skin) && TOKENS.schemes[p.scheme] && (p.tag === "off" || tagFinish(p.tag)));
 // "b:2" / "u:0" -> the preset
-const presetOf = key => (key[0] === "b" ? builtinPresets() : userPresets())[+key.slice(2)] || null;
+const presetOf = key => (key[0] === "b" ? builtinPresets() : key[0] === "s" ? PRESETS_SPECIAL : userPresets())[+key.slice(2)] || null;
+const sameColours = (a, b) => !!a && !!b && ["light", "dark"].every(m => ["bg", "fg", "accent"].every(k => (a[m] || {})[k] === (b[m] || {})[k]));
+const sameCase = (a, b) => !!a && !!b && a.base === b.base && a.accent === b.accent && a.pattern === b.pattern;
 const wpOf = () => Object.assign({}, WP_START, STATE.wallpaper || {});
 function presetMatches(p) {
     if (p.scheme && p.scheme !== SCHEME) return false;
+    if (p.customScheme && !sameColours(p.customScheme, customChoice())) return false;
+    if (p.customCase && !(customCaseMade() && sameCase(p.customCase, customCase()))) return false;
+    if (p.roomLight && p.roomMat && roomLightOf(p.roomMat) !== p.roomLight) return false;
     if (presetMode(p) && (STATE.modeSystem || presetMode(p) !== MODE)) return false;
     if (PRESET_KEYS.some(([k]) => p[k] != null && p[k] !== STATE[k])) return false;
     if (p.tag != null && (p.tag !== STATE.tag || (p.tag === "factory" && p.tagFactory && p.tagFactory !== STATE.tagFactory))) return false;
@@ -253,12 +279,33 @@ function presetScheme(id, mode, tries) {
     if (id !== SCHEME && (!mode || MODE === mode)) send("scheme", id);
     if (tries > 0) window.SetTimeout(() => presetScheme(id, mode, tries - 1), 500);
 }
+// a special preset's case: the custom case made in its colours (unless it already is), then put on
+function presetCase(cc) {
+    if (customCaseMade() && sameCase(cc, customCase())) { if (STATE.skin !== "custom") send("skin", "custom"); return; }
+    const ok = makeCustomCase(cc, (i, n) => { STY.making = [i, n]; window.Repaint(); }, done => {
+        STY.making = null;
+        if (done) {
+            setSetting("customCase", cc, true);
+            listSkins(true);
+            STY.img.delete("custom");
+            if (STATE.skin === "custom") { reloadSkin("custom"); send("skin-reload", "custom"); }
+            else send("skin", "custom");
+        }
+        window.Repaint();
+    });
+    if (ok) { STY.making = [0, 1]; window.Repaint(); }
+}
 function applyPreset(p) {
     if (!p) return;
+    if (p.customScheme && !sameColours(p.customScheme, customChoice())) setCustom(p.customScheme);
+    if (p.customCase) presetCase(p.customCase);
     for (const [k, msg] of PRESET_KEYS) {
+        if (k === "skin" && p.customCase) continue;   // (presetCase puts it on once it is made)
         if (p[k] == null || p[k] === STATE[k] || (k === "skin" && !listSkins().some(s => s.id === p.skin))) continue;
         send(msg, p[k]);
     }
+    // (the room's light is the material's: sent once the material is the preset's, presetAgain otherwise)
+    if (p.roomLight && STATE.roomMat === p.roomMat && roomLightOf(p.roomMat) !== p.roomLight) send("room-light", p.roomLight);
     if (Array.isArray(p.tagCustom)) send("tag-custom", p.tagCustom);
     if (p.tag === "factory" && p.tagFactory) { if (STATE.tag !== "factory" || STATE.tagFactory !== p.tagFactory) send("tag-factory", p.tagFactory); }
     else if (p.tag != null && p.tag !== STATE.tag) send("tag", p.tag);
@@ -266,8 +313,22 @@ function applyPreset(p) {
     const mode = presetMode(p);
     if (mode && (STATE.modeSystem || MODE !== mode)) send("mode-to", mode);
     if (p.scheme && TOKENS.schemes[p.scheme]) presetScheme(p.scheme, mode, 14);
+    // (a change of mode or of the custom colours imports a layout and the panels come back with the state as it was a
+    // moment ago: the plain keys sent again until they hold, a few times)
+    if (mode || p.customScheme || p.roomLight) presetAgain(p, 6);
     STY.edit = null;
     window.Repaint();
+}
+function presetAgain(p, tries) {
+    window.SetTimeout(() => {
+        const left = PRESET_KEYS.filter(([k]) => p[k] != null && p[k] !== STATE[k] && !(k === "skin" && (p.customCase || !listSkins().some(s => s.id === p.skin))));
+        for (const [k, msg] of left) send(msg, p[k]);
+        const mode = presetMode(p), off = mode && (STATE.modeSystem || MODE !== mode);
+        if (off) send("mode-to", mode);
+        const lightOff = p.roomLight && p.roomMat && roomLightOf(p.roomMat) !== p.roomLight;
+        if (lightOff && STATE.roomMat === p.roomMat) send("room-light", p.roomLight);
+        if ((left.length || off || lightOff) && tries > 1) presetAgain(p, tries - 1);
+    }, 1200);
 }
 function savePreset() {
     const list = userPresets();
@@ -293,6 +354,15 @@ function drawPresets(gr, g, y) {
     y += dp(30);
     B.forEach((p, i) => { const [x, dy] = at(i); drawPresetCard(gr, p, "b:" + i, x, y + dy, g.cw, h); });
     y += Math.ceil(B.length / g.cols) * (h + g.gap) + dp(10);
+    // WORLDS 2026: the special presets, with a note of what they are
+    label(gr, `${tr("WORLDS 2026 · SPECIAL")}  ·  ${pad(PRESETS_SPECIAL.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
+    y += dp(22);
+    label(gr, tr("League of Legends World Championship special presets: applying one replaces your custom colours and custom case."), st(STY_ST.tiny, C["text-muted"]), g.m, y);
+    y += dp(18);
+    label(gr, tr("Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop."), st(STY_ST.tiny, C["text-muted"]), g.m, y);
+    y += dp(24);
+    PRESETS_SPECIAL.forEach((p, i) => { const [x, dy] = at(i); drawPresetCard(gr, p, "s:" + i, x, y + dy, g.cw, h); });
+    y += Math.ceil(PRESETS_SPECIAL.length / g.cols) * (h + g.gap) + dp(10);
     label(gr, `${tr("YOURS")}  ·  ${pad(U.length, 2)} / ${PRESET_MAX}`, st(STY_ST.sec, C.fg), g.m, y);
     y += dp(30);
     U.forEach((p, i) => { const [x, dy] = at(i); drawPresetCard(gr, p, "u:" + i, x, y + dy, g.cw, h); });
@@ -314,10 +384,19 @@ function drawPresets(gr, g, y) {
 }
 // a preset's card: its case on its page colour (in its mode, else the one in use), three of its colours, its name
 function drawPresetCard(gr, p, key, x, y, w, h) {
-    const mh = h - dp(40), sc = TOKENS.schemes[p.scheme] || TOKENS.schemes[SCHEME], t = sc[presetMode(p) || MODE];
+    const mh = h - dp(40), sc = TOKENS.schemes[p.scheme] || TOKENS.schemes[SCHEME];
+    // (a special one: its own colours, its picture for the preview)
+    const t = p.customScheme ? Object.assign({ panel: p.customScheme[presetMode(p) || MODE].bg }, p.customScheme[presetMode(p) || MODE]) : sc[presetMode(p) || MODE];
     const inUse = presetMatches(p), hov = STY.hover && STY.hover.kind === "preset" && STY.hover.id === key;
     gr.FillSolidRect(x, y, w, mh, argb(t.bg));
-    const s = listSkins().find(k => k.id === p.skin), e = s && s.dir ? skinImages(s) : null;
+    const s = p.special ? null : listSkins().find(k => k.id === p.skin), e = s && s.dir ? skinImages(s) : null;
+    const pic = p.special ? wpThumb(p.wallpaper.path.slice(6), false) : null;
+    if (pic) {
+        const k = Math.max(w / pic.Width, mh / pic.Height), dw = pic.Width * k, dh = pic.Height * k;
+        gr.PushClip(x, y, w, mh);
+        gr.DrawImage(pic, x + (w - dw) / 2, y + (mh - dh) / 2, dw, dh, 0, 0, pic.Width, pic.Height);
+        gr.PopClip();
+    }
     if (e && e.array) {
         const k = Math.min((w - dp(16)) / e.array.Width, (mh - dp(8)) / e.array.Height) * 1.35, dw = e.array.Width * k, dh = e.array.Height * k;
         gr.PushClip(x, y, w, mh);
@@ -828,8 +907,8 @@ function drawWallpaperBuiltIns(gr, x0, y, w) {
     return end;
 }
 // a built-in picture's thumbnail (assets/wallpapers/thumbs) in the mode's version: null while it loads
-function wpThumb(id) {
-    const k = `${id}-${MODE}`;
+function wpThumb(id, byMode = true) {
+    const k = byMode ? `${id}-${MODE}` : id;
     if (STY.thumbs.has(k)) return STY.thumbs.get(k);
     STY.thumbs.set(k, null);
     const g = STY.gen;

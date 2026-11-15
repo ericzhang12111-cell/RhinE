@@ -318,6 +318,8 @@ function on_paint(gr) {
     gr.FillSolidRect(0, 0, W, H, C.bg);
     // the wallpaper (lib/wallpaper.js) where it is on: LABEL_LIVE then also tells the views they draw over it
     LABEL_LIVE = STATE.view !== "style" && wallpaperOn(STATE.view) && drawWallpaper(gr, "stage", 0, 0, W, H);
+    // (the track card's column plain where the wallpaper says so)
+    if (LABEL_LIVE && STATE.view === "lyrics" && typeof wallpaperCard === "function" && !wallpaperCard()) gr.FillSolidRect(cardX() - dp(24), 0, W - cardX() + dp(24), H, C.bg);
     if (STATE.mini) { drawMini(gr); return; }
     try {
         if (STATE.view === "archive") AR.layout === "grid" ? drawGrid(gr) : roomOn() ? drawRoom(gr) : drawArchive(gr);

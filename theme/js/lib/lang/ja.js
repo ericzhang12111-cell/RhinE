@@ -344,6 +344,6 @@ I18N["ja"] = {
     "Add folder to playlist": "フォルダーをプレイリストに追加", "Properties (edit tags)…": "プロパティ（タグを編集）…",
     "Artist file: look artists up online": "アーティストファイル：オンラインで検索",
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "オンライン検索はオフです（右クリックでオンにできます）。アルバムのファイルと同じ場所にある artist.txt がここに表示され、artist.jpg が写真になります。",
-    "CASE & COLOUR": "ケースと配色", "PRESETS": "プリセット", "YOURS": "マイプリセット", "SAVE THIS LOOK": "この外観を保存", "Name of the preset": "プリセットの名前", "Save current look": "現在の外観を保存", "PRESET": "プリセット",
+    "CASE & COLOUR": "ケースと配色", "PRESETS": "プリセット", "WORLDS 2026 · SPECIAL": "WORLDS 2026 · 特別プリセット", "League of Legends World Championship special presets: applying one replaces your custom colours and custom case.": "リーグ・オブ・レジェンド世界大会の特別プリセットです。適用するとカスタム配色とカスタムケースが置き換わります。", "Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop.": "背景は Image-2.6-Sunburst で生成し、Photoshop でレイアウトしました。", "YOURS": "マイプリセット", "SAVE THIS LOOK": "この外観を保存", "Name of the preset": "プリセットの名前", "Save current look": "現在の外観を保存", "PRESET": "プリセット",
     "Colour": "カラー", "Black": "ブラック", "White": "ホワイト", "Follow light / dark": "ライト / ダークに合わせる",
 };

@@ -345,6 +345,6 @@ I18N["de"] = {
     "Add folder to playlist": "Ordner zur Playlist hinzufügen", "Properties (edit tags)…": "Eigenschaften (Tags bearbeiten)…",
     "Artist file: look artists up online": "Künstlerakte: Künstler online nachschlagen",
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "Die Online-Suche ist aus (Rechtsklick schaltet sie ein). Eine Textdatei artist.txt neben den Dateien des Albums wird hier gezeigt, artist.jpg als Bild.",
-    "CASE & COLOUR": "HÜLLE & FARBE", "PRESETS": "VORGABEN", "YOURS": "EIGENE", "SAVE THIS LOOK": "DIESEN LOOK SPEICHERN", "Name of the preset": "Name der Vorgabe", "Save current look": "Aktuellen Look speichern", "PRESET": "VORGABE",
+    "CASE & COLOUR": "HÜLLE & FARBE", "PRESETS": "VORGABEN", "WORLDS 2026 · SPECIAL": "WM 2026 · SONDERVORGABEN", "League of Legends World Championship special presets: applying one replaces your custom colours and custom case.": "Sondervorgaben zur League-of-Legends-Weltmeisterschaft: eine davon ersetzt deine eigenen Farben und deine eigene Hülle.", "Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop.": "Hintergründe mit Image-2.6-Sunburst erzeugt, in Photoshop gesetzt.", "YOURS": "EIGENE", "SAVE THIS LOOK": "DIESEN LOOK SPEICHERN", "Name of the preset": "Name der Vorgabe", "Save current look": "Aktuellen Look speichern", "PRESET": "VORGABE",
     "Colour": "Farbe", "Black": "Schwarz", "White": "Weiß", "Follow light / dark": "Wie Hell / Dunkel",
 };

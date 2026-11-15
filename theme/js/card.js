@@ -28,7 +28,7 @@ function on_paint(gr) {
     hits.clear();
     gr.FillSolidRect(0, 0, W, H, C.bg);
     if (STATE.view !== "playlists") return;
-    if (wallpaperOn("playlists")) drawWallpaper(gr, "card", 0, 0, W, H);   // round the card (lib/wallpaper.js)
+    if (wallpaperOn("playlists") && (typeof wallpaperCard !== "function" || wallpaperCard())) drawWallpaper(gr, "card", 0, 0, W, H);   // round the card (lib/wallpaper.js)
     const [x, y, w, h] = cardRect();
     if (w < dp(200) || h < dp(200)) return;
     gr.PushTransform();

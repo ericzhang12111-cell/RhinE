@@ -343,6 +343,6 @@ I18N["ko"] = {
     "Add folder to playlist": "폴더를 재생목록에 추가", "Properties (edit tags)…": "속성 (태그 편집)…",
     "Artist file: look artists up online": "아티스트 파일: 온라인에서 찾기",
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "온라인 검색이 꺼져 있습니다(우클릭으로 켤 수 있습니다). 앨범 파일 옆의 artist.txt가 여기에 표시되고, artist.jpg가 사진으로 쓰입니다.",
-    "CASE & COLOUR": "케이스와 색상", "PRESETS": "프리셋", "YOURS": "내 프리셋", "SAVE THIS LOOK": "이 모양 저장", "Name of the preset": "프리셋 이름", "Save current look": "현재 모양 저장", "PRESET": "프리셋",
+    "CASE & COLOUR": "케이스와 색상", "PRESETS": "프리셋", "WORLDS 2026 · SPECIAL": "WORLDS 2026 · 특별 프리셋", "League of Legends World Championship special presets: applying one replaces your custom colours and custom case.": "리그 오브 레전드 월드 챔피언십 특별 프리셋입니다. 적용하면 사용자 색상과 사용자 케이스가 바뀝니다.", "Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop.": "배경은 Image-2.6-Sunburst로 생성하고 Photoshop에서 편집했습니다.", "YOURS": "내 프리셋", "SAVE THIS LOOK": "이 모양 저장", "Name of the preset": "프리셋 이름", "Save current look": "현재 모양 저장", "PRESET": "프리셋",
     "Colour": "색상", "Black": "블랙", "White": "화이트", "Follow light / dark": "라이트 / 다크에 맞춤",
 };
