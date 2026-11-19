@@ -9,7 +9,7 @@
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
 
 const M = TOKENS.metrics;
-const VIEWS = ["archive", "playlists", "lyrics", "signal", "style", "online"];
+const VIEWS = ["archive", "playlists", "lyrics", "signal", "online", "style"];
 // z-order: index 0 is the bottom window; fx (the transition overlay) must stay on top
 const CHILDREN = ["header", "transport", "stage", "manager", "head", "playlist", "card", "tip", "fx"];
 const PRESETS = ["album", "index"];
@@ -53,6 +53,7 @@ STATE.mini = getSetting("miniPlayer", false) === true;
 STATE.miniCorner = ["tl", "tr", "bl", "br"].includes(getSetting("miniCorner", "br")) ? getSetting("miniCorner", "br") : "br";
 STATE.miniShow = getSetting("miniShow", "lrc") === "trk" ? "trk" : "lrc";
 STATE.miniSkin = ["dark", "white", "auto"].includes(getSetting("miniSkin", "dark")) ? getSetting("miniSkin", "dark") : "dark";
+STATE.miniShape = MINI_SIZES[getSetting("miniShape", "wide")] ? getSetting("miniShape", "wide") : "wide";
 REDUCE_MOTION = STATE.reduce;
 RELOAD_ON_LANG = false;   // see lib/bus.js
 const P = {};          // child name -> PanelObject
@@ -64,7 +65,7 @@ const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, 
                                    halftone: STATE.halftone, halftoneLevel: STATE.halftoneLevel, emblem: STATE.emblem, tag: STATE.tag,
                                    tagShape: STATE.tagShape, tagColours: STATE.tagColours, tagCustom: STATE.tagCustom, tagOpacity: STATE.tagOpacity, tagBody: STATE.tagBody, tagFactory: STATE.tagFactory, font: STATE.font,
                                    sides: STATE.sides, modeSystem: STATE.modeSystem, borderless: STATE.borderless, roomMat: STATE.roomMat, roomLight: STATE.roomLight,
-                                   mini: STATE.mini, miniCorner: STATE.miniCorner, miniShow: STATE.miniShow, miniSkin: STATE.miniSkin });
+                                   mini: STATE.mini, miniCorner: STATE.miniCorner, miniShow: STATE.miniShow, miniSkin: STATE.miniSkin, miniShape: STATE.miniShape });
 
 // One-off: settings written before this change kept three switches for the lyrics (lyricsOnline, lyricsNetease,
 // lyricsTranslate). They map onto lyricsSource and lyricsTrans, and lyricsNeteaseAuto keeps the permission the old
@@ -228,7 +229,7 @@ function toggleMode() {
     if (fx && fx.kind === "mode") return;
     if (!startFx("mode")) switchMode();
 }
-// LIGHT, DARK or SYSTEM (05 STYLE › MODE, or MENU › Audio Archive): Columns UI's Light, Dark or Use system setting.
+// LIGHT, DARK or SYSTEM (06 STYLE › MODE, or MENU › Audio Archive): Columns UI's Light, Dark or Use system setting.
 // With SYSTEM, Windows' light / dark decides, and each of its switches reaches the theme as a change of colours (#46).
 // The sweep runs only when the colours change now.
 function setModeTo(v) {
@@ -245,7 +246,7 @@ function readModeSystem() {
     broadcast();
 }
 
-// BORDERLESS (05 STYLE › DISPLAY › WINDOW, or F11): foobar2000's main window without its title bar and frame, over the
+// BORDERLESS (06 STYLE › DISPLAY › WINDOW, or F11): foobar2000's main window without its title bar and frame, over the
 // whole monitor it is on. A script cannot restyle a window, so tools\window.ps1 does it, given this panel's window; it
 // keeps the window's place for the way back. Applied again at every start while it is on.
 // window.ps1 stays running beside foobar2000 once started (-Serve, one per window, gone with it) and takes its orders
@@ -276,9 +277,10 @@ function winCommand(cmd) {
     } catch (e) { console.log("audio-archive window: " + e); }
 }
 // the mini player over borderless over the normal window; the mini one in its corner (or where it was dragged; snap: the
-// corner again), 560 × 136 dp (mini.js)
+// corner again), at its shape's size in dp (MINI_SIZES, lib/bus.js)
+const miniWindow = () => `mini ${STATE.miniCorner} ${miniDims().join("x")}`;
 function applyWindow(mini = STATE.mini, snap = false) {
-    winCommand(mini ? `mini ${STATE.miniCorner} 560x136${snap ? " snap" : ""}` : STATE.borderless ? "borderless" : "window");
+    winCommand(mini ? miniWindow() + (snap ? " snap" : "") : STATE.borderless ? "borderless" : "window");
 }
 // the mini player on or off (on: true / false, or none to switch): the stage panel alone in a small window on top
 // The window first (tools/window.ps1, ≈ 0.4 s), the layout once the window has its new size (on_size): switched at once,
@@ -302,8 +304,9 @@ function miniSettle() {
     broadcast();
     layout();
 }
-// the window at the size it was asked for: about the mini player's (560 dp wide), or larger
-const miniSized = (mini, w) => mini ? w <= dp(560) * 1.15 : w > dp(560) * 1.15;
+// the window at the size it was asked for: about the mini player's (at most its widest shape's width), or larger
+const MINI_MAX_W = Math.max(...Object.values(MINI_SIZES).map(s => s[0])) * 1.15;
+const miniSized = (mini, w) => mini ? w <= dp(MINI_MAX_W) : w > dp(MINI_MAX_W);
 // on: true / false, or none (a message without data comes as null) to switch
 function toggleBorderless(on) {
     STATE.borderless = on == null ? !STATE.borderless : !!on;
@@ -373,7 +376,9 @@ onMessage("mini", toggleMini);
 onMessage("mini-corner", c => { if (["tl", "tr", "bl", "br"].includes(c)) { STATE.miniCorner = c; setSetting("miniCorner", c); broadcast(); if (STATE.mini) applyWindow(true, true); } });
 // the mini player dragged by its plate (mini.js): the button is down now, window.ps1 hands the window to Windows' move
 // (no helper yet: it is started, for the next drag)
-onMessage("window-drag", () => { if (!STATE.mini) return; if (winServing()) winCommand("drag"); else winCommand("mini " + STATE.miniCorner + " 560x136"); });
+onMessage("window-drag", () => { if (!STATE.mini) return; if (winServing()) winCommand("drag"); else winCommand(miniWindow()); });
+// a new shape: the window is sized again (window.ps1 keeps a dragged one's edges nearest its corner where they were)
+onMessage("mini-shape", v => { STATE.miniShape = MINI_SIZES[v] ? v : "wide"; setSetting("miniShape", STATE.miniShape); broadcast(); if (STATE.mini) applyWindow(true); });
 onMessage("mini-skin", v => { STATE.miniSkin = ["dark", "white", "auto"].includes(v) ? v : "dark"; setSetting("miniSkin", STATE.miniSkin); broadcast(); });
 onMessage("mini-show", v => { STATE.miniShow = v === "trk" ? "trk" : "lrc"; setSetting("miniShow", STATE.miniShow); broadcast(); });
 onMessage("scheme", setScheme);
@@ -422,7 +427,7 @@ onMessage("tag-shape", v => { STATE.tagShape = pickTagShape(v); setSetting("tagS
 onMessage("tag-colours", v => { STATE.tagColours = pickTagColours(v); setSetting("tagColours", STATE.tagColours); broadcast(); });
 onMessage("tag-body", v => { STATE.tagBody = pickTagBody(v); setSetting("tagBody", STATE.tagBody); broadcast(); });
 onMessage("tag-opacity", v => { STATE.tagOpacity = pickTagOpacity(v); setSetting("tagOpacity", STATE.tagOpacity); broadcast(); });
-// a factory tag picked in 05 STYLE: it is put in use
+// a factory tag picked in 06 STYLE: it is put in use
 onMessage("tag-factory", v => { STATE.tagFactory = pickTagFactory(v); STATE.tag = "factory"; setSetting("tagFactory", STATE.tagFactory); setSetting("tag", STATE.tag); broadcast(); });
 onMessage("tag-custom", v => { STATE.tagCustom = Array.isArray(v) ? v : null; setSetting("tagCustom", STATE.tagCustom, true); broadcast(); });
 onMessage("font", v => { STATE.font = pickFont(v); setSetting("font", STATE.font); setFontFamily(STATE.font); broadcast(); layout(); });
@@ -433,7 +438,7 @@ onMessage("sides", d => {
     broadcast();
     layout();
 });
-// the wallpaper's settings, changed in part (05 STYLE)
+// the wallpaper's settings, changed in part (06 STYLE)
 onMessage("wallpaper", w => { STATE.wallpaper = pickWallpaper(Object.assign({}, STATE.wallpaper, w)); setSetting("wallpaper", STATE.wallpaper, true); broadcast(); });
 onMessage("grain", on => { STATE.grain = !!on; setSetting("grain", STATE.grain); broadcast(); window.Repaint(); });
 
@@ -444,7 +449,7 @@ COMMANDS.forEach(([name], i) => fb.RegisterMainMenuCommand(i, name, name));
 function on_main_menu_dynamic(id) { if (COMMANDS[id]) COMMANDS[id][1](); }
 
 function on_key_down(vk) {
-    if (vk >= 0x31 && vk <= 0x35) setView(VIEWS[vk - 0x31]);
+    if (vk >= 0x31 && vk <= 0x36) setView(VIEWS[vk - 0x31]);
     else if (vk === 0x54) toggleMode();
     else if (vk === 0x50) togglePreset();
     else if (vk === 0x42 && !fx) startBoot();

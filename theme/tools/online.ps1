@@ -1,9 +1,9 @@
 <#
-  Installs the online bridge (06 ONLINE: NetEase Cloud Music) beside the foobar2000 profile:
+  Installs the online bridge (05 ONLINE: NetEase Cloud Music) beside the foobar2000 profile:
     <profile>\audio-archive-online\node\   Node.js, portable (downloaded, checked against its pinned SHA-256)
     <profile>\audio-archive-online\app\    bridge.js and its libraries (theme\online\, npm ci from the lockfile)
     <profile>\audio-archive-online\data\   what the bridge keeps (the login, encrypted for this Windows user)
-  The theme runs it from 06 ONLINE (CONNECT); it can also be run by hand:
+  The theme runs it from 05 ONLINE (CONNECT); it can also be run by hand:
     powershell -ExecutionPolicy Bypass -File online.ps1 -Profile "<profile path>" [-Node "<node.exe>"]
   -Node uses a Node.js already installed instead of downloading one. -Remove takes the app and Node away (the data
   folder, with the login, too).

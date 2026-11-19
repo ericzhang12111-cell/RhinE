@@ -69,9 +69,9 @@ Running it again keeps the foobar2000 folder and installs the theme again.
 
 | | Mouse | Key (any of the theme's panels focused) |
 |---|---|---|
-| Archive / Playlists / Lyrics / Signal / Style view | click `01` – `05` in the header | `1` – `5` |
-| Light / dark | `MODE` in `05 STYLE` (`LIGHT` / `DARK`, or `SYSTEM`, which follows Windows' light / dark), or `MENU › Audio Archive` | `T` |
-| Borderless full screen: no title bar or frame, over the whole monitor (the taskbar too) | `WINDOW` › `BORDERLESS` under `DISPLAY` in `05 STYLE`, or `MENU › Audio Archive › Borderless full screen`; it stays on at the next start until you switch it off, and the window then goes back where it was | `F11` |
+| Archive / Playlists / Lyrics / Signal / Online / Style view | click `01` – `06` in the header | `1` – `6` |
+| Light / dark | `MODE` in `06 STYLE` (`LIGHT` / `DARK`, or `SYSTEM`, which follows Windows' light / dark), or `MENU › Audio Archive` | `T` |
+| Borderless full screen: no title bar or frame, over the whole monitor (the taskbar too) | `WINDOW` › `BORDERLESS` under `DISPLAY` in `06 STYLE`, or `MENU › Audio Archive › Borderless full screen`; it stays on at the next start until you switch it off, and the window then goes back where it was | `F11` |
 | foobar2000's Preferences | `PREFERENCES` in the header (just the gear on narrow windows) | — |
 | DSP: presets, equalizer, DSP Manager | `DSP` in the transport (it shows the active DSPs, or `OFF`) | — |
 | Visualizations (foobar2000's own and those of installed components, each in its own window) | `VISUALIZATIONS` at the top right of the Signal view | — |
@@ -87,13 +87,14 @@ Running it again keeps the foobar2000 folder and installs the theme again.
 | foobar2000's main menu | `MENU` (top right) | — |
 | Reduce motion, grain | `MENU › Audio Archive › Reduce motion` / `Grain texture` | — |
 | Playlists: switch | click a row in the playlist manager | `↑` `↓` (manager) |
-| Playlists: new, rename, duplicate, remove | `+ NEW PLAYLIST`; double-click a row (or the name in the head) to rename; right-click a row | `Ctrl+N`, `F2`, `Delete` (manager) |
+| Playlists: play, new, rename, duplicate, remove | double-click a row to play it from the top (from a random track under Random or Shuffle (tracks), from the first track of a random album or folder under Shuffle (albums / folders); the playlist already playing goes on, a paused one resumes); `+ NEW PLAYLIST`; double-click the name in the head to rename; right-click a row for `Play playlist`, `Rename…` and the rest | `Enter` plays, `Ctrl+N`, `F2` renames, `Delete` (manager) |
 | Playlists: reorder | drag a row in the manager | — |
 | Playlists: find a track | hover the track rail for its card; click to scroll there, double-click to play | — |
 | Playlists: sort | click a column title in the playlist head (again: reversed; *Edit › Undo* restores) | — |
 | Play from the queue | click a row under `QUEUE / NEXT` on the profile card (Playlists and Lyrics views) | — |
 | Signal display: 3D ring, 2D ring or Classic | `MODEL 3D / 2D / CLASSIC` at the top right | `R` cycles (Signal view) |
-| Seek ±5 s | click the signal trace to jump (Signal view) | `←` `→` (Lyrics and Signal views) |
+| Seek ±5 s | click the signal trace to jump (Signal view; with the level history along the bottom, the thin rule under it) | `←` `→` (Lyrics and Signal views) |
+| Signal view panels: under the ring (spectrum, lyrics, level meters, stereo scope or nothing) and along the bottom (signal trace, lyrics, level history or nothing) | `PANELS` at the top right (3D and 2D), or right-click the Signal view | — |
 | Lyrics: read ahead or back | the wheel over the lyrics; the view returns to the sung line 5 s later | — |
 | Lyrics: play from a line | click the line | — |
 | Lyrics source: AUTO, LOCAL, LRCLIB or NETEASE | `SOURCE` under the Lyrics view's title, or `MENU › Audio Archive › Lyrics source` (see *Lyrics view* below) | — |
@@ -104,11 +105,12 @@ Running it again keeps the foobar2000 folder and installs the theme again.
 | Archive: add music | `+ ADD MUSIC FOLDER` while the Archive is empty (foobar2000's *Media Library* page) | — |
 | Archive: album / row | hover and click a case (on any shelf: a case on another shelf switches to it); `↑` `↓` beside the album index; `←` `→` beside the row name; wheel | `↑` `↓` album, `←` `→` row, `PgUp` `PgDn` `Home` `End` (Archive) |
 | Archive: the two shelves in front stay in view, see-through, to click back to | right-click › `Show the shelves in front (see-through)` (off by default) | — |
-| Archive: frosted glass on the cases not selected (their covers blurred) or clear glass on every case | right-click › `Frosted glass on the cases`, or `GLASS` under `DISPLAY` › `ARCHIVE` in `05 STYLE` (frosted by default) | — |
-| Archive: inspect the album | click the selected case; while the playing album is inspected, the next album that plays slides in (showing `TRACKS`: the next track) | `Enter`; `Esc` or click to return |
-| Archive: play / open the album | `PLAY ALBUM` / `OPEN ALBUM` | `Space` plays (or pauses it if it is playing); `Enter` while inspecting opens |
-| Archive: group by genre, decade, artist initial, folder, favourites or none | `GROUP` in the Archive's top bar (`FAV` puts the favourites first; `FOLDER` puts each case on the shelf of the folder it lies in, named by its path from the media library folder), or right-click | — |
-| Archive: sort albums by artist, title, year or date added | `SORT` in the Archive's top bar, or right-click | — |
+| Archive: frosted glass on the cases not selected (their covers blurred) or clear glass on every case | right-click › `Frosted glass on the cases`, or `GLASS` under `DISPLAY` › `ARCHIVE` in `06 STYLE` (frosted by default) | — |
+| Archive: inspect the album | click the selected case (it is outlined under the mouse too); while the playing album is inspected, the next album that plays slides in (showing `TRACKS`: the next track) | `Enter`; `Esc` or click to return |
+| Archive: play / open the album | double-click a case (array and room; the album already playing goes on, a paused one resumes), or `PLAY ALBUM` / `OPEN ALBUM` (they work while inspecting too) | `Space` plays (or pauses it if it is playing); `Enter` while inspecting opens |
+| Archive: group by genre, decade, artist, artist initial, folder, favourites, rating or none | `GROUP` in the Archive's top bar, or right-click. `ARTIST`: one group per album artist (the `ALBUM ARTIST` tag, as MusicBrainz Picard writes it; without one, the artist of most of the album's tracks, guest credits such as "feat." left out), however its albums spell it, in sort-name order (`ALBUMARTISTSORT` / `ARTISTSORT`, else a leading "The" set aside). `A–Z`: the first letter of that sort name. `FOLDER` puts each case on the shelf of the folder it lies in, named by that folder (the list of shelves shows the path from the media library folder). `FAV` puts the favourites first. `RATING`: 5 to 1, then the albums not rated (an album's rating is the mean of its rated tracks) | — |
+| Archive: one artist or one folder per shelf | right-click › `One shelf per artist or folder` (on by default): grouped by `ARTIST` or `FOLDER`, every group starts a shelf of its own; off, small groups share a shelf as the other groupings do | — |
+| Archive: sort albums by artist, title, year, date added or rating | `SORT` in the Archive's top bar, or right-click (artists by their sort name; `RATING` puts the highest rated first and the ones not rated last) | — |
 | Archive: next shelf (behind, on the left) / previous shelf (in front) | `← SHELF 04 / 31 →` under the array, or `Shift` + wheel (a sideways wheel too; in the grid it jumps a section) | `←` `→` |
 | Archive: pick an album from the index under the shelf | hover it to see the album's name; click, or hold and drag along it and release | — |
 | Archive: every track as its own case / tile (with its album's cover) | `SHOW [ALBUMS | TRACKS | FOLDERS]` in the Archive's top bar, or right-click | — |
@@ -131,20 +133,20 @@ Running it again keeps the foobar2000 folder and installs the theme again.
 | Archive: case array or cover grid | `LAYOUT ARRAY / GRID` at the top right of the Archive, or right-click | `G` |
 | Archive grid: covers per page (10, 36, 50, 75, 100, 200) | `PER PAGE` in the grid's bar, or right-click | — |
 | Archive: look again for covers of albums without artwork | right-click › `Re-index library` | — |
-| Archive grid: select / play / open | click a cover / double-click / `OPEN ALBUM` | arrows, `PgUp` `PgDn` `Home` `End`; `Space` plays, `Enter` opens |
+| Archive grid: select / play / open | click a cover / double-click (the album already playing goes on, a paused one resumes) / `OPEN ALBUM` | arrows, `PgUp` `PgDn` `Home` `End`; `Space` plays, `Enter` opens |
 | Archive grid: scroll | the wheel, or drag the scroll bar at its right edge (a click on the bar jumps there) | `PgUp` `PgDn` |
 | Case skin | `MENU › Audio Archive › Case skin`, or right-click the Archive | — |
-| Your own case | the `CUSTOM` card under `CASE SKIN` in `05 STYLE`: a base colour, an accent and a pattern (stripes, blocks or an edge band), then `MAKE THIS CASE` | — |
-| Wallpaper | `WALLPAPER ›` under `DISPLAY` in `05 STYLE`: one of the four pictures under `COMES WITH THE THEME` (Topography, Streams, Print, Survey, each in a dark and a light version that follows the mode) or a picture of your own, behind the views you pick (Archive, Playlists, Lyrics, Signal), clear, frosted or as a halftone, with a light, medium or strong veil | — |
-| Title tag: the song's title printed on a rendered tag on the signal profile card and the album file | the `TITLE TAG` cards in `05 STYLE`: a finish (plastic, paper, brushed metal, translucent, transparent, Tide or Aurora glass) or `OFF`; hover one for a preview. `FACTORY` opens tags rendered in real materials, each in its own colours (kraft and manila card, enamelled steel, anodised aluminium, leather, carbon fibre, bamboo, brass) on the right: click one to use it; a mark shows the ones suggested for your colour scheme and case. Under `DISPLAY` › `TITLE TAG`: `TAG SHAPE`, `TAG COLOURS` (the scheme's, the case's or your own), `TAG BODY` and `TAG OPACITY` (the factory tags keep their own colours) | — |
-| Font: Geist Mono, Oxanium or Chakra Petch | `FONT` under `DISPLAY` in `05 STYLE` (the native playlist keeps its own font) | — |
-| Header emblem: the Möbius ring or nested triangles | `EMBLEM` under `DISPLAY` in `05 STYLE` | — |
-| Halftone dots on the album file and the signal profile card | `HALFTONE` under `DISPLAY` in `05 STYLE`: off, along the bottom (fading upwards) or into the lower right corner; `DOTS`: faint, medium or strong | — |
-| Colour scheme (ARCHIVE, HAZARD, FLARE, FIELD, COLD FRONT, HEARTH, LIVEWIRE, MATCHA) | `MENU › Audio Archive › Colour scheme`, or the `05 STYLE` view | — |
-| Your own colour scheme | the `CUSTOM` card in `05 STYLE`: pick the page, text and accent for light and dark; the rest follows, with a warning when text is hard to read | — |
-| Style: see and switch skins and schemes | the `05 STYLE` view: hover a card for its preview, click to apply | `5` |
-| Text size (8 – 15, any size: 10 is 100 %), Archive array scale (80 – 130 %), inspection size (100 – 150 %) | `SIZE` (type a number, or − / +, the wheel, `↑` `↓`), `ARRAY` and `INSPECT` under `DISPLAY` in `05 STYLE`, or `MENU › Audio Archive › Text size` (its steps) / `Archive array scale` / `Inspection size` | — |
-| Archive floor: the page colour, a rendered lab deck under the shelves, or REAL STYLE (the Archive as one rendered scene on a walnut desk, always with the FROST case) | `FLOOR` under `DISPLAY` in `05 STYLE`, or `MENU › Audio Archive › Archive floor` | — |
+| Your own case | the `CUSTOM` card under `ARRAY CASE` in `06 STYLE`: a base colour, an accent and a pattern (stripes, blocks or an edge band), then `MAKE THIS CASE` | — |
+| Wallpaper | `WALLPAPER ›` under `DISPLAY` in `06 STYLE`: one of the four pictures under `COMES WITH THE THEME` (Topography, Streams, Print, Survey, each in a dark and a light version that follows the mode) or a picture of your own, behind the views you pick (Archive, Playlists, Lyrics, Signal), clear, frosted or as a halftone, with a light, medium or strong veil | — |
+| Title tag: the song's title printed on a rendered tag on the signal profile card and the album file | the `TITLE TAG` cards in `06 STYLE`: a finish (plastic, paper, brushed metal, translucent, transparent, Tide or Aurora glass) or `OFF`; hover one for a preview. `FACTORY` opens tags rendered in real materials, each in its own colours (kraft and manila card, enamelled steel, anodised aluminium, leather, carbon fibre, bamboo, brass) on the right: click one to use it; a mark shows the ones suggested for your colour scheme and case. Under `DISPLAY` › `TITLE TAG`: `TAG SHAPE`, `TAG COLOURS` (the scheme's, the case's or your own), `TAG BODY` and `TAG OPACITY` (the factory tags keep their own colours) | — |
+| Font: Geist Mono, Oxanium or Chakra Petch | `FONT` under `DISPLAY` in `06 STYLE` (the native playlist keeps its own font) | — |
+| Header emblem: the Möbius ring or nested triangles | `EMBLEM` under `DISPLAY` in `06 STYLE` | — |
+| Halftone dots on the album file and the signal profile card | `HALFTONE` under `DISPLAY` in `06 STYLE`: off, along the bottom (fading upwards) or into the lower right corner; `DOTS`: faint, medium or strong | — |
+| Colour scheme (ARCHIVE, HAZARD, FLARE, FIELD, COLD FRONT, HEARTH, LIVEWIRE, MATCHA) | `MENU › Audio Archive › Colour scheme`, or the `06 STYLE` view | — |
+| Your own colour scheme | the `CUSTOM` card under `COLOUR SCHEME` in `06 STYLE`: pick the page, text and accent for light and dark; the rest follows, with a warning when text is hard to read | — |
+| Style: see and switch the array's cases, the colour schemes and the room's cases | the `06 STYLE` view (pages `ARRAY CASE`, `COLOUR SCHEME`, `ROOM CASE`, `TITLE TAG`, `DISPLAY`, `PRESETS`): hover a card for its preview, click to apply | `6` |
+| Text size (8 – 15, any size: 10 is 100 %), Archive array scale (80 – 130 %), inspection size (100 – 150 %) | `SIZE` (type a number, or − / +, the wheel, `↑` `↓`), `ARRAY` and `INSPECT` under `DISPLAY` in `06 STYLE`, or `MENU › Audio Archive › Text size` (its steps) / `Archive array scale` / `Inspection size` | — |
+| Archive floor: the page colour, a rendered lab deck under the shelves, or REAL STYLE (the Archive as one rendered scene on a walnut desk, always with the FROST case) | `FLOOR` under `DISPLAY` in `06 STYLE`, or `MENU › Audio Archive › Archive floor` | — |
 | Width of the side columns: Playlists' list and card, Lyrics' left column and card, the Archive's album file | drag the column's edge (the cursor turns to ↔); a double-click on the edge gives back the width it came with | — |
 | Interface language: English, 简体中文, 繁體中文, 日本語, 한국어, Français, Deutsch (default: Windows' display language) | `MENU › Audio Archive › Language · 语言 · 語言 · 言語 · 언어 · Langue · Sprache` | — |
 
@@ -155,7 +157,7 @@ it first); the native playlist keeps foobar2000's own keys.
 
 **Light and dark** are Columns UI's mode (*View › Mode*). The theme runs that command by its place in the menu, so it
 also works in translated builds of foobar2000. If the colours still do not change, a message says where to switch the
-mode. `SYSTEM` (`MODE` in `05 STYLE`, or `MENU › Audio Archive › Follow Windows light / dark`) sets it to *Use system
+mode. `SYSTEM` (`MODE` in `06 STYLE`, or `MENU › Audio Archive › Follow Windows light / dark`) sets it to *Use system
 setting*: Windows' own light / dark setting then decides, and the theme follows each of its switches. `T` and
 `LIGHT` / `DARK` set a fixed mode again.
 
@@ -216,20 +218,30 @@ behind. Otherwise graphics only: the ring, whose light pulses spawn on bass onse
 cached in `<profile>\audio-archive-cache\waveform\`. `VISUALIZATIONS` opens foobar2000's own visualizations, and those
 of components you installed, in windows of their own.
 
+`PANELS` (beside it, or a right-click in the view) swaps what the 3D and 2D models show. Under the ring: the
+spectrum, a small lyrics window (the sung line with its karaoke rule, then its translation or romanization, else the
+next line), level meters (left and right, with a held peak and `PEAK` / `RMS` / `CORR` read-outs) or a stereo scope
+(a goniometer between the balance and the stereo correlation; a mono track is a vertical line), or nothing. Along the
+bottom: the signal trace, the lyrics (only the sung line, with a thin rule under it filling up until the next line; click it to play it
+again) or the level history (the last 60 s of peak and RMS level, starting again with each
+track; time played while another view or the mini player was shown is left blank), or nothing. The level history keeps a thin seek rule under it. Plain (unsynced) lyrics show from
+their first line. The choice is kept; CLASSIC is not affected.
+
 **Archive view.** Every album of the media library is one case (or, with `SHOW TRACKS`, every track, with its album's
 cover). An album is the tracks with the same album tag in the same folder (a `CD2` / `Disc 1` folder counts as its
 parent), so tracks with guest artists stay together. With `SHOW FOLDERS` a case is a folder instead: the tracks right
-in it, whatever their album tags. The cases stand on shelves of 20: the groups (genre, decade,
-artist initial or none) follow one another, so every shelf is full; `SORT` orders them by artist, title, year or date
-added. Each shelf keeps its own selection. The file on the right lists the album's tracks: click one to play the album
+in it, whatever their album tags. The cases stand on shelves of 10 to 30: the groups (genre, decade, artist initial,
+rating or none) follow one another, so every shelf is full, while grouped by artist or folder each group has shelves of
+its own; `SORT` orders them by artist, title, year, date added or rating. Each shelf keeps its own selection. The file on the right lists the album's tracks: click one to play the album
 from there. Its second page (the two dots at its bottom, or `L`) lists every track with its rating, so a large library
 can be browsed and rated without opening anything in a playlist. `LAYOUT GRID` shows the same albums as a cover grid. The library is read on a background thread and cached
 in `<profile>\audio-archive-cache\library.db`, so the view appears at once on the next start and follows library
 changes by itself; cover thumbnails are extracted once in the background and cached in
 `<profile>\audio-archive-cache\covers\`. Without media library folders the Archive shows the contents of all
 playlists instead (it says so under the buttons). `PLAY ALBUM` and `OPEN ALBUM` fill one playlist, *Archive · Album*,
-which they reuse. **Case skins** change the look of the specimen cases (Archive and profile cards): the theme ships eleven
-(the `05 STYLE` view shows them all). The Archive keys work when the Archive has keyboard focus (click it once).
+which they reuse, as do the artist page's play button and tracks (Edit › Undo brings back what was in it); the playlist head names it after the album it holds, and the
+manager tags it, like the theme's other own playlists, `THEME`. **Case skins** change the look of the specimen cases (Archive and profile cards): the theme ships eleven
+(the `06 STYLE` view shows them all). The Archive keys work when the Archive has keyboard focus (click it once).
 
 **Artist files.** The album file's third page, `ARTIST`, shows who made the album, and `OPEN FILE` (`I`) opens the
 artist's file over the shelves, in a room of cases lit from below; its `MAP` places the related artists around the
@@ -248,12 +260,13 @@ days. A text file `artist.txt` or a picture `artist.jpg` / `artist.png` beside t
 the biography or the picture.
 
 **Room layout.** `LAYOUT` › `ROOM` shows the Archive as a rendered room: the cases stand in rows, the selected one is
-lifted out with its cover, and the keys, the wheel and the search move through it as in the other layouts. The
+lifted out with its cover, and the keys, the wheel and the search move through it as in the other layouts (a double-click
+on a case plays its album). The
 material (`FROST`, `GLASS`, `WHITE`, `BLACKOUT`, `RHINE LAB`) and, for `WHITE` and `BLACKOUT`, the lighting are chosen
-in `05 STYLE` › `DISPLAY`. The room is a set of pictures rendered beforehand, so it shows the theme's cases, not a
+in `06 STYLE` › `ROOM CASE`, each card a render of the room in that case and light. The room is a set of pictures rendered beforehand, so it shows the theme's cases, not a
 custom one; `RHINE LAB` exists in light mode.
 
-**06 Online.** NetEase Cloud Music and QQ Music, and playlist import. The view talks to a small local bridge: on first
+**05 Online.** NetEase Cloud Music and QQ Music, and playlist import. The view talks to a small local bridge: on first
 use `INSTALL` downloads Node.js (pinned version, checked against its SHA-256) and the services' community libraries
 into `<profile>\audio-archive-online\` (about 160 MB); it listens on `127.0.0.1` only and runs only while foobar2000
 does. Logging in is a QR code scanned with the service's app: no password is typed anywhere, the session is stored
@@ -265,12 +278,14 @@ lines) is matched against your library by title, artist and length; what is foun
 <name>`, the rest goes to a text list of what is missing. Spotify gives playlists only to an app of your own whose
 owner has Premium (`CONNECT SPOTIFY` asks for its Client ID; no client secret is used).
 
-**Mini player.** `M` (or `MENU › Audio Archive › Mini player`) shrinks the window to a small always-on-top unit:
-cover, the current lyric line (`LRC`) or the track (`TRK`), level meters, a seek line, volume, previous / play /
-next. Drag it by its body; right-click for the corner it snaps to and its colour (black, white, or following light / dark). A double-click, `⤢` or `M` returns to the full
-window.
+**Mini player.** `M` (or `MENU › Audio Archive › Mini player › Open the mini player`) shrinks the window to a small
+always-on-top unit: cover, the current lyric line (`LRC`) or the track (`TRK`), level meters, a seek line, volume,
+previous / play / next. It comes in two shapes, `Wide` (560 × 136) and `Square` (304 × 304, with a large cover and
+the time), each in black or white or following light / dark: pick them under `MENU › Audio Archive › Mini player`
+(before opening it too) or from its right-click menu (`Shape`, `Colour`). Drag it by its body; right-click also for
+the corner it snaps to. A double-click, `⤢` or `M` returns to the full window.
 
-**Presets.** `05 STYLE` › `PRESETS` applies a whole look at once and `SAVE THIS LOOK` keeps your own (up to twelve;
+**Presets.** `06 STYLE` › `PRESETS` applies a whole look at once and `SAVE THIS LOOK` keeps your own (up to twelve;
 the `×` on a saved one deletes it).
 
 **Search** updates an autoplaylist called *Search* 300 ms after you stop typing: every word must appear in the title,
@@ -340,7 +355,7 @@ installed. Columns UI and JSplitter stay installed.
 - The window title bar is the system one.
 - The text size also switches the native playlist's fonts, to the nearest of six sizes (90–150 %); fonts you set by
   hand in *Preferences › Display › Columns UI › Colours and fonts* are replaced the next time the size changes.
-- `06 ONLINE` depends on community libraries for services that change without notice: a service may stop answering
+- `05 ONLINE` depends on community libraries for services that change without notice: a service may stop answering
   until the theme is updated. Songs without a stream for your account or region cannot be played.
 - Archive cover thumbnails are not refreshed when you change an album's artwork; delete
   `<profile>\audio-archive-cache\covers\` to rebuild them. The first start with a large library extracts every
@@ -371,7 +386,7 @@ lyrics from [LRCLIB](https://lrclib.net); artist files from [MusicBrainz](https:
 [Wikipedia](https://www.wikipedia.org) (CC BY-SA), [ListenBrainz](https://listenbrainz.org), [Deezer](https://www.deezer.com),
 NetEase Cloud Music and [Wikimedia Commons](https://commons.wikimedia.org). The artist file's room and map cases are renders of the archive case model
 from [RhineLabUI](https://github.com/LBEILC/RhineLabUI) by LBEILC (MIT, `assets/render/artist/LICENSE-RhineLabUI.txt`).
-`06 ONLINE` reaches NetEase Cloud Music and QQ Music through the community libraries
+`05 ONLINE` reaches NetEase Cloud Music and QQ Music through the community libraries
 [@neteasecloudmusicapienhanced/api](https://www.npmjs.com/package/@neteasecloudmusicapienhanced/api) and
 [@yakult-green-tea/qq-music-api](https://www.npmjs.com/package/@yakult-green-tea/qq-music-api) (both MIT; downloaded from
 npm when the view is first used, with [Node.js](https://nodejs.org), not bundled), an approach learned from

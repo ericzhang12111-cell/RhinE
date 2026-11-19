@@ -1,5 +1,5 @@
 ﻿"use strict";
-// 06 ONLINE's link to the music services (stage.js includes this file; online.js draws the view): the bridge
+// 05 ONLINE's link to the music services (stage.js includes this file; online.js draws the view): the bridge
 // (theme/online/bridge.js, installed by tools/online.ps1 beside the profile) runs on 127.0.0.1 and does the talking to
 // NetEase and QQ Music; this file starts it, asks it, keeps what it answered, fetches the covers, and turns a list of
 // songs into a foobar2000 playlist. One service is shown at a time (ONL.src, the SOURCE cards); each keeps its own
@@ -290,7 +290,7 @@ function onlRememberSearch(q) {
     onlSaveRecent();
 }
 
-// The header's search box, in 06 ONLINE: songs and playlists on the shown service (an empty text: the search goes)
+// The header's search box, in 05 ONLINE: songs and playlists on the shown service (an empty text: the search goes)
 function onlineSearch(text) {
     const q = String(text || "").trim();
     if (!q) { ONL.search = null; if (OV.section === "search") OV.section = "home"; onlRepaint(); return; }

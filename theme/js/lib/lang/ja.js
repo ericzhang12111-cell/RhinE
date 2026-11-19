@@ -96,7 +96,7 @@ I18N["ja"] = {
     "NO COVER": "カバーなし", "END": "終わり",
 
     // style
-    "STYLE  ·  05": "スタイル  ·  05", "CASE SKIN": "ケース", "COLOUR SCHEME": "カラースキーム", "DISPLAY": "表示",
+    "STYLE  ·  06": "スタイル  ·  06", "CASE SKIN": "ケース", "COLOUR SCHEME": "カラースキーム", "DISPLAY": "表示",
     "IN USE": "使用中", "MODE": "モード", "PLAY INTRO": "イントロ再生", "PREVIEW": "プレビュー", "TEXT": "文字", "INSPECT": "詳細",
     "FLOOR": "床", "PLAIN": "無地", "LAB DECK": "ラボデッキ", "Archive floor": "アーカイブの床", "Plain": "無地", "Lab deck": "ラボデッキ", "REAL STYLE": "リアルスタイル", "Real style": "リアルスタイル",
     "CLICK TO SKIP": "クリックでスキップ",
@@ -152,6 +152,23 @@ I18N["ja"] = {
     "Skip this version": "このバージョンをスキップ",
     "Check for updates daily": "毎日アップデートを確認",
     "Check for updates…": "アップデートを確認…",
+    // problem reports (lib/report.js)
+    "Report a problem": "問題を報告",
+    "Report on GitHub…": "GitHub で報告…",
+    "Copy the diagnostics (to paste in a comment or message)": "診断情報をコピー（コメントやメッセージに貼り付け）",
+    "Show the diagnostics…": "診断情報を表示…",
+    "Clear the error log": "エラー記録を消去",
+    "Recent errors: {0}": "最近のエラー：{0} 件",
+    "No errors recorded": "エラーの記録はありません",
+    "Copied to the clipboard:": "クリップボードにコピーしました：",
+    "Could not copy; select the text below and copy it:": "コピーできませんでした。下の文字を選択してコピーしてください：",
+    "ERROR · REPORT": "エラー · 報告",
+    "Dismiss": "閉じる",
+    "Diagnostics (RhinE)": "診断情報（RhinE）",
+    "none": "なし",
+    "What happened?": "何が起きましたか？",
+    "Steps to reproduce": "再現手順",
+    "Diagnostics": "診断情報",
     "RhinE {0} is the latest version.": "RhinE {0} は最新バージョンです。",
     "Could not check for updates: GitHub and jsDelivr did not answer. The releases are at {0}": "アップデートを確認できませんでした：GitHub と jsDelivr が応答しません。リリース：{0}",
     "WALLPAPER": "壁紙",
@@ -324,8 +341,8 @@ I18N["ja"] = {
     "Spotify answers an app of your own only while its owner has Premium. Without it: export the playlist with Exportify (a CSV) or ask Spotify for your data (Playlist1.json), then OPEN A FILE.": "Spotify は、所有者が Premium のアプリにしかデータを返しません。Premium がない場合は、Exportify でプレイリストを書き出す（CSV）か、Spotify にデータを請求して（Playlist1.json）、「ファイルを開く」から読み込んでください。",
     "Connect Spotify first (below), or open a file exported from it: Exportify's CSV or Spotify's own Playlist1.json.": "先に下で Spotify に接続するか、Spotify から書き出したファイル（Exportify の CSV、Spotify の Playlist1.json）を開いてください。", "Spotify did not give the playlist: {0}": "Spotify がプレイリストを返しませんでした：{0}", "Spotify did not log in: {0}": "Spotify にログインできませんでした：{0}", "That is not a Client ID (32 letters and digits, from developer.spotify.com › your app).": "Client ID ではありません（developer.spotify.com のアプリにある 32 桁の英数字）。", "Your Spotify app's Client ID (developer.spotify.com › Dashboard › your app; its redirect URI: {0})": "Spotify アプリの Client ID（developer.spotify.com › Dashboard › アプリ。リダイレクト URI：{0}）", "CONNECTED": "接続済み", "CONNECTED AS {0}": "{0} として接続中", "LOG IN IN THE BROWSER …": "ブラウザーでログインしてください …", "DISCONNECT": "接続を解除", "CONNECT SPOTIFY": "SPOTIFY に接続",
     // 2.0: QQ Music
-    "06 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "06 オンラインには小さなローカルブリッジが必要です（Node.js と各音楽サービスのライブラリ、約 160 MB）。", "CONNECT QQ MUSIC": "QQ MUSIC に接続", "SEARCH QQ MUSIC": "QQ MUSIC を検索", "Open the QQ Music app": "QQ Music アプリを開く", "Scan with the app's own scanner": "アプリ内のスキャナーで読み取る", "Open QQ on the phone": "スマートフォンで QQ を開く", "Scan with QQ's scanner": "QQ のスキャナーで読み取る", "Open WeChat on the phone": "スマートフォンで WeChat を開く", "Scan with WeChat's scanner": "WeChat のスキャナーで読み取る", "SCAN WITH": "スキャン方法", "QQ MUSIC APP": "QQ MUSIC アプリ", "WECHAT": "WECHAT",
-    "ONLINE": "オンライン", "Online view": "オンラインビュー", "SEARCH NETEASE": "NETEASE を検索", "ONLINE  ·  06": "オンライン  ·  06",
+    "05 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "05 オンラインには小さなローカルブリッジが必要です（Node.js と各音楽サービスのライブラリ、約 160 MB）。", "CONNECT QQ MUSIC": "QQ MUSIC に接続", "SEARCH QQ MUSIC": "QQ MUSIC を検索", "Open the QQ Music app": "QQ Music アプリを開く", "Scan with the app's own scanner": "アプリ内のスキャナーで読み取る", "Open QQ on the phone": "スマートフォンで QQ を開く", "Scan with QQ's scanner": "QQ のスキャナーで読み取る", "Open WeChat on the phone": "スマートフォンで WeChat を開く", "Scan with WeChat's scanner": "WeChat のスキャナーで読み取る", "SCAN WITH": "スキャン方法", "QQ MUSIC APP": "QQ MUSIC アプリ", "WECHAT": "WECHAT",
+    "ONLINE": "オンライン", "Online view": "オンラインビュー", "SEARCH NETEASE": "NETEASE を検索", "ONLINE  ·  05": "オンライン  ·  05",
     "NOT CONNECTED": "未接続", "COMING": "近日対応", "IMPORT · COMING": "インポート · 近日対応", "SECTION": "セクション", "HOME": "ホーム",
     "LIKED SONGS": "お気に入りの曲", "MY PLAYLISTS": "マイプレイリスト", "SEARCH": "検索", "BRIDGE": "ブリッジ", "ACCOUNT": "アカウント",
     "STANDARD": "標準", "LOG OUT": "ログアウト", "ABSENT": "未インストール", "READY": "準備完了", "ERROR": "エラー", "NOT INSTALLED": "未インストール",
@@ -346,4 +363,19 @@ I18N["ja"] = {
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "オンライン検索はオフです（右クリックでオンにできます）。アルバムのファイルと同じ場所にある artist.txt がここに表示され、artist.jpg が写真になります。",
     "CASE & COLOUR": "ケースと配色", "PRESETS": "プリセット", "WORLDS 2026 · SPECIAL": "WORLDS 2026 · 特別プリセット", "League of Legends World Championship special presets: applying one replaces your custom colours and custom case.": "リーグ・オブ・レジェンド世界大会の特別プリセットです。適用するとカスタム配色とカスタムケースが置き換わります。", "Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop.": "背景は Image-2.6-Sunburst で生成し、Photoshop でレイアウトしました。", "YOURS": "マイプリセット", "SAVE THIS LOOK": "この外観を保存", "Name of the preset": "プリセットの名前", "Save current look": "現在の外観を保存", "PRESET": "プリセット",
     "Colour": "カラー", "Black": "ブラック", "White": "ホワイト", "Follow light / dark": "ライト / ダークに合わせる",
+    // playlists: play on double-click, the theme's own playlists tagged
+    "Play playlist": "このプレイリストを再生", "THEME": "テーマ",
+    // archive: group by artist or rating, sort by rating, one shelf per artist or folder
+    "INITIAL": "頭文字", "Group by artist": "アーティストでグループ化", "Group by rating": "評価でグループ化", "RATING {0}": "評価 {0}",
+    "Rating (highest first)": "評価（高い順）", "One shelf per artist or folder": "アーティスト・フォルダごとに 1 段の棚",
+    // signal: what shows under the ring and along the bottom (PANELS)
+    "PANELS": "パネル", "Under the ring": "メビウスの輪の下", "Along the bottom": "下部", "Spectrum": "スペクトラム", "Lyrics": "歌詞", "Level meters": "レベルメーター", "Stereo scope": "ステレオスコープ",
+    "Signal trace": "シグナル波形", "Level history": "レベル履歴", "LEVEL HISTORY  ·  60 S": "レベル履歴  ·  60 秒", "CORR": "相関", "BALANCE": "バランス", "MONO": "モノラル", "For the 3D and 2D models": "3D・2D モデル用",
+    // mini player: its shape (wide / square), and the MENU entry that opens it
+    "Shape": "形", "Wide": "ワイド", "Square": "スクエア", "Open the mini player": "ミニプレーヤーを開く",
+    // 06 STYLE: ARRAY CASE, COLOUR SCHEME and ROOM CASE as pages of their own (the room's cases as renders)
+    "ARRAY CASE": "配列ケース", "ROOM CASE": "資料室ケース",
+    "Frosted cream polymer, lit from the floor below": "すりガラス調のクリーム色樹脂、床下からの光", "Jade glass, lit from the floor below": "翡翠色のガラス、床下からの光",
+    "Matte white cases under lights of their own: pick one under ROOM LIGHT": "専用の照明があるマットホワイトのケース：「照明」で選べます", "Black cases under lights of their own: pick one under ROOM LIGHT": "専用の照明がある黒いケース：「照明」で選べます",
+    "RHINE LAB's own cases, each with its paper label": "RHINE LAB 専用ケース、それぞれ紙ラベル付き", "There is no light to pick for this case.": "このケースには選べる照明はありません。",
 };

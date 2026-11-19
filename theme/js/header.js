@@ -8,12 +8,12 @@ include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\emblem.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\translate.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\update.js");
 
-const VIEWS = ["archive", "playlists", "lyrics", "signal", "style", "online"];
-// the service 06 ONLINE shows (its SOURCE cards, lib/online.js): what the search box searches there
+const VIEWS = ["archive", "playlists", "lyrics", "signal", "online", "style"];
+// the service 05 ONLINE shows (its SOURCE cards, lib/online.js): what the search box searches there
 let ONLINE_SRC = String(getSetting("onlineSource", "ne"));
 onMessage("online-source", v => { ONLINE_SRC = String(v); window.Repaint(); });
 onMessage("online-search-set", t => { if (STATE.view === "online") { setSearchText(t); window.Repaint(); } });
-const NAV = { archive: ["01", tr("ARCHIVE")], playlists: ["02", tr("PLAYLISTS")], lyrics: ["03", tr("LYRICS")], signal: ["04", tr("SIGNAL")], style: ["05", tr("STYLE")], online: ["06", tr("ONLINE")] };
+const NAV = { archive: ["01", tr("ARCHIVE")], playlists: ["02", tr("PLAYLISTS")], lyrics: ["03", tr("LYRICS")], signal: ["04", tr("SIGNAL")], online: ["05", tr("ONLINE")], style: ["06", tr("STYLE")] };
 const ST = {
     ident: { size: 18.5, weight: 700, track: -.02, fixed: true },   // the wordmark keeps its size at any text size
     spread: { size: 7.5, weight: 500, track: .04, fixed: true },
@@ -31,6 +31,12 @@ const st = (s, colour, bg = C.bg) => Object.assign({ colour, bg }, s);
 let W = 0, H = 0;
 const hits = Hits();
 let hover = null;
+// an error logged by any panel since the report menu was last opened (lib/report.js): a dark plate left of PREFERENCES
+let errChip = errorPending();
+function onErrorLogged() { errChip = errorPending(); window.Repaint(); }
+onMessage("error-logged", onErrorLogged);
+const REPORT_GREEN = argb("#1F9D55"), REPORT_GREEN_DARK = argb("#157A40"), REPORT_INK = argb("#FFFFFF");
+const errChipW = () => errChip ? dp(10) + dp(8) + labelWidth(tr("ERROR · REPORT"), st(ST.menu, 0)) + dp(16) + dp(14) : 0;
 const plate = { x: Spring(0, 14), w: Spring(0, 14), placed: false };
 let navRects = {}, navKey = "";            // view -> [x, w]; the layout they were measured for
 const search = { on: false, timer: 0, caret: true };
@@ -134,7 +140,7 @@ const navItemW = (v, mode) => {
 };
 const navWidth = mode => VIEWS.reduce((a, v) => a + navItemW(v, mode), 0) + dp(6) * (VIEWS.length - 1);
 function headerLayout() {
-    const mw = dp(14) + dp(8) + labelWidth(tr("MENU"), st(ST.menu, 0)), px = W - dp(24) - mw - dp(30) - dp(14);
+    const mw = dp(14) + dp(8) + labelWidth(tr("MENU"), st(ST.menu, 0)), px = W - dp(24) - mw - dp(30) - dp(14) - errChipW();
     const steps = [[true, true, "full"], [true, true, "names"], [true, false, "names"], [false, false, "names"], [false, false, "numbers"]];
     for (const [ident, clk, mode] of steps) {
         const x0 = ident ? dp(352) : dp(140), end = clk ? px - dp(36) - clockWidth() : px - dp(8);
@@ -199,7 +205,7 @@ function drawRight(gr, navEnd, L) {
     const dateText = tr("{0} · {1} {2} {3}", days[now.getDay()], pad(now.getDate(), 2), months[now.getMonth()], now.getFullYear());
     const cw = Math.max(labelWidth("00:00:00", st(ST.time, 0)), labelWidth(dateText, st(ST.date, 0)));
     const fullW = dp(14) + dp(8) + labelWidth(tr("PREFERENCES"), st(ST.menu, 0));
-    const withLabel = mx - dp(30) - fullW - (L.clock ? dp(36) + cw : 0) - dp(26) - (navEnd + dp(24)) >= dp(170);
+    const withLabel = mx - dp(30) - fullW - errChipW() - (L.clock ? dp(36) + cw : 0) - dp(26) - (navEnd + dp(24)) >= dp(170);
     const pw = withLabel ? fullW : dp(14), px = mx - dp(30) - pw;
     const pHover = hover && hover.id === "prefs";
     if (pHover) gr.FillSolidRect(px - dp(8), my, pw + dp(16), mh, C.fg);
@@ -212,8 +218,21 @@ function drawRight(gr, navEnd, L) {
     if (withLabel) label(gr, tr("PREFERENCES"), st(ST.menu, pc, pHover ? C.fg : C.bg), px + dp(22), my + Math.round((mh - labelHeight(ST.menu)) / 2));
     hits.add("prefs", px - dp(8), my, pw + dp(16), mh);
 
+    // ERROR · REPORT: a green plate, its own colour on every scheme (none of them is green enough to hide it), white
+    // text; hover darkens it
+    let rx = px;
+    if (errChip) {
+        const ew = errChipW() - dp(14), ex = px - dp(8) - dp(14) - ew, eHover = hover && hover.id === "report";
+        const fill = eHover ? REPORT_GREEN_DARK : REPORT_GREEN, ink = REPORT_INK;
+        gr.FillSolidRect(ex, my, ew, mh, fill);
+        gr.FillSolidRect(ex + dp(10), my + Math.round(mh / 2) - dp(4), dp(8), dp(8), ink);
+        label(gr, tr("ERROR · REPORT"), st(ST.menu, ink, fill), ex + dp(26), my + Math.round((mh - labelHeight(ST.menu)) / 2));
+        hits.add("report", ex, my, ew, mh);
+        rx = ex + dp(8);
+    }
+
     // clock: time over date, right-aligned before PREFERENCES (gone when the navigation needs the room)
-    const cx = L.clock ? Math.min(W - dp(284), px - dp(36) - cw) : px - dp(10);
+    const cx = L.clock ? Math.min(W - dp(284), rx - dp(36) - cw) : rx - dp(10);
     if (L.clock) {
         const tw = label(gr, `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}:${pad(now.getSeconds(), 2)}`, st(ST.time, C.fg), cx, dp(18));
         // the date under the time, however large the text is set
@@ -280,6 +299,7 @@ function on_mouse_lbtn_up(x, y) {
     if (a.id === "nav") send("view", a.data);
     else if (a.id === "menu") showMenu(a);
     else if (a.id === "prefs") fb.ShowPreferences();
+    else if (a.id === "report") reportChipMenu(a);
     else if (a.id === "search-x") { clearSearch(); if (!search.on) focusSearch(); return; }
     if (a.id !== "search" && search.on) blurSearch();
 }
@@ -385,7 +405,7 @@ function leaveSearch() {
 
 function applySearch() {
     if (STATE.view === "archive") { filterArchive(SF.text); return; }
-    // in 06 ONLINE it searches NetEase (lib/online.js)
+    // in 05 ONLINE it searches NetEase (lib/online.js)
     if (STATE.view === "online") { send("online-search", SF.text); return; }
     const q = searchQuery(SF.text);
     if (!q) return;
@@ -413,13 +433,23 @@ function showMenu(a) {
     });
     root.AppendMenuSeparator();
     const theme = window.CreatePopupMenu();
-    ["Archive view", "Playlists view", "Lyrics view", "Signal view", "Style view", "Online view"].forEach((t, i) => theme.AppendMenuItem(0, 21 + i, `${tr(t)}\t${i + 1}`));
+    ["Archive view", "Playlists view", "Lyrics view", "Signal view", "Online view", "Style view"].forEach((t, i) => theme.AppendMenuItem(0, 21 + i, `${tr(t)}\t${i + 1}`));
     theme.CheckMenuRadioItem(21, 26, 21 + VIEWS.indexOf(STATE.view));
     theme.AppendMenuSeparator();
     theme.AppendMenuItem(0, 4, tr(MODE === "dark" ? "Light mode" : "Dark mode") + "\tT");
     theme.AppendMenuItem(STATE.modeSystem ? 0x8 : 0, 17, tr("Follow Windows light / dark"));
     theme.AppendMenuItem(STATE.borderless ? 0x8 : 0, 16, tr("Borderless full screen") + "\tF11");
-    theme.AppendMenuItem(STATE.mini ? 0x8 : 0, 18, tr("Mini player") + "\tM");
+    // the mini player: open it, and its shape and colours, which can be picked here before it is open
+    const mini = window.CreatePopupMenu(), msh = window.CreatePopupMenu(), msk = window.CreatePopupMenu();
+    mini.AppendMenuItem(STATE.mini ? 0x8 : 0, 18, tr("Open the mini player") + "\tM");
+    mini.AppendMenuSeparator();
+    MINI_SHAPES.forEach(([, name], i) => msh.AppendMenuItem(0, 700 + i, tr(name)));
+    msh.CheckMenuRadioItem(700, 700 + MINI_SHAPES.length - 1, 700 + Math.max(0, MINI_SHAPES.findIndex(s => s[0] === STATE.miniShape)));
+    msh.AppendTo(mini, 0, tr("Shape"));
+    MINI_SKINS.forEach(([, name], i) => msk.AppendMenuItem(0, 710 + i, tr(name)));
+    msk.CheckMenuRadioItem(710, 710 + MINI_SKINS.length - 1, 710 + Math.max(0, MINI_SKINS.findIndex(s => s[0] === STATE.miniSkin)));
+    msk.AppendTo(mini, 0, tr("Colour"));
+    mini.AppendTo(theme, 0, tr("Mini player"));
     theme.AppendMenuItem(0, 5, tr("Playlist preset: {0}", tr(STATE.preset === "album" ? "Index" : "Album")) + "\tP");
     theme.AppendMenuItem(STATE.reduce ? 0x8 : 0, 6, tr("Reduce motion"));   // MF_CHECKED
     theme.AppendMenuItem(STATE.grain ? 0x8 : 0, 9, tr("Grain texture"));
@@ -466,7 +496,7 @@ function showMenu(a) {
     const ts = window.CreatePopupMenu(), as = window.CreatePopupMenu();
     TEXT_SCALES.forEach((v, i) => ts.AppendMenuItem(0, 300 + i, pct(v)));
     if (TEXT_SCALES.includes(STATE.textScale)) ts.CheckMenuRadioItem(300, 300 + TEXT_SCALES.length - 1, 300 + TEXT_SCALES.indexOf(STATE.textScale));
-    else { ts.AppendMenuSeparator(); ts.AppendMenuItem(0x1 | 0x8, 399, pct(STATE.textScale)); }   // a size typed in 05 STYLE
+    else { ts.AppendMenuSeparator(); ts.AppendMenuItem(0x1 | 0x8, 399, pct(STATE.textScale)); }   // a size typed in 06 STYLE
     ts.AppendTo(theme, 0, tr("Text size"));
     ARRAY_SCALES.forEach((v, i) => as.AppendMenuItem(0, 320 + i, pct(v)));
     as.CheckMenuRadioItem(320, 320 + ARRAY_SCALES.length - 1, 320 + Math.max(0, ARRAY_SCALES.indexOf(STATE.arrayScale)));
@@ -487,6 +517,9 @@ function showMenu(a) {
     theme.AppendMenuSeparator();
     theme.AppendMenuItem(0, 12, `${tr("Check for updates…")}\tRhinE ${themeVersion()}`);
     theme.AppendMenuItem(getSetting("updateCheck", true) !== false ? 0x8 : 0, 13, tr("Check for updates daily"));
+    const rep = window.CreatePopupMenu();   // problem reports and the error log (lib/report.js)
+    appendReportMenu(rep, 600);
+    rep.AppendTo(theme, 0, tr("Report a problem"));
     theme.AppendTo(root, 0, "Audio Archive");
     const id = root.TrackPopupMenu(a.x - dp(8), a.y + a.h, 0);
     const k = Math.floor(id / 1000) - 1;
@@ -495,6 +528,8 @@ function showMenu(a) {
     else if (id === 4) send("mode");
     else if (id === 16) send("borderless");
     else if (id === 18) send("mini");
+    else if (id >= 700 && id < 700 + MINI_SHAPES.length) send("mini-shape", MINI_SHAPES[id - 700][0]);
+    else if (id >= 710 && id < 710 + MINI_SKINS.length) send("mini-skin", MINI_SKINS[id - 710][0]);
     else if (id === 17) send("mode-to", STATE.modeSystem ? MODE : "system");
     else if (id === 5) send("preset");
     else if (id === 6) send("reduce", !STATE.reduce);
@@ -502,6 +537,7 @@ function showMenu(a) {
     else if (id === 9) send("grain", !STATE.grain);
     else if (id === 12) send("update-check");
     else if (id === 13) setSetting("updateCheck", getSetting("updateCheck", true) === false, true);
+    else if (id >= 600 && id < 604) { reportMenuSeen(); onErrorLogged(); reportAction(id - 600); }
     else if (id >= 450 && id < 450 + UI_LANGS.length) { if (UI_LANGS[id - 450][0] !== UI_LANG) { setSetting("uiLang", UI_LANGS[id - 450][0]); send("ui-lang"); window.Reload(); } }
     else if (id >= 500 && id < 500 + LYR_SOURCES.length) send("lyrics-source", LYR_SOURCES[id - 500][0]);
     else if (id === 510) send("lyrics-netease-auto", !STATE.lyricsNeteaseAuto);
@@ -520,6 +556,18 @@ function showMenu(a) {
     else if (id >= 300 && id < 300 + TEXT_SCALES.length) send("text-scale", TEXT_SCALES[id - 300]);
     else if (id >= 200 && schemes[id - 200]) send("scheme", schemes[id - 200]);
     else if (id >= 100 && skins[id - 100]) send("skin", skins[id - 100].id);
+}
+
+// the ERROR · REPORT plate's menu: report it (lib/report.js) or dismiss it; either way it goes until the next error
+function reportChipMenu(a) {
+    const m = window.CreatePopupMenu();
+    appendReportMenu(m, 1);
+    m.AppendMenuSeparator();
+    m.AppendMenuItem(0, 20, tr("Dismiss"));
+    const id = m.TrackPopupMenu(a.x, a.y + a.h, 0);
+    reportMenuSeen();
+    onErrorLogged();   // (the message goes to the other panels only)
+    if (id >= 1 && id <= 4) reportAction(id - 1);
 }
 
 // asks for a translation provider's key(s) and switches to that provider; kept in the settings file only

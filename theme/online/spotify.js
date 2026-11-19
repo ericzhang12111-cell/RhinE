@@ -81,7 +81,7 @@ module.exports = function spotify({ DATA, PORT, dpapi }) {
             res.end(`<!doctype html><meta charset="utf-8"><title>RhinE · Spotify</title><body style="font:15px system-ui;background:#111;color:#eee;padding:48px"><h2 style="font-weight:600">${title}</h2><p style="color:#aaa">${text}</p></body>`)
         }
         const P = pending
-        if (!P || q.get('state') !== P.state || Date.now() > P.until) { page('Not connected', 'This login is out of date. Start it again from foobar2000 (06 ONLINE › IMPORT).'); return }
+        if (!P || q.get('state') !== P.state || Date.now() > P.until) { page('Not connected', 'This login is out of date. Start it again from foobar2000 (05 ONLINE › IMPORT).'); return }
         pending = null
         if (q.get('error') || !q.get('code')) { page('Not connected', `Spotify said: ${String(q.get('error') || 'no code').replace(/[<>&"]/g, '')}`); return }
         try {
@@ -90,7 +90,7 @@ module.exports = function spotify({ DATA, PORT, dpapi }) {
             let premium = false
             try { const me = await api('/me'); sp.user = { name: me.display_name || me.id, product: me.product || '' }; save() }
             catch (e) { premium = !!(e.body && e.body.error === 'spotify-premium'); sp.user = { name: '', product: '', error: e.body ? e.body.error : 'spotify-api' }; save() }
-            if (premium) page('Logged in, but Spotify will not answer', 'Spotify answers an app of your own only while its owner has Premium. Without it, export the playlist with Exportify (a CSV) or ask Spotify for your data (Playlist1.json), and open that file in foobar2000 (06 ONLINE › IMPORT › OPEN A FILE).')
+            if (premium) page('Logged in, but Spotify will not answer', 'Spotify answers an app of your own only while its owner has Premium. Without it, export the playlist with Exportify (a CSV) or ask Spotify for your data (Playlist1.json), and open that file in foobar2000 (05 ONLINE › IMPORT › OPEN A FILE).')
             else page('Spotify connected', 'You can close this tab and go back to foobar2000.')
         } catch (e) { page('Not connected', `Spotify said: ${String(e.message).replace(/[<>&"]/g, '')}`) }
     }

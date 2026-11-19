@@ -95,7 +95,7 @@ I18N["de"] = {
     "NO COVER": "KEIN COVER", "END": "ENDE",
 
     // style
-    "STYLE  ·  05": "STIL  ·  05", "CASE SKIN": "HÜLLE", "COLOUR SCHEME": "FARBSCHEMA", "DISPLAY": "ANZEIGE",
+    "STYLE  ·  06": "STIL  ·  06", "CASE SKIN": "HÜLLE", "COLOUR SCHEME": "FARBSCHEMA", "DISPLAY": "ANZEIGE",
     "IN USE": "AKTIV", "MODE": "MODUS", "PLAY INTRO": "INTRO SPIELEN", "PREVIEW": "VORSCHAU", "TEXT": "TEXT", "INSPECT": "DETAIL",
     "FLOOR": "BODEN", "PLAIN": "SCHLICHT", "LAB DECK": "LABORDECK", "Archive floor": "Archivboden", "Plain": "Schlicht", "Lab deck": "Labordeck", "REAL STYLE": "REALISTISCH", "Real style": "Realistisch",
     "CLICK TO SKIP": "KLICKEN ZUM ÜBERSPRINGEN",
@@ -151,6 +151,23 @@ I18N["de"] = {
     "Skip this version": "Diese Version überspringen",
     "Check for updates daily": "Täglich nach Updates suchen",
     "Check for updates…": "Nach Updates suchen…",
+    // problem reports (lib/report.js)
+    "Report a problem": "Problem melden",
+    "Report on GitHub…": "Auf GitHub melden…",
+    "Copy the diagnostics (to paste in a comment or message)": "Diagnose kopieren (für einen Kommentar oder eine Nachricht)",
+    "Show the diagnostics…": "Diagnose anzeigen…",
+    "Clear the error log": "Fehlerprotokoll leeren",
+    "Recent errors: {0}": "Letzte Fehler: {0}",
+    "No errors recorded": "Keine Fehler protokolliert",
+    "Copied to the clipboard:": "In die Zwischenablage kopiert:",
+    "Could not copy; select the text below and copy it:": "Kopieren nicht möglich; Text unten markieren und kopieren:",
+    "ERROR · REPORT": "FEHLER · MELDEN",
+    "Dismiss": "Ausblenden",
+    "Diagnostics (RhinE)": "Diagnose (RhinE)",
+    "none": "keine",
+    "What happened?": "Was ist passiert?",
+    "Steps to reproduce": "Schritte zum Nachvollziehen",
+    "Diagnostics": "Diagnose",
     "RhinE {0} is the latest version.": "RhinE {0} ist die neueste Version.",
     "Could not check for updates: GitHub and jsDelivr did not answer. The releases are at {0}": "Keine Update-Prüfung möglich: GitHub und jsDelivr antworten nicht. Die Releases gibt es unter {0}",
     "WALLPAPER": "HINTERGRUNDBILD",
@@ -323,8 +340,8 @@ I18N["de"] = {
     "Spotify answers an app of your own only while its owner has Premium. Without it: export the playlist with Exportify (a CSV) or ask Spotify for your data (Playlist1.json), then OPEN A FILE.": "Spotify beantwortet eine eigene App nur, solange ihr Besitzer Premium hat. Ohne Premium: Playlist mit Exportify exportieren (CSV) oder deine Daten bei Spotify anfordern (Playlist1.json), dann DATEI ÖFFNEN.",
     "Connect Spotify first (below), or open a file exported from it: Exportify's CSV or Spotify's own Playlist1.json.": "Verbinde zuerst Spotify (unten) oder öffne eine von dort exportierte Datei: Exportifys CSV oder Spotifys Playlist1.json.", "Spotify did not give the playlist: {0}": "Spotify hat die Playlist nicht geliefert: {0}", "Spotify did not log in: {0}": "Spotify-Anmeldung fehlgeschlagen: {0}", "That is not a Client ID (32 letters and digits, from developer.spotify.com › your app).": "Das ist keine Client ID (32 Buchstaben und Ziffern, von developer.spotify.com › deine App).", "Your Spotify app's Client ID (developer.spotify.com › Dashboard › your app; its redirect URI: {0})": "Client ID deiner Spotify-App (developer.spotify.com › Dashboard › deine App; Redirect-URI: {0})", "CONNECTED": "VERBUNDEN", "CONNECTED AS {0}": "VERBUNDEN ALS {0}", "LOG IN IN THE BROWSER …": "IM BROWSER ANMELDEN …", "DISCONNECT": "TRENNEN", "CONNECT SPOTIFY": "SPOTIFY VERBINDEN",
     // 2.0: QQ Music
-    "06 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "06 ONLINE braucht eine kleine lokale Brücke (Node.js und die Bibliotheken der Musikdienste, etwa 160 MB).", "CONNECT QQ MUSIC": "QQ MUSIC VERBINDEN", "SEARCH QQ MUSIC": "QQ MUSIC DURCHSUCHEN", "Open the QQ Music app": "Die QQ-Music-App öffnen", "Scan with the app's own scanner": "Mit dem Scanner der App scannen", "Open QQ on the phone": "QQ auf dem Handy öffnen", "Scan with QQ's scanner": "Mit dem Scanner von QQ scannen", "Open WeChat on the phone": "WeChat auf dem Handy öffnen", "Scan with WeChat's scanner": "Mit dem Scanner von WeChat scannen", "SCAN WITH": "SCANNEN MIT", "QQ MUSIC APP": "QQ-MUSIC-APP", "WECHAT": "WECHAT",
-    "ONLINE": "ONLINE", "Online view": "Online-Ansicht", "SEARCH NETEASE": "NETEASE DURCHSUCHEN", "ONLINE  ·  06": "ONLINE  ·  06",
+    "05 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "05 ONLINE braucht eine kleine lokale Brücke (Node.js und die Bibliotheken der Musikdienste, etwa 160 MB).", "CONNECT QQ MUSIC": "QQ MUSIC VERBINDEN", "SEARCH QQ MUSIC": "QQ MUSIC DURCHSUCHEN", "Open the QQ Music app": "Die QQ-Music-App öffnen", "Scan with the app's own scanner": "Mit dem Scanner der App scannen", "Open QQ on the phone": "QQ auf dem Handy öffnen", "Scan with QQ's scanner": "Mit dem Scanner von QQ scannen", "Open WeChat on the phone": "WeChat auf dem Handy öffnen", "Scan with WeChat's scanner": "Mit dem Scanner von WeChat scannen", "SCAN WITH": "SCANNEN MIT", "QQ MUSIC APP": "QQ-MUSIC-APP", "WECHAT": "WECHAT",
+    "ONLINE": "ONLINE", "Online view": "Online-Ansicht", "SEARCH NETEASE": "NETEASE DURCHSUCHEN", "ONLINE  ·  05": "ONLINE  ·  05",
     "NOT CONNECTED": "NICHT VERBUNDEN", "COMING": "IN KÜRZE", "IMPORT · COMING": "IMPORT · IN KÜRZE",
     "SECTION": "BEREICH", "HOME": "START", "LIKED SONGS": "GELIKTE SONGS", "MY PLAYLISTS": "MEINE PLAYLISTS",
     "SEARCH": "SUCHE", "BRIDGE": "BRÜCKE", "ACCOUNT": "KONTO", "STANDARD": "STANDARD", "LOG OUT": "ABMELDEN",
@@ -347,4 +364,19 @@ I18N["de"] = {
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "Die Online-Suche ist aus (Rechtsklick schaltet sie ein). Eine Textdatei artist.txt neben den Dateien des Albums wird hier gezeigt, artist.jpg als Bild.",
     "CASE & COLOUR": "HÜLLE & FARBE", "PRESETS": "VORGABEN", "WORLDS 2026 · SPECIAL": "WM 2026 · SONDERVORGABEN", "League of Legends World Championship special presets: applying one replaces your custom colours and custom case.": "Sondervorgaben zur League-of-Legends-Weltmeisterschaft: eine davon ersetzt deine eigenen Farben und deine eigene Hülle.", "Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop.": "Hintergründe mit Image-2.6-Sunburst erzeugt, in Photoshop gesetzt.", "YOURS": "EIGENE", "SAVE THIS LOOK": "DIESEN LOOK SPEICHERN", "Name of the preset": "Name der Vorgabe", "Save current look": "Aktuellen Look speichern", "PRESET": "VORGABE",
     "Colour": "Farbe", "Black": "Schwarz", "White": "Weiß", "Follow light / dark": "Wie Hell / Dunkel",
+    // playlists: play on double-click, the theme's own playlists tagged
+    "Play playlist": "Playlist abspielen", "THEME": "THEME",
+    // archive: group by artist or rating, sort by rating, one shelf per artist or folder
+    "INITIAL": "BUCHSTABE", "Group by artist": "Nach Künstler gruppieren", "Group by rating": "Nach Wertung gruppieren", "RATING {0}": "WERTUNG {0}",
+    "Rating (highest first)": "Wertung (höchste zuerst)", "One shelf per artist or folder": "Ein Regal pro Künstler oder Ordner",
+    // signal: what shows under the ring and along the bottom (PANELS)
+    "PANELS": "FELDER", "Under the ring": "Unter dem Ring", "Along the bottom": "Am unteren Rand", "Spectrum": "Spektrum", "Lyrics": "Liedtext", "Level meters": "Pegelanzeige", "Stereo scope": "Stereo-Goniometer",
+    "Signal trace": "Signalverlauf", "Level history": "Pegelverlauf", "LEVEL HISTORY  ·  60 S": "PEGELVERLAUF  ·  60 S", "CORR": "KORR", "BALANCE": "BALANCE", "MONO": "MONO", "For the 3D and 2D models": "Für die Modelle 3D und 2D",
+    // mini player: its shape (wide / square), and the MENU entry that opens it
+    "Shape": "Form", "Wide": "Breit", "Square": "Quadratisch", "Open the mini player": "Mini-Player öffnen",
+    // 06 STYLE: ARRAY CASE, COLOUR SCHEME and ROOM CASE as pages of their own (the room's cases as renders)
+    "ARRAY CASE": "REIHEN-HÜLLE", "ROOM CASE": "ARCHIVRAUM-HÜLLE",
+    "Frosted cream polymer, lit from the floor below": "Mattierter cremefarbener Kunststoff, von unten beleuchtet", "Jade glass, lit from the floor below": "Jadeglas, von unten beleuchtet",
+    "Matte white cases under lights of their own: pick one under ROOM LIGHT": "Matte weiße Hüllen mit eigenem Licht: unter LICHT wählen", "Black cases under lights of their own: pick one under ROOM LIGHT": "Schwarze Hüllen mit eigenem Licht: unter LICHT wählen",
+    "RHINE LAB's own cases, each with its paper label": "RHINE LABs eigene Hüllen, jede mit Papieretikett", "There is no light to pick for this case.": "Für diese Hülle gibt es kein Licht zur Auswahl.",
 };

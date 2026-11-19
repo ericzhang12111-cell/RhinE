@@ -29,6 +29,44 @@ function plStats(pl) {
     return s;
 }
 
+// ------------------------------------------------------------------------------------------- play a playlist
+// A playlist plays from its first track, or from a random one while the playback order is Random or Shuffle (tracks);
+// under Shuffle (albums / folders) from the first track of a random album or folder, so that one plays whole. The one
+// already playing goes on (paused: it resumes) rather than starting again; an empty one only becomes active.
+const TF_PL_GROUP = { 5: fb.TitleFormat("[%album artist%]\u0001[%album%]"), 6: fb.TitleFormat("$directory_path(%path%)") };
+function playPlaylist(pl) {
+    if (pl < 0 || pl >= plman.PlaylistCount) return false;
+    plman.ActivePlaylist = pl;
+    const n = plman.PlaylistItemCount(pl);
+    if (!n) return false;
+    const loc = plman.GetPlayingItemLocation();
+    if (fb.IsPlaying && loc.IsValid && loc.PlaylistIndex === pl) { if (fb.IsPaused) fb.PlayOrPause(); return true; }
+    const o = plman.PlaybackOrder;   // 3 Random, 4 – 6 Shuffle (tracks, albums, folders)
+    let at = 0;
+    if (o === 3 || o === 4) at = Math.floor(Math.random() * n);
+    else if (TF_PL_GROUP[o]) {
+        // where each album or folder starts in the playlist; every one has the same chance
+        const keys = TF_PL_GROUP[o].EvalWithMetadbs(plItems(pl)), starts = [];
+        for (let k = 0; k < keys.length; k++) if (!k || keys[k] !== keys[k - 1]) starts.push(k);
+        at = starts[Math.floor(Math.random() * starts.length)];
+    }
+    plman.ExecutePlaylistDefaultAction(pl, at);
+    return true;
+}
+
+// The Archive's album playlist (lib/bus.js ARCHIVE_PLAYLIST) goes by the album it holds: "Album — Artist", or the
+// folder's name for a folder of several albums. "" for any other playlist, or when the tracks have nothing in common.
+const TF_PL_ALBUM = fb.TitleFormat("[%album%]\u0001[%album artist%]\u0001$directory(%path%)");
+function albumPlaylistTitle(pl) {
+    if (pl < 0 || plman.GetPlaylistName(pl) !== ARCHIVE_PLAYLIST || plman.IsAutoPlaylist(pl) || plman.IsPlaylistLocked(pl)) return "";
+    const items = plItems(pl);
+    if (!items.Count) return "";
+    const v = TF_PL_ALBUM.EvalWithMetadbs(items).map(s => s.split("\u0001")), [album, artist, dir] = v[0];
+    if (album && v.every(x => x[0] === album)) return artist ? `${album} — ${artist}` : album;
+    if (dir && v.every(x => x[2] === dir)) return dir;
+    return "";
+}
+
 // 1.9 GB / 312 MB
 function fmtSize(b) {
     if (b >= 1e9) return (b / 1073741824).toFixed(1) + " GB";

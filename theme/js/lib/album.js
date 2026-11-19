@@ -15,7 +15,7 @@ function loadSkin(id) {
     CASE_LISTENERS.forEach(f => f());
     return true;
 }
-// a skin whose renders were made again (the custom case, 05 STYLE): load them anew where it is in use
+// a skin whose renders were made again (the custom case, 06 STYLE): load them anew where it is in use
 function reloadSkin(id) { if (CASE_SKIN === id) { CASE_DIR = ""; loadSkin(id); window.Repaint(); } }
 onMessage("skin-reload", reloadSkin);
 // An album is the tracks with the same album tag in the same folder, a disc folder ("CD2", "Disc 1") counting as its

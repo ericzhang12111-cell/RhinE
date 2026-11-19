@@ -20,9 +20,13 @@ const DB_FILE = CACHE_DIR + "library.db";
 const BLUR = 48;
 
 const TF = fb.TitleFormat([
-    "[%album%]", "%path%", "[$meta(album artist,0)]", "[%artist%]", "[$meta(genre,0)]", "[$left(%date%,4)]", "[%codec%]",
+    "[%album%]", "%path%", "$if3($meta(album artist,0),$meta(albumartist,0),)", "[%artist%]", "[$meta(genre,0)]", "[$left(%date%,4)]", "[%codec%]",
     "[%__bitspersample%]", "[%samplerate%]", "[%bitrate%]", "$if($stricmp(%__encoding%,lossless),1,)",
     "[%length_seconds_fp%]", "[%discnumber%]", "[%added%]", "[%play_count%]", "[%title%]", "[%tracknumber%]", "%subsong%",
+    // the sort tags under the names taggers give them (MusicBrainz Picard: ALBUMARTISTSORT, ARTISTSORT; in ID3 files
+    // the "... sort order" fields foobar2000 maps TSO2 and TSOP to), the first artist alone
+    "$if3($meta(albumartistsort,0),$meta(album artist sort order,0),$meta(albumartistsortorder,0),)",
+    "[$meta(artist,0)]", "$if3($meta(artistsort,0),$meta(artist sort order,0),$meta(artistsortorder,0),)",
 ].join("\u0001"));
 
 // An album is the tracks with the same album tag in the same folder, a disc folder counting as its parent (the same
@@ -46,6 +50,12 @@ function shelfName(dir, root, own) {
     return [root[root.length - 1] || "", ...rest].join(" › ");
 }
 
+// An artist's key (GROUP › ARTIST): lower case, spaces collapsed. A track's own artist loses a guest credit ("A feat.
+// B", "A (ft. B)" are A's), so an album without an album artist tag still goes under the artist of most of its tracks.
+const FEAT = /(?:\s+|\s*[(\[]\s*)(?:featuring|feat|ft)(?:\.\s*|\s+)\S.*$/i;
+const bareArtist = s => String(s || "").replace(FEAT, "").trim();
+const artistKey = s => String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
+
 // what the archive's search filter looks in: album fields plus every track's title and artists
 const TF_SEARCH = fb.TitleFormat("%title% %artist% %album artist%");
 
@@ -57,8 +67,10 @@ function fnv(str) {
 
 let handles = null, gen = 0;
 
-// The album's artist: its album artist tag, else the artist of most of its tracks, else "Various Artists"; its genre
-// the first one given (blank or whitespace-only genres count as none); its title the folder's name when untagged.
+// The album's artist: its album artist tag (the one most of its tracks give), else the artist of most of its tracks
+// (without guest credits when the full credits differ), else "Various Artists"; its genre the first one given (blank or
+// whitespace-only genres count as none); its title the folder's name when untagged. For GROUP › ARTIST it also gets
+// that artist's key (akey), name (aname) and sort tag (asort, "" when there is none).
 // Also returns one item per track (the archive's TRACKS view): the album's fields where the track has none, its own
 // title, artist, length, date added and play count, and its album's key for the cover (cover) and the album (album).
 function buildAlbums(list) {
@@ -79,14 +91,24 @@ function buildAlbums(list) {
             const dir = albumDir(v[1]);
             a = { key, artist: "", title: v[0].trim() || dir[dir.length - 1] || "", genre: "", year: "", codec: v[6], bits: +v[7] || 0,
                   rate: +v[8] || 0, kbps: +v[9] || 0, lossless: v[10] === "1", tracks: 0, length: 0, discs: 1, added: "", plays: 0,
-                  idx: [], text: "", aa: "", artists: new Map(), shelf: shelfName(dir, rootOf(i), false) };
+                  idx: [], text: "", aas: new Map(), aasort: "", artists: new Map(), firsts: new Map(), shelf: shelfName(dir, rootOf(i), false) };
             map.set(key, a);
             albums.push(a);
         }
         a.tracks++;
-        if (!a.aa && v[2].trim()) a.aa = v[2].trim();
+        const aa = v[2].trim();
+        if (aa) { a.aas.set(aa, (a.aas.get(aa) || 0) + 1); if (!a.aasort) a.aasort = v[18].trim(); }
         const ar = v[3].trim();
         if (ar) a.artists.set(ar, (a.artists.get(ar) || 0) + 1);
+        const fa = bareArtist(v[19]);   // the first artist, without guests: their key, spellings and sort tag
+        if (fa) {
+            const k = artistKey(fa);
+            let e = a.firsts.get(k);
+            if (!e) a.firsts.set(k, e = { n: 0, names: new Map(), sort: "" });
+            e.n++;
+            e.names.set(fa, (e.names.get(fa) || 0) + 1);
+            if (!e.sort) e.sort = bareArtist(v[20]);
+        }
         if (!a.genre && v[4].trim()) a.genre = v[4].trim();
         if (v[5] && (!a.year || v[5] < a.year)) a.year = v[5];
         a.length += +v[11] || 0;
@@ -96,11 +118,21 @@ function buildAlbums(list) {
         a.idx.push(i);
         a.text += " " + words[i];
     }
+    const most = m => { let top = "", n = 0; for (const [k, c] of m) if (c > n) { top = k; n = c; } return [top, n]; };
     for (const a of albums) {
-        let top = "", n = 0;
-        for (const [ar, c] of a.artists) if (c > n) { top = ar; n = c; }
-        a.artist = a.aa || (a.artists.size <= 1 || n * 2 >= a.tracks ? top : "Various Artists");
-        delete a.aa; delete a.artists;
+        const [aa] = most(a.aas), [top, n] = most(a.artists);
+        // without ALBUMARTISTSORT, the ARTISTSORT of the tracks whose first artist is the album artist
+        if (aa) { const e = a.firsts.get(artistKey(bareArtist(aa))); a.aname = aa; a.asort = a.aasort || (e ? e.sort : ""); }
+        else {
+            let best = null;
+            for (const e of a.firsts.values()) if (!best || e.n > best.n) best = e;
+            if (!best) { a.aname = top; a.asort = ""; }
+            else if (a.firsts.size === 1 || best.n * 2 >= a.tracks) { a.aname = most(best.names)[0]; a.asort = best.sort; }
+            else { a.aname = "Various Artists"; a.asort = ""; }
+        }
+        a.akey = artistKey(a.aname);
+        a.artist = aa || (a.artists.size <= 1 || n * 2 >= a.tracks ? top : a.aname);
+        delete a.aas; delete a.aasort; delete a.artists; delete a.firsts;
         a.length = Math.round(a.length);
         a.text = `${a.title} ${a.artist} ${a.genre} ${a.year}${a.text}`.toLowerCase();
     }
@@ -113,10 +145,11 @@ function buildAlbums(list) {
                       artist: v[3].trim() || a.artist, genre: a.genre, year: v[5] || a.year, codec: v[6], bits: +v[7] || 0, rate: +v[8] || 0,
                       kbps: +v[9] || 0, lossless: v[10] === "1", tracks: 1, length: Math.round(+v[11] || 0), discs: 1, added: v[13],
                       plays: +v[14] || 0, ord: (parseInt(v[12]) || 1) * 1000 + (parseInt(v[16]) || 0), idx: [i], shelf: shelfName(albumDir(v[1]), rootOf(i), true),
+                      asort: v[3].trim() ? v[20].trim() : a.asort,
                       text: `${title} ${v[3]} ${a.title} ${a.artist} ${a.genre} ${v[5] || a.year} ${words[i]}`.toLowerCase() });
     }
     // the folder cases, put together from the albums (an album lies in one folder): one artist when all its albums have
-    // the same, else Various Artists; the cover its first album's
+    // the same, else Various Artists (for GROUP › ARTIST too); the cover its first album's
     const fmap = new Map(), folders = [];
     for (const a of albums) {
         const dir = albumDir(vals[a.idx[0]][1]), key = FOLDER_KEY + dir.join("\\").toLowerCase();
@@ -124,11 +157,12 @@ function buildAlbums(list) {
         if (!f) {
             f = { key, folder: true, name: dir[dir.length - 1] || "", title: dir[dir.length - 1] || "", cover: a.key, artist: a.artist, genre: "",
                   year: "", codec: a.codec, bits: a.bits, rate: a.rate, kbps: a.kbps, lossless: a.lossless, tracks: 0, length: 0, discs: 1,
-                  added: "", plays: 0, idx: [], text: "", shelf: a.shelf };
+                  added: "", plays: 0, idx: [], text: "", shelf: a.shelf, akey: a.akey, aname: a.aname, asort: a.asort };
             fmap.set(key, f);
             folders.push(f);
         }
         if (f.artist !== a.artist) f.artist = "Various Artists";
+        if (f.akey !== a.akey) { f.akey = "various artists"; f.aname = "Various Artists"; f.asort = ""; }
         if (!f.genre) f.genre = a.genre;
         if (a.year && (!f.year || a.year < f.year)) f.year = a.year;
         if (a.added && (!f.added || a.added < f.added)) f.added = a.added;

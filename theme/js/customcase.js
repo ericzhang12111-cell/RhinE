@@ -1,5 +1,5 @@
 ﻿"use strict";
-// The custom case (05 STYLE › CUSTOM): a base colour, an accent and a pattern, chosen from curated matte plastics. It is
+// The custom case (06 STYLE › CUSTOM): a base colour, an accent and a pattern, chosen from curated matte plastics. It is
 // made from the WHITE skin's renders, recoloured region by region with Direct2D effects (the regions are masks rendered
 // from the same model: assets\render\case-custom\, two RGB images per sprite), and saved as a skin of its own in
 // <profile>\audio-archive-skins\custom\, which the theme then lists and loads like any skin. stage.js includes this file.

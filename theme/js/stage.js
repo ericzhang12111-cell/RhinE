@@ -189,22 +189,24 @@ function npChanged(same, h, what) {
 
 // the archive's file panel marks the playing track
 const playingChanged = () => { AR.tracks.key = ""; AR.listVer++; AR.dirtyInfo = true; AF.dirty = true; inspectFollow(); if (STATE.view === "archive") window.Repaint(); };
-function on_playback_new_track() { loadTrack(); playingChanged(); onlineTrack(); if (STATE.view === "online") window.Repaint(); }
+function on_playback_new_track() { loadTrack(); playingChanged(); onlineTrack(); signalNewTrack(); if (STATE.view === "online") window.Repaint(); }
 function on_playback_starting() { clock.wake(); }
-function on_playback_pause() { dirty.card = true; clock.wake(); window.Repaint(); }
+function on_playback_pause(paused) { signalPaused(paused); dirty.card = true; clock.wake(); window.Repaint(); }
 function on_playback_stop(reason) { if (reason !== 2) { loadTrack(); playingChanged(); } }
 function on_volume_change() { if (STATE.mini) window.Repaint(); }   // (the mini player's fader)
 function on_playback_seek() { lyrIdx = -2; clock.wake(); }
 function on_playback_queue_changed() { if (T.handle) { T.next = nextTitle(); dirty.left = dirty.card = true; window.Repaint(); } }
 function on_playlist_items_reordered(i) { plDirty(i); }
 function on_item_focus_change() { if (!fb.IsPlaying) loadTrack(); }
-// a track changed (tags, a rating): the card and the album file read it again
-function on_metadb_changed() {
+// a track changed (tags, a rating): the card and the album file read it again, and the RATING group or sort follows
+// (lib/library.js)
+function on_metadb_changed(handles) {
     if (T.handle) loadTrack();
     AR.listVer++; AR.dirtyInfo = true;
+    libRatingsChanged(handles);
     if (STATE.view === "archive") window.Repaint();
 }
-onMessage("rating-store", () => { if (T.handle) loadTrack(); AR.listVer++; AR.dirtyInfo = true; window.Repaint(); });
+onMessage("rating-store", () => { if (T.handle) loadTrack(); AR.listVer++; AR.dirtyInfo = true; libRatingStore(); window.Repaint(); });
 // a heart given or taken (here or in another panel, lib/favourite.js): the card, the album file, the FAVOURITES group and
 // the Favourites playlist (when there is one) follow; the MENU asks for the playlist with "fav-playlist"
 FAV_LISTENERS.push(() => {
@@ -235,7 +237,7 @@ const clock = Clock((dt, now) => {
         window.RepaintRect(0, 0, AR.dirtyInfo ? W : arrayW(), H);
         return more;
     }
-    // 06 ONLINE: its now-playing column (the time) twice a second while playing
+    // 05 ONLINE: its now-playing column (the time) twice a second while playing
     if (STATE.view === "online") {
         const on = fb.IsPlaying && !fb.IsPaused;
         if (on && OV.nowRect && now - lastPaint > 500) { lastPaint = now; window.RepaintRect(...OV.nowRect); }
@@ -244,7 +246,7 @@ const clock = Clock((dt, now) => {
     if (!visible()) return false;
     const playing = fb.IsPlaying && !fb.IsPaused;
     if (playing) analyseAudio(dt);
-    if (STATE.view === "signal") { ringUpdate(dt, playing); window.Repaint(); return playing; }
+    if (STATE.view === "signal") { ringUpdate(dt, playing); signalUpdate(dt, playing); window.Repaint(); return playing; }
     // lyrics: every frame while something moves, otherwise ten times a second while playing (line changes, read-outs)
     // or while a pop-up's dots cycle; the karaoke rule alone is repainted every frame
     if (LYR_SCROLL.n && now > LYR_SCROLL.until && lyrSynced()) { LYR_SCROLL.n = 0; window.Repaint(); }
@@ -263,7 +265,7 @@ const lyricsKey = () => [STATE.lyricsSource, STATE.lyricsTrans, STATE.lyricsNete
 let lyricsWas = "";
 onMessage("state", () => {
     if (stageSkin() !== CASE_SKIN && loadSkin(stageSkin())) dirty.card = true;
-    // another halftone, title tag, font or case (05 STYLE): the album file and the card are drawn again
+    // another halftone, title tag, font or case (06 STYLE): the album file and the card are drawn again
     const ht = [STATE.halftone, STATE.halftoneLevel, STATE.tag, STATE.tagShape, STATE.tagColours, JSON.stringify(STATE.tagCustom), STATE.tagOpacity, STATE.tagBody, STATE.tagFactory, STATE.font, stageSkin(), roomSet(), MODE].join("|");
     if (ht !== halftoneWas) { halftoneWas = ht; AR.dirtyInfo = dirty.card = true; }
     // the lyrics settings as the track's lyrics were read: when every panel reloads at once (a new interface language)
@@ -733,6 +735,8 @@ function on_mouse_lbtn_down(x, y, mask) {
     if (STATE.mini) { miniDown(x, y); return; }
     if ((STATE.view === "lyrics" || STATE.view === "archive") && sideDragStart(x)) return;
     const a = hits.at(x, y);
+    // a press on a control: no double-click on a case can follow from an earlier click (archiveDoubleClick)
+    if (a && STATE.view === "archive") AR.lastClick = null;
     if (STATE.view === "style") styleDown(x, a, mask, y);
     if (STATE.view === "archive" && AR.layout === "grid" && a && a.id === "grid-bar") gridBarDown(y, a);
     if (STATE.view === "archive" && AR.layout !== "grid" && a && a.id === "ar-ruler") rulerDown(x);
@@ -772,8 +776,11 @@ function on_mouse_lbtn_dblclk(x, y) {
     const e = (STATE.view === "lyrics" || STATE.view === "archive") && sideEdgeAt(x);
     if (e) { STATE.sides = pickSides(Object.assign({}, STATE.sides, { [e.key]: SIDES_START[e.key] })); sidesChanged(); sendSide(e.key, SIDES_START[e.key], true); return; }
     if (STATE.view === "style") { styleDblClick(x, hits.at(x, y)); return; }
-    if (STATE.view === "archive" && AR.layout === "grid" && !hits.at(x, y)) gridDblClick(x, y);
-    if (STATE.view === "archive" && roomOn() && !hits.at(x, y)) roomDoubleClick();
+    // a cover (the grid) or a case (the array, the room): its album plays
+    // (the array, the room: also over a control that came up under the mouse since the first click went to a case, as
+    // the inspection's RETURN can)
+    if (STATE.view === "archive" && AR.layout !== "grid" && (!hits.at(x, y) || AR.lastClick)) archiveDoubleClick();
+    else if (STATE.view === "archive" && AR.layout === "grid" && !hits.at(x, y)) gridDblClick(x, y);
 }
 function on_mouse_wheel_h(step) { if (STATE.view === "archive") archiveWheelH(step); }   // a sideways wheel: shelves
 function on_mouse_wheel(step) {
@@ -792,6 +799,7 @@ function on_mouse_rbtn_up(x, y, mask) {
     if (STATE.mini) { miniMenu(x, y); return true; }
     if (STATE.view === "archive") { archiveMenu(x, y); return true; }
     if (STATE.view === "lyrics") { lyricsTransMenu(x, y); return true; }   // the state chip's menu, with Edit lyrics
+    if (STATE.view === "signal") { signalPanelsMenu(x, y); return true; }   // what shows under the ring and along the bottom
     return false;
 }
 function on_mouse_lbtn_up(x, y) {
@@ -806,6 +814,7 @@ function on_mouse_lbtn_up(x, y) {
     if (STATE.view === "online") { onlineClick(a); return; }
     if (!a) return;
     if (a.id === "vis") visMenu(a.x, a.y + a.h);
+    else if (a.id === "sig-panels") signalPanelsMenu(a.x, a.y + a.h);
     else if (a.id === "model" && a.data !== Ring.mode) { Ring.mode = a.data; setSetting("ringMode", a.data); window.Repaint(); }
     else if (a.id === "rate") setRating(T.handle, ratingAt(x, a.x + a.data.pad, a.data.size));
     else if (a.id === "fav") setFav(T.handle);
@@ -824,6 +833,7 @@ function on_mouse_lbtn_up(x, y) {
     }
     else if (a.id === "lyr-trans") lyricsTransMenu(a.x, a.y + a.h);
     else if (a.id === "lyric" && T.lyrics && T.lyrics.lines[a.data] && T.lyrics.lines[a.data].t != null && fb.IsPlaying) { LYR_SCROLL.n = 0; fb.PlaybackTime = T.lyrics.lines[a.data].t; }
+    else if (a.id === "sig-lyric" && T.lyrics && T.lyrics.lines[a.data] && T.lyrics.lines[a.data].t != null && fb.IsPlaying) fb.PlaybackTime = T.lyrics.lines[a.data].t;   // (the Signal view's lyrics)
     else if (a.id === "trace" && fb.IsPlaying && fb.PlaybackLength > 0) fb.PlaybackTime = clamp((x - a.x) / a.w, 0, 1) * fb.PlaybackLength;
 }
 function on_char(code) { if (!styleChar(code)) searchChar(code); }

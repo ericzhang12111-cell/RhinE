@@ -120,7 +120,7 @@ function accentShift(img) {
     return out;
 }
 
-// The panels' halftone decoration, as chosen in 05 STYLE (STATE.halftone, STATE.halftoneLevel): across the bottom
+// The panels' halftone decoration, as chosen in 06 STYLE (STATE.halftone, STATE.halftoneLevel): across the bottom
 // `height` px of a w × h area, fading upwards, or into its lower right corner; nothing when off.
 const HALFTONE_ALPHA = { low: [.09, .11], mid: [.17, .2], high: [.27, .3] };   // [dark, light]
 function halftoneDecor(gr, w, h, height) {

@@ -12,7 +12,9 @@
 // the others do, and a click on one goes to its shelf's album nearest it. The shelves behind sink into a haze (a
 // blurred whole case in place of the faces, darker), so that shelves coming and going back there are not seen.
 //   ← → (or the wheel): the album before / after · ↑ ↓: the shelf behind / in front
-//   click a case: select it, the selected one: inspect it · double-click or Space: play the album · Enter: inspect it
+//   click a case: select it, the selected one: inspect it (it rises at once; the inspection fades in a moment later, when
+//   no second click came: archive.js inspectClicked) · double-click a case (archiveDoubleClick) or Space: play the
+//   album · Enter: inspect it
 
 const ROOM_ROOT = THEME_ROOT + "assets\\render\\room\\";
 const ROOM = { mode: "", forMode: "", dir: "", meta: null, img: null, geo: null, hov: new Map(), under: null, want: new Set() };
@@ -25,6 +27,7 @@ const ROOM_FADE = [12, 2];               // over how many places the far end of 
 const ROOM_FOG = { start: 24, depth: 55, max: .9 };
 const ROOM_END_GAP = 1.5;                // places between a shelf's albums and the empty cases beyond them
 const ROOM_PICK = 1.6;                   // how far the selected case rises out of the swell (room units): half its cover shows
+const ROOM_ARM_LIFT = .7;                // how far the selected case rises when clicked, before the inspection fades in
 const ROOM_HOVER = .6;                   // how far the case under the mouse rises (its neighbours less), at the selected case's distance
 const ROOM_HAZE = [1.5, 3.5];            // the shelves behind go into the haze between these places
 const ROOM_LIGHT_R = 9;                  // how far the light under the selected case reaches (room units)
@@ -32,7 +35,7 @@ const ROOM_LIGHT_R = 9;                  // how far the light under the selected
 // cases' own lights (ROOM_LIGHTS) are in their sprites already (rendered under them), so none
 const ROOM_LIGHT_FALL = { "": .75 };
 
-// The room's assets: assets/render/room/<set>/<mode>/, the material chosen in 05 STYLE (ARCHIVE › ROOM: cream
+// The room's assets: assets/render/room/<set>/<mode>/, the material chosen in 06 STYLE (ARCHIVE › ROOM: cream
 // polymer, jade glass, or the white and blackout cases, each of those two in one of its lights: ROOM LIGHT; roomSet()
 // in lib/bus.js), the dark ones when the mode has none.
 function roomAssets() {
@@ -235,10 +238,11 @@ function drawRoom(gr) {
             const c = r.cases.get(i), s = slotOf(row, i);
             if (!c) continue;
             // where the case rests without the lift under the mouse: its click area, as the array's (#7)
-            const rest = [x, -(s - r.scroll.x + c.gap.to) * M.dy, roomTargets(i, r, active, row).lift];
-            const isSel = active && i === r.sel;
+            // (the selected case pressed by a click that opens the inspection: archive.js inspectClicked)
+            const isSel = active && i === r.sel, press = isSel ? ROOM_ARM_LIFT * inspLift() : 0;
+            const rest = [x, -(s - r.scroll.x + c.gap.to) * M.dy, roomTargets(i, r, active, row).lift + press];
             place({ gi, i, slot: s, c, a: row.albums[i], isSel, ra: Math.round(ra * roomEndFade(s - r.scroll.x)), haze: roomHaze(r.pos.x), rest },
-                x, -(s - r.scroll.x + c.gap.x) * M.dy, c.lift.x, roomBump(gi, s, r.pos.x));
+                x, -(s - r.scroll.x + c.gap.x) * M.dy, c.lift.x + press, roomBump(gi, s, r.pos.x));
         }
         const n = row.albums.length;
         fill(gi, r.pos.x, r.scroll.x, slotOf(row, r.sel), n ? [slotOf(row, 0), slotOf(row, n - 1)] : null, ra);
@@ -260,9 +264,10 @@ function drawRoom(gr) {
     // the PV's shape, baked at pack time beside the grade (rhine): the middle a little deeper, the edges dissolving
     // into the page; stretched over the render's frame, the same mapping as the plate
     if (I.valley) gr.DrawImage(I.valley, RG.ox, RG.oy, I.plate.Width * RG.k, I.plate.Height * RG.k, 0, 0, I.valley.Width, I.valley.Height);
-    // the mouse's case, looked for again in this frame's click areas (the shelves may have moved under it)
-    if (AR.mouseX >= 0 && AR.mouseX < aw) {
-        const c = caseUnder(AR.mouseX, AR.mouseY), h = c ? c.i : -1, hg = c ? c.gi : -1;
+    // the mouse's case, looked for again in this frame's click areas (the shelves may have moved under it); none under
+    // the inspection or the artist file, nor under a control (as the array's)
+    if (AR.mouseX >= 0 && AR.mouseX < aw && !AR.overHit) {
+        const c = AR.inspOn || AF.open ? null : caseUnder(AR.mouseX, AR.mouseY), h = c ? c.i : -1, hg = c ? c.gi : -1;
         roomPointer(c);
         if (h !== AR.hover || hg !== AR.hoverRow) { AR.hover = h; AR.hoverRow = hg; clock.wake(); }
     }
@@ -340,7 +345,7 @@ function roomDraw(gr, img, name, f, q, alpha) {
 }
 // one case: its faces, each fitted onto the case's own; the selected one clear (its sprite fitted on its front), its
 // cover in the window; every other case its album's cover in its window too, under the glass (blurred under frosted
-// glass, as the array's: 05 STYLE › GLASS), an empty one a dark well; a case in the haze, the blurred whole case (fitted on its front: under the blur the other faces'
+// glass, as the array's: 06 STYLE › GLASS), an empty one a dark well; a case in the haze, the blurred whole case (fitted on its front: under the blur the other faces'
 // bend does not show), coming in over the faces as they go. Returns { a, x, y } (the cover's top corner on screen) for
 // the selected case.
 function drawRoomCase(gr, it, RG) {
@@ -382,9 +387,9 @@ function drawRoomCase(gr, it, RG) {
         AR.hits.push({ i: it.c ? it.i : -1, gi: it.gi, slot: it.slot, empty: !it.c, quad: still ? out : roomOutline(...it.rest, RG) });
     }
     // the one under the mouse is outlined or labelled (an empty one too, as EMPTY: the shelves beyond the library's
-    // look as full as the others)
-    const u = ROOM.under, hovered = alpha > 0 && !it.isSel && (it.c ? it.i === AR.hover && it.gi === AR.hoverRow : !!u && u.empty && u.gi === it.gi && u.slot === it.slot);
-    if (hovered && AR.hoverMode === "label") {
+    // look as full as the others); the selected one is outlined too, not labelled (it has its plate)
+    const u = ROOM.under, hovered = alpha > 0 && (!it.isSel || inspTurn() === 0) && (it.c ? it.i === AR.hover && it.gi === AR.hoverRow : !!u && u.empty && u.gi === it.gi && u.slot === it.slot);
+    if (hovered && !it.isSel && AR.hoverMode === "label") {
         const [x, y] = out.reduce((m, p) => p[1] < m[1] ? p : m);   // the case's top corner
         AR.hoverPlate = { a: it.a, txt: it.c ? null : tr("EMPTY"), x, y, alpha };
     }
@@ -411,10 +416,11 @@ function roomClick() {
     const u = ROOM.under, row = u ? arRows()[u.gi] : null;
     if (!row || !row.albums.length) return;
     const i = u.empty ? (u.slot < slotOf(row, 0) ? 0 : row.albums.length - 1) : u.i;
+    if (!u.empty) noteClick(u.gi, i);   // for a double-click (archive.js archiveDoubleClick)
     if (u.gi !== AR.group) { selectCase(u.gi, i); return; }
     const r = AR.rows.get(AR.group);
     if (r && i !== r.sel) moveAlbum(i - r.sel);
-    else if (r && !u.empty) { AR.inspOn = true; inspectImages(); clock.wake(); }   // the selected case: inspected, as in the array
+    else if (r && !u.empty) inspectClicked();   // the selected case: inspected, as in the array (held for a double-click)
 }
 // The covers asked for: the albums on the shelves kept nearest the selection, as many as the cover memory holds
 // (ROOM.want; the other cases show none). The room has far more cases in view than that: drawn with their covers, every
@@ -431,11 +437,6 @@ function roomThumbs() {
     ROOM.want = new Set(want.map(coverKey));
     setThumbBudget(n + 40);
     requestThumbs(want, n);
-}
-function roomDoubleClick() {
-    const r = AR.rows.get(AR.group);
-    if (AR.hover >= 0 && AR.hoverRow === AR.group && r && AR.hover === r.sel) { playAlbum(); return true; }
-    return false;
 }
 // the shelf runs across the view and the shelves stand one behind the other: ← → along it, ↑ ↓ between them
 function roomKey(vk) {

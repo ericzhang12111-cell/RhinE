@@ -2,13 +2,14 @@
 // 02 · PLAYLISTS, left: the playlist manager and the track rail, one panel for both.
 //   manager  PLAYLISTS ……… 06, then one 26 dp row per playlist: a rail line whose length is log(item count), number,
 //            name, count. The active playlist is inverted with an orange square; the playing one has an orange tab.
-//            Click activates, drag reorders, double-click renames, right-click: new / rename / duplicate / remove.
+//            Click activates, double-click plays (lib/playlists.js playPlaylist), drag reorders, right-click: play / new /
+//            rename / duplicate / remove. The theme's own playlists (lib/bus.js OWN_PLAYLISTS) are muted and tagged THEME.
 //   rail     INDEX and the track count, then one 2 dp line per track of the active playlist (13 dp apart; a long playlist is spread
 //            over the lines, each standing for an equal share). Hover raises a bell-shaped wave and shows the hover
 //            card (tip.js, placed by frame.js over the playlist); click selects and scrolls to the track, double-click
 //            plays it. The playing track's line and the selected (focused) track's line are orange, at rest length.
 //            Nothing moves while the mouse holds still.
-// Keys while focused: ↑ ↓ switch playlists, F2 rename, Delete remove, Ctrl+N new; the shared keys otherwise.
+// Keys while focused: ↑ ↓ switch playlists, Enter play, F2 rename, Delete remove, Ctrl+N new; the shared keys otherwise.
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\playlists.js");
@@ -17,6 +18,7 @@ const MST = {
     head: { size: 9, weight: 600, track: .16 },
     count: { size: 9, weight: 500, track: .1 },
     action: { size: 8.5, weight: 600, track: .14 },
+    tag: { size: 7.5, weight: 600, track: .14 },
     index: { size: 8.5, weight: 500, track: .12 },
 };
 const mst = (s, colour, bg = C.bg) => Object.assign({ colour, bg }, s);
@@ -29,6 +31,9 @@ const hits = Hits();
 let hover = null;            // hit under the mouse
 let scroll = 0;              // first visible manager row
 let drag = null;             // { from, y0, active, to }
+// a row's second click: when the first click switches playlists, Windows sends no double-click to the panel, so the
+// panel times the clicks itself (the system's double-click time, DBL_MS in lib/bus.js)
+let lastRowUp = null;      // { i, t }
 let railHover = -1;          // rail line under the mouse
 const lens = [];             // a spring per rail line: its length in dp
 
@@ -92,15 +97,26 @@ function drawManager(gr) {
         if (on) gr.FillSolidRect(0, y, w, ROW(), C.fg);
         else if (hov || dropRow === i) gr.FillSolidRect(0, y, w, ROW(), C.panel);
         if (dropRow === i) box(gr, 0, y, w - HAIR, ROW(), C.accent, dp(2));   // tracks dragged over it land here
-        const fg = on ? C.bg : C.fg, cy = y + ROW() / 2;
+        const name = plman.GetPlaylistName(i), own = OWN_PLAYLISTS.has(name);
+        const fg = on ? C.bg : own ? C["text-muted"] : C.fg, cy = y + ROW() / 2;
         // rail line: log(count)
         const L = Math.round(dp(6 + 18 * Math.log10(counts[i] + 1) / maxLog));
         gr.FillSolidRect(dp(14), Math.round(cy - dp(1)), L, dp(2), on ? C.bg : C["line-dim"]);
         if (on) gr.FillSolidRect(dp(14) + L, Math.round(cy - dp(3)), dp(6), dp(6), C.accent);
         if (i === playingPl) gr.FillSolidRect(0, y, dp(4), ROW(), C.accent);   // the playing playlist: an orange tab
         gr.DrawText(pad(i + 1, 2), font(11, 500), on ? C.bg : C["text-muted"], dp(50), y, dp(24), ROW(), DT_SINGLE);
-        const name = plman.GetPlaylistName(i), cnt = fmtCount(counts[i]), cf = font(10.5, 400), cw = Math.ceil(gr.CalcTextWidth(cnt, cf));
-        text(gr, name, 12, on ? 600 : 400, fg, dp(76), y, w - dp(76) - dp(18) - cw - dp(10), ROW());
+        const cnt = fmtCount(counts[i]), cf = font(10.5, 400), cw = Math.ceil(gr.CalcTextWidth(cnt, cf));
+        // the theme refills its own playlists (the Archive's album, favourites, search, the library shuffle): a THEME tag
+        let tw = 0;
+        if (own) {
+            const ts = mst(MST.tag, on ? C.bg : C["text-muted"], on ? C.fg : hov || dropRow === i ? C.panel : C.bg);
+            const th = labelHeight(MST.tag) + dp(4);
+            tw = labelWidth(tr("THEME"), ts) + dp(10);
+            const tx = w - dp(18) - cw - dp(8) - tw, ty = Math.round(cy - th / 2);
+            box(gr, tx, ty, tw, th, on ? C.bg : C["line-faint"]);
+            label(gr, tr("THEME"), ts, tx + dp(5), ty + dp(2));
+        }
+        text(gr, name, 12, on ? 600 : 400, fg, dp(76), y, w - dp(76) - dp(18) - cw - dp(10) - (tw ? tw + dp(8) : 0), ROW());
         gr.DrawText(cnt, cf, on ? C.bg : C["text-muted"], w - dp(18) - cw, y, cw + dp(2), ROW(), DT_SINGLE);
         hits.add("pl", 0, y, w, ROW(), i);
     }
@@ -159,6 +175,7 @@ function showTip(k) {
 
 // ------------------------------------------------------------------------------------------------- actions
 function activate(i) { if (i >= 0 && i < plman.PlaylistCount) plman.ActivePlaylist = i; }
+// play: lib/playlists.js playPlaylist
 function newPlaylist() { const i = plman.CreatePlaylist(plman.PlaylistCount, ""); plman.ActivePlaylist = i; }
 function renamePlaylist(i) {
     if (i < 0) return;
@@ -180,6 +197,10 @@ function railJump(k, play) {
 
 function playlistMenu(x, y, i) {
     const menu = window.CreatePopupMenu();
+    if (i >= 0) {
+        menu.AppendMenuItem(plman.PlaylistItemCount(i) ? 0 : 1, 7, tr("Play playlist"));
+        menu.AppendMenuSeparator();
+    }
     menu.AppendMenuItem(0, 1, tr("New playlist"));
     if (i >= 0) {
         menu.AppendMenuItem(0, 2, tr("Rename…"));
@@ -196,6 +217,7 @@ function playlistMenu(x, y, i) {
     else if (id === 4) removePlaylist(i);
     else if (id === 5) plman.ShowAutoPlaylistUI(i);
     else if (id === 6) removeInstrumentals(i);
+    else if (id === 7) playPlaylist(i);
 }
 
 // --------------------------------------------------------------------------------------------------- mouse
@@ -261,14 +283,19 @@ function on_mouse_lbtn_up(x, y) {
     }
     const a = hits.at(x, y);
     if (!a) return;
-    if (a.id === "pl") activate(a.data);
+    if (a.id === "pl") {
+        const now = Date.now(), L = lastRowUp;
+        lastRowUp = { i: a.data, t: now };
+        if (L && L.i === a.data && now - L.t <= DBL_MS) { lastRowUp = null; playPlaylist(a.data); }
+        else activate(a.data);
+    }
     else if (a.id === "new") newPlaylist();
     else if (a.id === "rail") railJump(Math.floor((y - TOP()) / PITCH()), false);
 }
 function on_mouse_lbtn_dblclk(x, y) {
     if (sideEdgeAt(x)) { sendSide("list", SIDES_START.list, true); return; }   // the edge: back to the list's own width
     const a = hits.at(x, y);
-    if (a && a.id === "pl") renamePlaylist(a.data);
+    if (a && a.id === "pl") { lastRowUp = null; playPlaylist(a.data); }   // F2 or the right-click menu renames
     else if (a && a.id === "rail") railJump(Math.floor((y - TOP()) / PITCH()), true);
     else if (!a && y > TOP() && x < MW()) newPlaylist();
 }
@@ -327,6 +354,7 @@ function on_key_down(vk) {
         if (i < scroll) scroll = i; else if (i >= scroll + rows) scroll = i - rows + 1;
         return;
     }
+    if (vk === 0x0D) { playPlaylist(active); return; }              // Enter
     if (vk === 0x71) { renamePlaylist(active); return; }            // F2
     if (vk === 0x2E) { removePlaylist(active); return; }            // Delete
     if (ctrl && vk === 0x4E) { newPlaylist(); return; }             // Ctrl+N
@@ -346,5 +374,5 @@ function on_item_focus_change(pl) { if (pl === plman.ActivePlaylist) { railDirty
 function on_playback_stop(reason) { if (reason !== 2) refresh(); }
 function on_colours_changed() { refreshTokens(); window.Repaint(); }
 onMessage("state", () => { if (STATE.view !== "playlists" && railHover >= 0) { railHover = -1; sendTip(null); } window.Repaint(); });
-window.DlgCode = 0x0004;   // arrows, F2 and Delete reach the panel
+window.DlgCode = 0x0004;   // arrows, Enter, F2 and Delete reach the panel
 helloFrame();   // lib/bus.js

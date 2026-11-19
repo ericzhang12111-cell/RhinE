@@ -96,7 +96,7 @@ I18N["zh-TW"] = {
     "NO COVER": "無封面", "END": "結束",
 
     // style
-    "STYLE  ·  05": "外觀  ·  05", "CASE SKIN": "唱片盒", "COLOUR SCHEME": "配色方案", "DISPLAY": "顯示",
+    "STYLE  ·  06": "外觀  ·  06", "CASE SKIN": "唱片盒", "COLOUR SCHEME": "配色方案", "DISPLAY": "顯示",
     "IN USE": "使用中", "MODE": "模式", "PLAY INTRO": "播放開場動畫", "PREVIEW": "預覽", "TEXT": "文字", "INSPECT": "放大",
     "FLOOR": "背景", "PLAIN": "純色", "LAB DECK": "實驗檯", "Archive floor": "曲庫背景", "Plain": "純色", "Lab deck": "實驗檯", "REAL STYLE": "寫實", "Real style": "寫實",
     "CLICK TO SKIP": "點擊跳過",
@@ -152,6 +152,23 @@ I18N["zh-TW"] = {
     "Skip this version": "略過此版本",
     "Check for updates daily": "每天檢查更新",
     "Check for updates…": "檢查更新…",
+    // problem reports (lib/report.js)
+    "Report a problem": "回報問題",
+    "Report on GitHub…": "在 GitHub 上回報…",
+    "Copy the diagnostics (to paste in a comment or message)": "複製診斷資訊（可貼到留言或私訊）",
+    "Show the diagnostics…": "檢視診斷資訊…",
+    "Clear the error log": "清除錯誤紀錄",
+    "Recent errors: {0}": "最近的錯誤：{0} 筆",
+    "No errors recorded": "沒有錯誤紀錄",
+    "Copied to the clipboard:": "已複製到剪貼簿：",
+    "Could not copy; select the text below and copy it:": "無法複製，請選取下方文字手動複製：",
+    "ERROR · REPORT": "出錯了 · 回報",
+    "Dismiss": "忽略",
+    "Diagnostics (RhinE)": "診斷資訊（RhinE）",
+    "none": "無",
+    "What happened?": "遇到了什麼問題？",
+    "Steps to reproduce": "重現步驟",
+    "Diagnostics": "診斷資訊",
     "RhinE {0} is the latest version.": "RhinE {0} 已是最新版本。",
     "Could not check for updates: GitHub and jsDelivr did not answer. The releases are at {0}": "無法檢查更新：GitHub 和 jsDelivr 都沒有回應。可以到這裡下載新版本：{0}",
     "WALLPAPER": "桌布",
@@ -331,11 +348,11 @@ I18N["zh-TW"] = {
     "That is not a Client ID (32 letters and digits, from developer.spotify.com › your app).": "這不是 Client ID（應為 32 位字母和數字，在 developer.spotify.com 的應用程式頁面裡）。",
     "Your Spotify app's Client ID (developer.spotify.com › Dashboard › your app; its redirect URI: {0})": "你的 Spotify 應用程式的 Client ID（developer.spotify.com › Dashboard › 你的應用程式；重新導向 URI 填：{0}）",
     "CONNECTED": "已連接", "CONNECTED AS {0}": "已連接：{0}", "LOG IN IN THE BROWSER …": "請在瀏覽器中登入 …", "DISCONNECT": "中斷連接", "CONNECT SPOTIFY": "連接 Spotify",
-    "06 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "06 線上需要安裝一個本機小服務（Node.js 和各音樂平台的介面程式庫，約 160 MB）。",
+    "05 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "05 線上需要安裝一個本機小服務（Node.js 和各音樂平台的介面程式庫，約 160 MB）。",
     "CONNECT QQ MUSIC": "連接 QQ 音樂", "SEARCH QQ MUSIC": "搜尋 QQ 音樂", "Open the QQ Music app": "開啟 QQ 音樂 App",
     "Scan with the app's own scanner": "用 App 內建的掃一掃掃碼", "Open QQ on the phone": "在手機上開啟 QQ", "Scan with QQ's scanner": "用 QQ 的掃一掃掃碼",
     "Open WeChat on the phone": "在手機上開啟微信", "Scan with WeChat's scanner": "用微信的掃一掃掃碼", "SCAN WITH": "掃碼方式", "QQ MUSIC APP": "QQ 音樂 App",
-    "WECHAT": "微信", "ONLINE": "線上", "Online view": "線上", "SEARCH NETEASE": "搜尋網易雲", "ONLINE  ·  06": "線上  ·  06", "NOT CONNECTED": "未連接",
+    "WECHAT": "微信", "ONLINE": "線上", "Online view": "線上", "SEARCH NETEASE": "搜尋網易雲", "ONLINE  ·  05": "線上  ·  05", "NOT CONNECTED": "未連接",
     "COMING": "即將推出", "IMPORT · COMING": "匯入 · 即將推出", "SECTION": "分區", "HOME": "首頁", "LIKED SONGS": "我喜歡的音樂", "MY PLAYLISTS": "我的歌單", "SEARCH": "搜尋",
     "BRIDGE": "本機服務", "ACCOUNT": "帳號", "STANDARD": "一般用戶", "LOG OUT": "登出", "ABSENT": "未安裝", "READY": "就緒", "ERROR": "錯誤", "NOT INSTALLED": "未安裝",
     "INSTALLING": "正在安裝", "STARTING": "正在啟動",
@@ -355,4 +372,19 @@ I18N["zh-TW"] = {
     "CASE & COLOUR": "唱片盒與配色", "PRESETS": "預設", "WORLDS 2026 · SPECIAL": "WORLDS 2026 · 特別預設", "League of Legends World Championship special presets: applying one replaces your custom colours and custom case.": "此為英雄聯盟世界賽特別預設：套用後會取代你的自訂配色和自訂唱片盒。", "Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop.": "背景由 Image-2.6-Sunburst 生成，Photoshop 排版。", "YOURS": "我的預設", "SAVE THIS LOOK": "儲存目前外觀", "Name of the preset": "預設名稱",
     "Save current look": "儲存目前外觀", "PRESET": "預設",
     "Colour": "顏色", "Black": "黑色", "White": "白色", "Follow light / dark": "跟隨深淺色",
+    // playlists: play on double-click, the theme's own playlists tagged
+    "Play playlist": "播放此清單", "THEME": "主題",
+    // archive: group by artist or rating, sort by rating, one shelf per artist or folder
+    "INITIAL": "首字母", "Group by artist": "依藝人分組", "Group by rating": "依評分分組", "RATING {0}": "評分 {0}",
+    "Rating (highest first)": "評分（最高在前）", "One shelf per artist or folder": "每位藝人、每個資料夾單獨一排",
+    // signal: what shows under the ring and along the bottom (PANELS)
+    "PANELS": "面板", "Under the ring": "莫比烏斯環下方", "Along the bottom": "底部", "Spectrum": "頻譜", "Lyrics": "歌詞", "Level meters": "音量表", "Stereo scope": "立體聲相位圖",
+    "Signal trace": "整首波形", "Level history": "音量歷程", "LEVEL HISTORY  ·  60 S": "音量歷程  ·  60 秒", "CORR": "相關性", "BALANCE": "聲道平衡", "MONO": "單聲道", "For the 3D and 2D models": "用於 3D 和 2D 樣式",
+    // mini player: its shape (wide / square), and the MENU entry that opens it
+    "Shape": "形狀", "Wide": "長條", "Square": "方形", "Open the mini player": "開啟迷你播放器",
+    // 06 STYLE: ARRAY CASE, COLOUR SCHEME and ROOM CASE as pages of their own (the room's cases as renders)
+    "ARRAY CASE": "陳列唱片盒", "ROOM CASE": "展室唱片盒",
+    "Frosted cream polymer, lit from the floor below": "霧面奶白樹脂，由地面底光照亮", "Jade glass, lit from the floor below": "翡翠玻璃，由地面底光照亮",
+    "Matte white cases under lights of their own: pick one under ROOM LIGHT": "霧面白色唱片盒，帶專屬燈光：在下方「燈光」中選擇", "Black cases under lights of their own: pick one under ROOM LIGHT": "黑色唱片盒，帶專屬燈光：在下方「燈光」中選擇",
+    "RHINE LAB's own cases, each with its paper label": "RHINE LAB 專屬唱片盒，每個都附紙質標籤", "There is no light to pick for this case.": "這款唱片盒沒有可選的燈光。",
 };

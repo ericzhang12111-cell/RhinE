@@ -2,7 +2,8 @@
 // 01 · ARCHIVE, GRID layout (stage.js includes this after archive.js): every album as a cover in a grid, in sections by
 // the archive's grouping (genre, decade or artist initial), for browsing by eye. It shares the archive's selection and
 // its album file on the right; LAYOUT [ARRAY | GRID] (key G) switches between the two.
-//   click a cover: select it · double-click / Space: play the album · Enter: open it in the Archive playlist
+//   click a cover: select it · double-click: play the album (the one playing goes on, a paused one resumes) · Space:
+//   play it (the one playing: play / pause) · Enter: open it in the Archive playlist
 //   wheel scrolls; arrows move the selection (across sections), Page Up / Down a screen, Home / End
 //   PER PAGE 10 · 36 · 50 · 75 · 100 · 200: about that many covers on screen (the cover size follows)
 // Only the covers on screen (and a row around them) are drawn and asked for; thumbnails come from the library worker's
@@ -364,7 +365,7 @@ function gridClick(x, y, a) {
 }
 function gridDblClick(x, y) {
     const h = gridAt(x, y);
-    if (h) { gridSelect(h.gi, h.i, false); playAlbum(); }
+    if (h) { gridSelect(h.gi, h.i, false); playCase(); }
 }
 function gridWheel(step) {
     const G = gridGeom();

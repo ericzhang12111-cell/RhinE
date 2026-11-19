@@ -6,7 +6,9 @@
 //   grain   the noise texture over each panel                 settings  settings kept across layout imports
 //   i18n    tr(): the interface language                     custom  the user's own colour scheme
 //   wallpaper  the user's picture behind some views          rating  track ratings (where kept, read, set, drawn)
-//   tag     the title tag: the song's title on a rendered tag (05 STYLE)
-//   field   one-line text fields (the search, 05 STYLE's text size)
+//   tag     the title tag: the song's title on a rendered tag (06 STYLE)
+//   field   one-line text fields (the search, 06 STYLE's text size)
+//   report  the error log and problem reports (MENU › Audio Archive › Report a problem)
 
-for (const f of ["settings", "i18n", "custom", "tokens", "motion", "text", "draw", "bus", "rating", "favourite", "skins", "grain", "wallpaper", "tag", "field"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
+// report first: it wraps the timers before any other file makes one (lib/report.js)
+for (const f of ["report", "settings", "i18n", "custom", "tokens", "motion", "text", "draw", "bus", "rating", "favourite", "skins", "grain", "wallpaper", "tag", "field"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);

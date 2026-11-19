@@ -1,5 +1,5 @@
 ﻿"use strict";
-// The title tag (05 STYLE › TITLE TAG): the song's title printed on a rendered tag instead of plain text, on the signal
+// The title tag (06 STYLE › TITLE TAG): the song's title printed on a rendered tag instead of plain text, on the signal
 // profile card and the album file. A tag has three bands (a pale top band, the body, an accent band along the bottom)
 // whose colours come from the colour scheme (paper, ink, accent), from the case skin, or the user's three own.
 //
@@ -9,7 +9,7 @@
 // own colours. The see-through finishes show the panel through them (a dot grid on it, so there is something to see):
 // TRANSPARENT (clear acrylic: clear-shade.png is its edges and glare, clear-mask.png its outline) with the band colours
 // as a tint, TRANSLUCENT (the grid blurred) and the TIDE and AURORA glass (their colours over the grid); how much the
-// colours cover is 05 STYLE › TAG OPACITY. The solid finishes can have a see-through middle band (TAG BODY). Then the
+// colours cover is 06 STYLE › TAG OPACITY. The solid finishes can have a see-through middle band (TAG BODY). Then the
 // print, white per band (print-top/-body/-bottom.png, inked dark or light to read on its band), the colour bars
 // (print-static.png) and the eyelet (eyelet.png). tags.json says where the bands end and where the title and the small
 // print go. The plate is put together once per shape, finish, colours, width and page; the title is set live, so it can
@@ -33,12 +33,12 @@ const TAG_CASE = {
     tide: ["#eef3fb", "#2a5fe6", "#8fd8f2"], aurora: ["#f4f0e4", "#a9a6ea", "#e8e2fb"],
 };
 const TAG_CUSTOM_START = ["#f1efe8", "#2b3240", "#e2722b"];
-// how much of the page the colours of the see-through parts cover (05 STYLE › TAG OPACITY), in per cent
+// how much of the page the colours of the see-through parts cover (06 STYLE › TAG OPACITY), in per cent
 const TAG_OPACITIES = [[25, "25%"], [50, "50%"], [75, "75%"]];
 // how a finish shows the page: "clear" (sharp, a little bent), "frosted" (blurred), "glass" (Tide and Aurora: their
 // colours over it, sharp); the others are solid
 const TAG_SEE_KIND = { clear: "clear", frosted: "frosted", tide: "glass", aurora: "glass" };
-// the middle band of a solid finish (05 STYLE › TAG BODY): solid, or see-through like the translucent or clear plate
+// the middle band of a solid finish (06 STYLE › TAG BODY): solid, or see-through like the translucent or clear plate
 const TAG_BODIES = [["solid", "SOLID"], ["frosted", "TRANSLUCENT"], ["clear", "TRANSPARENT"]];
 const tagBodyKind = fin => !TAG_SEE_KIND[fin] && !tagFactoryFin(fin) && ["frosted", "clear"].includes(STATE.tagBody) ? STATE.tagBody : null;
 // whether a finish shows the page anywhere (the TAG OPACITY row is offered then)

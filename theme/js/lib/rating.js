@@ -4,7 +4,7 @@
 //   auto       foo_playcount's statistics when it is installed, else JSplitter's database (the default)
 //   jsplitter  JSplitter's own statistics database, %jsplitter_rating%: nothing to install, no file is written
 //   playcount  foo_playcount's Playback Statistics, %rating%: the rating other components and columns show
-//   tag        a RATING tag in the files themselves (a 0–100 value written by another player reads as 1–5)
+//   tag        a RATING tag in the files themselves (a 0–100 or 0–255 value written by another player reads as 1–5)
 // Giving a track the rating it already has clears it; Ctrl+1–5 rates the playing (else focused) track from any view,
 // Ctrl+0 clears it (globalKey in lib/bus.js). Every store tells foobar2000 the track changed, so the panels
 // hear of it through on_metadb_changed.
@@ -22,7 +22,11 @@ function ratingStore() {
     if (s === "jsplitter" || s === "tag" || (s === "playcount" && HAS_PLAYCOUNT)) return s;
     return HAS_PLAYCOUNT ? "playcount" : "jsplitter";
 }
-const normRating = v => { v = parseFloat(v) || 0; if (v > 5) v /= 20; return clamp(Math.round(v), 0, 5); };
+// 1–5 as they are; a multiple of 10 up to 100 a percentage (20 a mark); anything else the 0–255 of an ID3 POPM frame
+// (Windows Media Player writes 1, 64, 128, 196, 255; MediaMonkey 54 for two): up to 31 is 1, up to 95 is 2, up to 159 is 3,
+// up to 223 is 4, then 5. (64 could be a percentage too, but the players that write percentages keep to whole tens.)
+const popmRating = v => v < 32 ? 1 : v < 96 ? 2 : v < 160 ? 3 : v < 224 ? 4 : 5;
+const normRating = v => { v = parseFloat(v) || 0; if (v > 100 || (v > 5 && v % 10)) v = popmRating(v); else if (v > 5) v /= 20; return clamp(Math.round(v), 0, 5); };
 const getRating = h => h ? normRating(RATING_TF[ratingStore()].EvalWithMetadb(h)) : 0;
 const getRatings = list => list && list.Count ? RATING_TF[ratingStore()].EvalWithMetadbs(list).map(normRating) : [];
 // toggle: giving a track the rating it already has clears it (the marks); off for the keys (Ctrl+1–5, Ctrl+0 clears)

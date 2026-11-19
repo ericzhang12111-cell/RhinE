@@ -32,7 +32,7 @@ function mix(a, b, t) {
 }
 const withAlpha = (c, alpha) => (((Math.round(alpha * 255) & 255) << 24) | (c & 0xFFFFFF)) >>> 0;
 
-// The interface font (05 STYLE › FONT): Geist Mono, Oxanium or Chakra Petch (all SIL OFL, in assets/fonts). Static
+// The interface font (06 STYLE › FONT): Geist Mono, Oxanium or Chakra Petch (all SIL OFL, in assets/fonts). Static
 // TTFs, so each weight is its own family name (700 is the regular family with the bold flag). Geist Mono is installed
 // per user by install.ps1; loading every file privately as well keeps the panels correct if it was removed or the theme
 // was copied by hand. A family whose files are missing falls back to Geist Mono.

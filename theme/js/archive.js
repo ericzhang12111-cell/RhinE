@@ -8,7 +8,7 @@
 //          wave around it; the selected case decrypts frost → clear and gets corner marks and a leader to its ARC
 //          number. Below: ALBUM / SELECT numeral, album index (navigation), shelf switcher. Click the selected case
 //          (or Enter) to inspect it: the case is lifted straight up out of its row, then turns square-on in front
-//          (and goes back the same way).
+//          (and goes back the same way). Double-click a case (or Space) to play its album (archiveDoubleClick).
 //   right  the album file, two pages (the two dots at the bottom, or L):
 //            FILE    eyebrow, bracketed album number, format chip, title plate, artist, profile table, first tracks,
 //                    PLAY ALBUM / OPEN ALBUM, ghost row name
@@ -35,7 +35,6 @@ const AR_ST = {
 const AS = .54;                    // array sprite px → dp (the renders are 2× for sharpness)
 const PITCH = 1.0, ROWP = 4.7;     // case spacing along a row and between rows, in case.json axis units
 const CLOSE = [.45, -.62, .64];    // "towards the viewer", for back-to-front sorting
-const ARCHIVE_PLAYLIST = "Archive · Album";
 const LIFT_OUT = 2.2;              // how far the inspected case rises out of its row, in case.json axis units
 const INSP_LIFT = .32, INSP_TURN = .72, INSPECT_ZOOM = 2.05;   // stage durations (s); size at the end of the turn
 
@@ -53,17 +52,22 @@ const AR = {
     title: null, tracks: { key: "", rows: [], total: 0 },
     page: ["tracks", "artist"].includes(getSetting("archiveInfoPage", "file")) ? getSetting("archiveInfoPage", "file") : "file",   // the album file's page
     list: null, listVer: 0, listScroll: 0, listMax: 0, listKey: "",   // the TRACKS page: its rows, their scroll
-    rateHover: null, mouseX: 0, mouseY: 0,   // { i, n }: the rating under the mouse (previewed); the mouse (wheel over the file)
+    rateHover: null, mouseX: -1, mouseY: -1,   // { i, n }: the rating under the mouse (previewed); the mouse (-1: not over the panel)
     rulerStart: Spring(0, 14), ticks: new Map(),
     dirtyInfo: true, info: null,
     topTitles: getSetting("caseTopTitles", true) !== false,
     frontShelves: getSetting("archiveFrontShelves", false) === true,   // the shelves in front stay in view (the context menu)
-    frost: getSetting("caseFrost", true) !== false,   // the cases not selected behind frosted glass, their covers blurred (the context menu, 05 STYLE)
+    shelfPerGroup: getSetting("archiveShelfPerGroup", true) !== false,   // GROUP › ARTIST and FOLDER: each group on shelves of its own (the context menu)
+    frost: getSetting("caseFrost", true) !== false,   // the cases not selected behind frosted glass, their covers blurred (the context menu, 06 STYLE)
     skipInst: getSetting("skipInstrumentals", false) === true,   // play albums without their instrumentals (lib/playlists.js)   // the titles on the cases' top edges (the context menu)
     hoverMode: HOVER_MODES.includes(getSetting("caseHover", "outline")) ? getSetting("caseHover", "outline") : "outline",   // the case under the mouse: outlined, titled or left as is (the context menu)
     hoverPlate: null,   // the case to label this frame (hoverMode "label"): drawn after the shelf, over its neighbours
     hoverRow: -1,       // the shelf (row index) of the case under the mouse (AR.hover): the selected one or any other
     selPlate: null,     // the selected case's plate to draw this frame: after every shelf, over the ones in front
+    overHit: false,     // the mouse is over a button or another click area (no case is under it then)
+    lastClick: null,    // { gi, i, key, t }: the case the last click went to, for a double-click (archiveDoubleClick)
+    eatUp: 0,           // when a double-click was taken: the button's release that follows it is not a click
+    playAfter: null,    // { gi, i, key }: a double-clicked case waiting for the inspection to be put back (archiveDoubleClick)
 };
 let ARCHIVE_ON = false;
 const PICK = { steps: null, t: 0, after: false };   // RANDOM PICK's run (see randomPick)
@@ -75,7 +79,8 @@ try { AR.selAlbum = String(JSON.parse(getSetting("archiveSel", "{}")).key || "")
 // file panel say which group a case belongs to). A larger one starts a shelf of its own, after topping up a shelf left
 // short of SHELF_MIN, and is shared out evenly over as few shelves as hold the rest (45: 23 + 22, rather than 20 + 20
 // + 5, which leaves a few cases alone on the last shelf). A shelf's rail is as long as its cases, SHELF_MIN slots at
-// least.
+// least. Grouped by artist or folder, every group starts a shelf of its own (AR.shelfPerGroup, on unless turned off in
+// the context menu), so a shelf is one artist or one folder however few cases it has.
 // shelf: { name, albums, slot (each album's slot), slots, segs: [{ gi, name, from, n, slot, part, parts, total }] }
 // The grid's sections are the plain groups; both layouts share the selected album.
 const SHELF_MIN = 10, SHELF_MAX = 30;
@@ -93,10 +98,11 @@ function buildShelves() {
         if (!parts.has(gi)) parts.set(gi, []);
         parts.get(gi).push(seg);
     };
+    const alone = AR.shelfPerGroup && (LIB.groupBy === "albumartist" || LIB.groupBy === "folder");
     LIB.groups.forEach((g, gi) => {
         const N = g.albums.length;
         let i = 0;
-        if (cur) {
+        if (cur && !alone) {
             if (cur.used + N <= SHELF_MAX) { put(g, gi, 0, N); return; }   // beside the groups before it
             // a short shelf is topped up (the rest is then more than SHELF_MIN: N > SHELF_MAX - used)
             if (cur.used < SHELF_MIN) { i = SHELF_MIN - cur.used; put(g, gi, 0, i); }
@@ -113,6 +119,14 @@ function buildShelves() {
     });
     SHELVES = out;
     SHELF_SPAN = Math.max(SHELF_MIN, ...out.map(s => s.slots));
+}
+// a row's name as shown: each group on it by its name (groupName), a part of a longer group with its number; full: a
+// folder by its whole path (the list of every shelf)
+function rowName(row, full) {
+    const nm = g => full && LIB.groupBy === "folder" ? g || tr("UNKNOWN") : groupName(g);
+    if (!row.segs) return nm(row.name);
+    const one = row.segs[0];
+    return row.segs.length > 1 ? row.segs.map(g => nm(g.name)).join("  ·  ") : one ? nm(one.name) + (one.parts > 1 ? `  ${one.part} / ${one.parts}` : "") : "";
 }
 // the rows of the layout in use: shelves (array) or groups (grid)
 const arRows = () => AR.layout === "grid" ? LIB.groups : SHELVES;
@@ -381,6 +395,7 @@ function archiveUpdate(dt) {
     let more = stepInspection(dt);
     more = stepSwap(dt) || more;
     more = pickUpdate(dt) || more;
+    more = playAfterUpdate() || more;
     // Keep a full viewport near the end of the library, plus a row at each edge for animation.
     const start = arrayStart(), count = arrayGeom().count, F = frontRows();
     for (let gi = start - 1 - F; gi <= start + count; gi++) if (gi >= 0 && gi < G.length) rowState(gi).pos.to = gi - start;
@@ -451,16 +466,32 @@ function caseWindow(r, row, pos = r.pos.x, scroll = r.scroll.x) {
 const inspLift = () => easeInOut(clamp(AR.insp, 0, 1));
 const inspTurn = () => easeInOut(clamp(AR.insp - 1, 0, 1));
 const ROOM_INSP_FADE = .22;   // the room's inspection fades in and out over this (s)
+// The room's inspection is held back while a double-click can still come: the clicked case rises a little at once (the
+// press, 0 → 1, room.js ROOM_ARM_LIFT) and the inspection fades in over the room only once the system's double-click
+// hold has run out since the click (AR.inspAt), so a double-click on the selected case (archiveDoubleClick) plays it
+// without the inspection flashing up first. Enter (no double-click to wait for) opens it at once.
+const ROOM_INSP_ARM = .18;    // the press (s)
+// (not the whole of a long double-click time: most double-clicks come well inside this, and the press shows at once)
+const ROOM_INSP_HOLD = Math.min(DBL_MS, 320);
+const inspHeld = () => AR.inspAt > 0 && Date.now() - AR.inspAt < ROOM_INSP_HOLD;
+// a click opens the inspection: held while a double-click can still come (the room; the array's lift hides it)
+function inspectClicked() {
+    AR.inspOn = true;
+    AR.inspAt = Date.now();
+    inspectImages();
+    clock.wake();
+}
 function stepInspection(dt) {
-    const target = AR.inspOn ? (ARIMG.inspect ? 2 : 1) : 0;
-    if (AR.insp === target) return AR.inspOn && !ARIMG.inspect;
-    if (REDUCE_MOTION) { AR.insp = target; return false; }
+    const held = AR.inspOn && roomOn() && inspHeld();
+    if (!AR.inspOn || !held) AR.inspAt = 0;
+    const target = AR.inspOn ? (ARIMG.inspect && !held ? 2 : 1) : 0;
+    if (AR.insp === target) return held || (AR.inspOn && !ARIMG.inspect);
+    if (REDUCE_MOTION) { AR.insp = target; return held; }
     if (roomOn()) {
-        // (no lift: straight to 1 going in, straight to 0 once faded out)
-        if (target >= 1 && AR.insp < 1) AR.insp = 1;
-        if (target === 0 && AR.insp <= 1) { AR.insp = 0; return false; }
-        const dir = Math.sign(Math.max(1, target) - AR.insp);
-        AR.insp = clamp(AR.insp + dir * dt / ROOM_INSP_FADE, 1, 2);
+        // the press (0 → 1, also sinking back), then the fade over the room (1 → 2)
+        const dir = Math.sign(target - AR.insp), pressing = dir > 0 ? AR.insp < 1 : AR.insp <= 1;
+        const next = AR.insp + dir * dt / (pressing ? ROOM_INSP_ARM : ROOM_INSP_FADE);
+        AR.insp = dir > 0 ? Math.min(next, pressing ? 1 : target) : Math.max(next, pressing ? target : 1);
         return true;
     }
     const dir = Math.sign(target - AR.insp), lifting = dir > 0 ? AR.insp < 1 : AR.insp <= 1;
@@ -776,7 +807,7 @@ function inspectImages() {
     return null;
 }
 // the archive's big images are kept only while it is shown
-function archiveHidden() { pickStop(); AF.layer = null; AF.img = {}; TOP_IMG.clear(); AR.inspOn = false; AR.insp = 0; ARIMG.inspect = null; ARIMG.gen++; ARIMG.inspectLoading = false; ARIMG.faded.clear(); ARIMG.clear = ARIMG.frost = ARIMG.rail = null; AR.info = null; FLOOR.key = null; FLOOR.img = null; }
+function archiveHidden() { pickStop(); AR.playAfter = null; AF.layer = null; AF.img = {}; TOP_IMG.clear(); AR.inspOn = false; AR.insp = 0; ARIMG.inspect = null; ARIMG.gen++; ARIMG.inspectLoading = false; ARIMG.faded.clear(); ARIMG.clear = ARIMG.frost = ARIMG.rail = null; AR.info = null; FLOOR.key = null; FLOOR.img = null; }
 
 // covers of what is on screen, nearest first: the current row around the selection, then the rows behind
 function requestVisibleThumbs() {
@@ -949,8 +980,9 @@ function drawArchive(gr) {
     }
     // The case under the mouse was found when the mouse last moved; the shelves may have moved under it since (a shelf
     // switched with the keys, or one gone from view), so it is looked for again where the mouse stands, in this frame's
-    // click areas: a click then takes the case shown under it, not one that was there.
-    if (AR.hover >= 0) {
+    // click areas: a click then takes the case shown under it, not one that was there. (Whatever the case was before:
+    // a case that slid in under the still mouse, or one shown again after the inspection, is found without a move.)
+    if (AR.mouseX >= 0 && AR.mouseX < aw && !AR.overHit) {
         const c = AR.inspOn || AF.open ? null : caseUnder(AR.mouseX, AR.mouseY), h = c ? c.i : -1, hg = c ? c.gi : -1;
         if (h !== AR.hover || hg !== AR.hoverRow) { AR.hover = h; AR.hoverRow = hg; clock.wake(); }
     }
@@ -1011,12 +1043,13 @@ function drawArrayCase(gr, it, sx, sy, k, aw, I) {
     const hv = AR.hoverMode === "none" ? 0 : clamp(it.c.hov.x, 0, 1), ta = Math.round(alpha * Math.max(readable(f), hv));
     if (AR.topTitles && ta > 0) drawTopTitle(gr, it.a, ox, oy, k, ta, f * (1 - hv));
     // the whole case (front face and top edge) at its resting place answers the mouse, on every shelf in view (a case
-    // on another shelf switches to it); the one under it is outlined
+    // on another shelf switches to it); the one under it is outlined (the selected one too: a click inspects it), or
+    // titled (not the selected one, which has its plate)
     if (alpha > 0) {
         const P = casePoly(), rx = it.rest[0] - meta.origin[0] * k, ry = it.rest[1] - meta.origin[1] * k;
         AR.hits.push({ i: it.i, gi: it.gi, quad: P.map(([px, py]) => [rx + px * k, ry + py * k]) });
-        const hovered = it.i === AR.hover && it.gi === AR.hoverRow && !it.isSel && AR.insp === 0;
-        if (hovered && AR.hoverMode === "label") AR.hoverPlate = { a: it.a, ox, oy, k, alpha };
+        const hovered = it.i === AR.hover && it.gi === AR.hoverRow && AR.insp === 0;
+        if (hovered && !it.isSel && AR.hoverMode === "label") AR.hoverPlate = { a: it.a, ox, oy, k, alpha };
         if (hovered && AR.hoverMode === "outline") gr.DrawPolygon(withAlpha(C.accent, alpha / 255), Math.max(HAIR, dp(1.5)), P.flatMap(([px, py]) => [ox + px * k, oy + py * k]));
     }
     // the selected case's corner marks, on its cover (a see-through shelf in front covers them, as it covers the case),
@@ -1198,7 +1231,7 @@ function drawRuler(gr) {
 }
 // a drag along the album index (#8): from a press on it until the release, wherever the mouse goes
 function rulerTickAt(x) { const R = AR.rulerGeom; return R ? clamp(Math.round((x - R.x0) / R.step + R.s0), 0, R.n - 1) : -1; }
-function rulerDown(x) { if (!AR.rulerGeom || AR.inspOn) return; pickStop(); AR.rulerDrag = true; AR.hoverTick = rulerTickAt(x); clock.wake(); }
+function rulerDown(x) { if (!AR.rulerGeom || AR.inspOn) return; pickStop(); AR.lastClick = null; AR.rulerDrag = true; AR.hoverTick = rulerTickAt(x); clock.wake(); }
 function rulerMove(x) { const t = rulerTickAt(x); if (t !== AR.hoverTick) { AR.hoverTick = t; clock.wake(); } }
 function rulerUp() {
     AR.rulerDrag = false;
@@ -1216,7 +1249,7 @@ function drawGroupSwitch(gr) {
     label(gr, lbl, s, x, y);
     drawRoll(gr, AR.groupRoll, f, C["text-muted"], x + labelWidth(lbl, s), y, cell, labelHeight(AR_ST.sel));
     label(gr, tail, s, x + labelWidth(lbl, s) + cell * 2, y);
-    label(gr, fitLabel(groupName(g.name), st(AR_ST.group, 0), dp(180)), st(AR_ST.group, C.fg), cx, y + dp(16), 1);
+    label(gr, fitLabel(rowName(g), st(AR_ST.group, 0), dp(180)), st(AR_ST.group, C.fg), cx, y + dp(16), 1);
     // the count and the name open the list of every shelf (shelfMenu): a small chevron after the count says so
     if (arRows().length > 1) {
         const vx = Math.round(x + w + dp(10)), vy = Math.round(y + labelHeight(AR_ST.sel) / 2), v = dp(3);
@@ -1305,7 +1338,7 @@ function drawInfo(gr, w, h) {
     const a = curAlbum();
     if (!a) return;
     const x = dp(20), iw = fileW(), gname = groupName(a.grp || "");
-    // the halftone (05 STYLE), under the ghost group name (both pages)
+    // the halftone (06 STYLE), under the ghost group name (both pages)
     halftoneDecor(gr, w, h, dp(210));
     // ghost group name, low behind the actions
     const gf = font(132, 700), gw = gr.CalcTextWidth(gname, gf);
@@ -1388,7 +1421,7 @@ function drawInfoFile(gr, a, x, y, iw, w, h) {
     y += hh + dp(14);
     gr.FillSolidRect(x, y, w - x, HEAVY, C.fg);
     y += HEAVY + dp(20);
-    // the album's title, or the track's: on the title tag (05 STYLE), or on title plates (wraps, two lines at most)
+    // the album's title, or the track's: on the title tag (06 STYLE), or on title plates (wraps, two lines at most)
     const al = albumOf(a) || a, isTrack = al !== a;
     const title = AR.title ? scrambleText(AR.title) : (a.title || tr("UNTITLED")), tf = fontFor(a.title || "U", 25, 600);
     const own = isTrack ? albumTrackList(a).rows.find(r => r.own) : null;
@@ -1530,11 +1563,13 @@ function drawInfoTracks(gr, a, x, y, iw, w, h) {
 }
 
 // ------------------------------------------------------------------------------------------------------ actions
+// the album playlist (lib/bus.js ARCHIVE_PLAYLIST): the first of that name the theme can refill. An autoplaylist or a
+// locked playlist of the same name is left alone and a fresh one made beside it.
 function archivePlaylist() {
-    let pl = plman.FindPlaylist(ARCHIVE_PLAYLIST);
-    if (pl >= 0 && plman.IsAutoPlaylist(pl)) pl = -1;
-    if (pl < 0) pl = plman.CreatePlaylist(plman.PlaylistCount, ARCHIVE_PLAYLIST);
-    return pl;
+    for (let i = 0; i < plman.PlaylistCount; i++) {
+        if (plman.GetPlaylistName(i) === ARCHIVE_PLAYLIST && !plman.IsAutoPlaylist(i) && !plman.IsPlaylistLocked(i)) return i;
+    }
+    return plman.CreatePlaylist(plman.PlaylistCount, ARCHIVE_PLAYLIST);
 }
 // keep: a track asked for by name, kept even when it is an instrumental the setting leaves out
 function loadAlbum(a, keep) {
@@ -1542,6 +1577,7 @@ function loadAlbum(a, keep) {
     if (!list || !list.Count) return -1;
     if (AR.skipInst) list = dropInstrumentals(list, keep);
     const pl = archivePlaylist();
+    plman.UndoBackup(pl);   // what was in it comes back with Edit › Undo
     plman.ClearPlaylist(pl);
     plman.InsertPlaylistItems(pl, 0, list);
     return pl;
@@ -1562,6 +1598,12 @@ function playAlbum(at) {
 }
 // the playing track is this item (a track item) or on this album, or in this folder
 function itemPlaying(a, np = fb.GetNowPlaying()) { return !!(a && np && (a.album ? sameTrack(itemTrack(a), np) : (a.folder ? folderKeyOf(np.Path) : albumKey(np)) === a.key)); }
+// a double-click on a case or a cover (array, room, grid): the selected item's album plays; when it is the one playing it
+// goes on (paused: it resumes) rather than starting again
+function playCase() {
+    if (!itemPlaying(curAlbum())) playAlbum();
+    else if (fb.IsPaused) fb.PlayOrPause();
+}
 // Inspect from elsewhere: the transport's cover and the signal profile card ask for the playing (else focused) track.
 // The Archive opens on its album (or on the track itself while SHOW TRACKS is on) and inspects it once the view is
 // shown and the item is listed; the grid gives way to the case array for it (the room inspects in place).
@@ -1622,7 +1664,7 @@ function caseUnder(x, y) {
     return null;
 }
 function archiveMouseMove(x, y, a) {
-    AR.mouseX = x; AR.mouseY = y;
+    AR.mouseX = x; AR.mouseY = y; AR.overHit = !!a;
     artistMouseMove(x, y, a);
     // the file panel's track rows highlight under the mouse; over a row's marks, the rating they would give shows
     const th = a && (a.id === "ar-track" || a.id === "ar-favt") ? a.data : a && a.id === "ar-rate" ? a.data.i : -1;
@@ -1649,13 +1691,19 @@ function archiveMouseLeave() {
     if (AR.hover >= 0 || AR.hoverTick >= 0) { AR.hover = AR.hoverRow = -1; AR.hoverTick = -1; clock.wake(); }
 }
 function archiveClick(x, y, a) {
+    // the release that ends a double-click (archiveDoubleClick took it); never one long after
+    if (AR.eatUp) { const t = AR.eatUp; AR.eatUp = 0; if (Date.now() - t < 1000) return; }
+    AR.lastClick = null;
+    AR.playAfter = null;   // a new click: a double-click still waiting is dropped
     if (a && a.id === "ar-pick") { randomPick(); return; }
     pickStop();
     if (artistClick(a)) return;
+    // the file's PLAY ALBUM and OPEN ALBUM answer while the case is inspected too (it stays inspected)
+    if (a && a.id === "ar-play") { playAlbum(); return; }
+    if (a && a.id === "ar-open") { openAlbum(); return; }
     if (AR.inspOn) { AR.inspOn = false; clock.wake(); return; }
     if (a) {
         switch (a.id) {
-            case "ar-play": playAlbum(); return;
             case "ar-addmusic": addMusicFolder(); return;
             case "ar-track": playAlbum(a.data); return;
             case "ar-rate": {
@@ -1665,7 +1713,6 @@ function archiveClick(x, y, a) {
             }
             case "ar-page": setInfoPage(a.data); return;
             case "ar-unit": setUnit(a.data); return;
-            case "ar-open": openAlbum(); return;
             case "ar-fav": { const c = curAlbum(); if (c && c.album) setFav(itemTrack(c)); else if (c) setFavAlbum(c.key); return; }
             case "ar-favt": { const L = AR.list, h = L && L.handles ? L.handles[a.data] : null; if (h) setFav(h); return; }
             case "ar-prev": moveAlbum(-1); return;
@@ -1685,12 +1732,56 @@ function archiveClick(x, y, a) {
     if (AF.open && x < arrayW()) return;   // the artist file covers the shelves
     if (AR.layout === "grid") { gridClick(x, y, a); return; }
     if (roomOn()) { roomClick(); return; }
-    if (AR.hover >= 0 && AR.hoverRow !== AR.group) { selectCase(AR.hoverRow, AR.hover); return; }
-    if (AR.hover >= 0) {
-        const r = AR.rows.get(AR.group);
-        if (AR.hover === r.sel) { AR.inspOn = true; inspectImages(); clock.wake(); }
-        else moveAlbum(AR.hover - r.sel);
+    if (AR.hover < 0) return;
+    noteClick(AR.hoverRow, AR.hover);
+    if (AR.hoverRow !== AR.group) { selectCase(AR.hoverRow, AR.hover); return; }
+    const r = AR.rows.get(AR.group);
+    if (AR.hover === r.sel) inspectClicked();
+    else moveAlbum(AR.hover - r.sel);
+}
+// the case a click went to (array, room), for a double-click that follows it
+function noteClick(gi, i) {
+    const row = arRows()[gi], a = row && row.albums[i];
+    AR.lastClick = a ? { gi, i, key: a.key, t: Date.now() } : null;
+}
+// A double-click on a case (the array, the room; the grid has gridDblClick) plays its album: the case its first click
+// went to (AR.lastClick), as the shelf has slid by then and another case may stand under the mouse. That click selected
+// it (or inspected it, when it was the selected one: the inspection is put back); the button's second release, which
+// would click again, is let go (AR.eatUp). Windows sends down, up, double-click, up.
+function archiveDoubleClick() {
+    if (AF.open || PICK.steps) return;
+    AR.eatUp = Date.now();
+    const L = AR.lastClick;
+    AR.lastClick = null;
+    if (!L || Date.now() - L.t > 2000) return;   // the first click went to no case (or closed the inspection)
+    AR.inspOn = false;
+    playClicked(L);
+}
+// plays the case a double-click went to; the first click not taken (the selection is held while an inspection is still
+// being put back) is taken now, or once the case is back (AR.playAfter), so the returning case keeps its album
+function playClicked(L) {
+    const row = arRows()[L.gi], a = row && row.albums[L.i];
+    if (!a || a.key !== L.key) return;
+    const r = rowState(L.gi);
+    if (L.gi !== AR.group || r.sel !== L.i) {
+        if (AR.insp > 0) { AR.playAfter = L; clock.wake(); return; }
+        AR.group = L.gi;
+        AR.ticks.clear();
+        r.sel = L.i;
+        r.scroll.to = scrollTarget(L.i, row);
+        selectionChanged();
     }
+    playCase();
+    clock.wake();
+}
+function playAfterUpdate() {
+    if (!AR.playAfter) return false;
+    if (AR.inspOn) { AR.playAfter = null; return false; }   // inspected again meanwhile
+    if (AR.insp > 0) return true;
+    const L = AR.playAfter;
+    AR.playAfter = null;
+    playClicked(L);
+    return false;
 }
 // the wheel: along the shelf (the array) or down the grid; over the TRACKS page, through its list. With Shift held
 // (or a sideways wheel, archiveWheelH) it switches shelves (the grid: sections), as ← → do.
@@ -1810,26 +1901,28 @@ function drawArchiveNote(gr) {
 // every shelf by name, to go straight to one (a click on the shelf's name under the array)
 function shelfMenu(x, y) {
     const R = arRows(), m = window.CreatePopupMenu(), PER = 30;
-    const name = i => `${pad(i + 1, 2)}   ${groupName(R[i].name).replace(/&/g, "&&")}\t${R[i].albums.length}`;
+    const name = i => `${pad(i + 1, 2)}   ${rowName(R[i], true).replace(/&/g, "&&")}\t${R[i].albums.length}`;
     if (R.length <= PER) R.forEach((g, i) => m.AppendMenuItem(0, i + 1, name(i)));
     else for (let p = 0; p < R.length; p += PER) {   // a long list (folders): thirty to a page
         const sub = window.CreatePopupMenu(), end = Math.min(R.length, p + PER);
         for (let i = p; i < end; i++) sub.AppendMenuItem(0, i + 1, name(i));
         if (AR.group >= p && AR.group < end) sub.CheckMenuRadioItem(p + 1, end, AR.group + 1);
-        const cut = s => { const t = [...groupName(s).replace(/&/g, "&&")]; return t.length > 18 ? t.slice(0, 17).join("") + "…" : t.join(""); };
-        sub.AppendTo(m, AR.group >= p && AR.group < end ? 0x8 : 0, `${pad(p + 1, 2)} – ${pad(end, 2)}   ${cut(R[p].name)} … ${cut(R[end - 1].name)}`);
+        const cut = r => { const t = [...rowName(r).replace(/&/g, "&&")]; return t.length > 18 ? t.slice(0, 17).join("") + "…" : t.join(""); };
+        sub.AppendTo(m, AR.group >= p && AR.group < end ? 0x8 : 0, `${pad(p + 1, 2)} – ${pad(end, 2)}   ${cut(R[p])} … ${cut(R[end - 1])}`);
     }
     if (R.length <= PER && R.length) m.CheckMenuRadioItem(1, R.length, AR.group + 1);
     const id = m.TrackPopupMenu(x, y);
     if (id > 0) moveGroup(id - 1 - AR.group);
 }
 function archiveMenu(x, y) {
-    const m = window.CreatePopupMenu(), by =["genre", "decade", "artist", "folder", "favourites", "none"], sorts = SORT_BY.map(([k]) => k);
-    ["Group by genre", "Group by decade", "Group by artist initial", "Group by folder", "Group by favourites", "No groups"].forEach((t, i) => m.AppendMenuItem(0, 30 + i, tr(t)));
+    // the groupings and sorts as GROUP and SORT in the top bar list them (lib/library.js)
+    const m = window.CreatePopupMenu(), by = GROUP_BY.map(([k]) => k), sorts = SORT_BY.map(([k]) => k);
+    GROUP_BY.forEach(([k, t], i) => m.AppendMenuItem(0, 30 + i, tr(GROUP_MENU[k] || t)));
     m.CheckMenuRadioItem(30, 30 + by.length - 1, 30 + Math.max(0, by.indexOf(LIB.groupBy)));
+    m.AppendMenuItem(AR.shelfPerGroup ? 0x8 : 0, 26, tr("One shelf per artist or folder"));
     const so = window.CreatePopupMenu();
-    ["Artist", "Album title", "Year", "Date added (newest first)"].forEach((t, i) => so.AppendMenuItem(0, 400 + i, tr(t)));
-    so.CheckMenuRadioItem(400, 403, 400 + Math.max(0, sorts.indexOf(LIB.sortBy)));
+    SORT_BY.forEach(([k, t], i) => so.AppendMenuItem(0, 400 + i, tr(SORT_MENU[k] || t)));
+    so.CheckMenuRadioItem(400, 400 + sorts.length - 1, 400 + Math.max(0, sorts.indexOf(LIB.sortBy)));
     so.AppendTo(m, 0, tr("Sort by"));
     m.AppendMenuItem(showTracks() ? 0x8 : 0, 10, tr("Show every track as its own item"));
     m.AppendMenuItem(itemUnit() === "folders" ? 0x8 : 0, 21, tr("Show every folder as one item"));
@@ -1881,6 +1974,7 @@ function archiveMenu(x, y) {
     else if (id >= 800) addToPlaylist(tg, id === 800 ? -1 : lists[id - 801]);
     else if (id === 23) fb.RunContextCommandWithMetadb("Properties", tg.list);
     else if (id === 25) setBarCompact(!AR.barCompact);
+    else if (id === 26) { AR.shelfPerGroup = !AR.shelfPerGroup; setSetting("archiveShelfPerGroup", AR.shelfPerGroup); placeSelection(AR.selAlbum); window.Repaint(); }
     else if (id === 24) { artistOnline(!ART.online); AF.prefKey = ""; AR.dirtyInfo = true; AF.dirty = true; window.Repaint(); }
     else if (id === 16) { if (c.album) setFav(itemTrack(c)); else setFavAlbum(c.key); }
     else if (id === 17) { favPlaylist(libHandles); send("view", "playlists"); }
@@ -1896,7 +1990,7 @@ function archiveMenu(x, y) {
     else if (id === 14) setInfoPage(AR.page === "tracks" ? "file" : "tracks");
     else if (id === 19) artistFileOpen(true);
     else if (id === 15) { AR.skipInst = !AR.skipInst; setSetting("skipInstrumentals", AR.skipInst); AR.dirtyInfo = true; window.Repaint(); }
-    else if (id >= 600 && ratingMenuPick(id, 600)) { AR.listVer++; AR.dirtyInfo = true; window.Repaint(); }
+    else if (id >= 600 && ratingMenuPick(id, 600)) { AR.listVer++; AR.dirtyInfo = true; libRatingStore(); window.Repaint(); }
     else if (id === 10) setUnit(showTracks() ? "albums" : "tracks");
     else if (id === 21) setUnit(itemUnit() === "folders" ? "albums" : "folders");
     else if (id === 5) openAlbum();

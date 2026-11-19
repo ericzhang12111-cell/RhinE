@@ -108,6 +108,7 @@ function playArtist(lib, from = null) {
     }
     if (!list.Count) return;
     const pl = archivePlaylist();
+    plman.UndoBackup(pl);   // what was in it comes back with Edit › Undo
     plman.ClearPlaylist(pl);
     plman.InsertPlaylistItems(pl, 0, list);
     let at = 0;

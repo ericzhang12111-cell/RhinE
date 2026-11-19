@@ -13,7 +13,14 @@ const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, s
                 textScale: 1, arrayScale: 1, inspectScale: 1.3, wallpaper: null, halftone: "bottom", halftoneLevel: "mid",
                 emblem: "ring", tag: "plastic", tagShape: "tab", tagColours: "scheme", tagCustom: null, tagOpacity: 50, tagBody: "solid", tagFactory: null, font: "geist",
                 sides: null, modeSystem: false, borderless: false, roomMat: "cream", roomLight: {},
-                mini: false, miniCorner: "br", miniShow: "lrc", miniSkin: "dark" };   // the mini player (mini.js): on, its screen corner, LRC | TRK
+                mini: false, miniCorner: "br", miniShow: "lrc", miniSkin: "dark", miniShape: "wide" };   // the mini player (mini.js): on, its screen corner, LRC | TRK, colours, shape
+
+// the mini player's shapes and their size in dp (mini.js draws them, frame.js and tools/window.ps1 size the window to
+// them), and its colours (MENU › Audio Archive › Mini player, and its own right-click menu)
+const MINI_SIZES = { wide: [560, 136], square: [304, 304] };
+const MINI_SHAPES = [["wide", "Wide"], ["square", "Square"]];
+const MINI_SKINS = [["dark", "Black"], ["white", "White"], ["auto", "Follow light / dark"]];
+const miniDims = () => MINI_SIZES[STATE.miniShape] || MINI_SIZES.wide;
 
 // text size, Array scale and inspection size: the choices offered in MENU › Audio Archive and the Style view (frame.js keeps the value)
 const TEXT_SCALES = [.9, 1, 1.1, 1.2, 1.35, 1.5], ARRAY_SCALES = [.8, .9, 1, 1.15, 1.3], INSPECT_SCALES = [1, 1.15, 1.3, 1.5];
@@ -24,7 +31,7 @@ const FLOORS = [["plain", "PLAIN"], ["deck", "LAB DECK"], ["real", "REAL STYLE"]
 const FLOOR_SKIN = { real: "frost" };
 const stageSkin = () => FLOOR_SKIN[STATE.floor] || STATE.skin;
 const pickFloor = v => FLOORS.some(f => f[0] === v) ? v : "plain";
-// the halftone of dots on the album file and the signal profile card (05 STYLE): where (off, along the bottom, the
+// the halftone of dots on the album file and the signal profile card (06 STYLE): where (off, along the bottom, the
 // lower right corner) and how strong (lib/draw.js halftoneDecor)
 const HALFTONES = [["off", "OFF"], ["bottom", "BOTTOM"], ["corner", "CORNER"]], HALFTONE_LEVELS = [["low", "FAINT"], ["mid", "MEDIUM"], ["high", "STRONG"]];
 const pickHalftone = v => HALFTONES.some(f => f[0] === v) ? v : "bottom";
@@ -56,10 +63,10 @@ const lyrFixed = () => STATE.lyricsSource === "lrclib" || STATE.lyricsSource ===
 // permission, with the old lyricsNetease default (on for a Chinese Windows, off elsewhere), so AUTO does not start
 // contacting NetEase for everyone.
 const lyrNetease = () => STATE.lyricsSource === "netease" || (STATE.lyricsSource === "auto" && !!STATE.lyricsNeteaseAuto);
-// the header's emblem (05 STYLE, lib/emblem.js): the Möbius ring or nested triangles
+// the header's emblem (06 STYLE, lib/emblem.js): the Möbius ring or nested triangles
 const EMBLEMS = [["ring", "RING"], ["delta", "DELTA"]];
 const pickEmblem = v => EMBLEMS.some(f => f[0] === v) ? v : "ring";
-// the Archive room's cases (05 STYLE › ARCHIVE › ROOM; room.js): cream polymer, jade glass, white or blackout, or the
+// the Archive room's cases (06 STYLE › ARCHIVE › ROOM; room.js): cream polymer, jade glass, white or blackout, or the
 // RhinE Lab original's own case (with the camera and light of its own room)
 const ROOM_MATS = [["cream", "FROST"], ["glass", "GLASS"], ["white", "WHITE"], ["blackout", "BLACKOUT"], ["rhine", "RHINE LAB"]];
 const pickRoomMat = v => ROOM_MATS.some(f => f[0] === v) ? v : "cream";
@@ -69,7 +76,7 @@ const ROOM_LIGHTS = { white: [["l2", "TOP LIGHT"], ["l3", "BACKLIGHT"], ["l5", "
                       blackout: [["l1", "WARM KEY"], ["l5", "TWO-TONE"], ["l6", "SOFTBOX"]] };
 const roomLightOf = (mat = STATE.roomMat) => { const L = ROOM_LIGHTS[mat]; if (!L) return ""; const v = STATE.roomLight && STATE.roomLight[mat]; return L.some(f => f[0] === v) ? v : L[0][0]; };
 const roomSet = (mat = STATE.roomMat) => roomLightOf(mat) ? `${mat}-${roomLightOf(mat)}` : mat;
-// A track's front cover, as utils.GetAlbumArtAsyncV2 gives it ({ image }); for a song of 06 ONLINE (the bridge's
+// A track's front cover, as utils.GetAlbumArtAsyncV2 gives it ({ image }); for a song of 05 ONLINE (the bridge's
 // address, lib/online.js) the cover the bridge saved beside its tag: foobar2000 reads no pictures from a stream
 const ONLINE_ART = fb.ProfilePath + "audio-archive-online\\data\\art\\";
 function albumArtAsync(handle) {
@@ -78,7 +85,7 @@ function albumArtAsync(handle) {
     if (file && utils.IsFile(file)) return d2d.LoadImageAsyncV2(0, file).then(image => ({ image }));
     return utils.GetAlbumArtAsyncV2(window.ID, handle, 0);
 }
-// the title tag on the signal profile card and the album file (05 STYLE, lib/tag.js): its finish, or off (plain text),
+// the title tag on the signal profile card and the album file (06 STYLE, lib/tag.js): its finish, or off (plain text),
 // its shape and where its colours come from (TAG_SHAPES, TAG_COLOUR_SOURCES in lib/tag.js); FACTORY: one of the tags
 // rendered in their own materials and colours (TAG_FACTORY in lib/tag.js, the one in use: tagFactory)
 const TAGS = [["off", "OFF"], ["plastic", "PLASTIC"], ["paper", "PAPER"], ["metal", "BRUSHED METAL"], ["frosted", "TRANSLUCENT"], ["clear", "TRANSPARENT"], ["tide", "TIDE GLASS"], ["aurora", "AURORA GLASS"],
@@ -88,11 +95,11 @@ const pickTagShape = v => ["tab", "notch", "round", "ticket"].includes(v) ? v : 
 const pickTagColours = v => ["scheme", "case", "custom"].includes(v) ? v : "scheme";
 const pickTagOpacity = v => [25, 50, 75].includes(+v) ? +v : 50;
 const pickTagBody = v => ["solid", "frosted", "clear"].includes(v) ? v : "solid";
-// the interface font (05 STYLE › FONT, lib/tokens.js FONT_FAMILIES)
+// the interface font (06 STYLE › FONT, lib/tokens.js FONT_FAMILIES)
 const FONTS = [["geist", "GEIST MONO"], ["oxanium", "OXANIUM"], ["chakra", "CHAKRA PETCH"]];
 const pickFont = v => FONTS.some(f => f[0] === v) ? v : "geist";
 const pickScale = (v, list) => list.reduce((a, b) => Math.abs(b - v) < Math.abs(a - v) ? b : a, 1);
-// a text size: the menu's steps (TEXT_SCALES) or any typed in 05 STYLE (SIZE), from 80 to 150 %, to the per cent
+// a text size: the menu's steps (TEXT_SCALES) or any typed in 06 STYLE (SIZE), from 80 to 150 %, to the per cent
 const textScaleOf = v => Math.round(clamp(+v || 1, .8, 1.5) * 100) / 100;
 
 // The side columns' widths, which the user sets by dragging their edges (double-click: back to these), in dp at 100 %:
@@ -141,7 +148,7 @@ function helloFrame(tries = 10) {
 // panel (frame.js) has no text of its own on screen and stays, so the layout and the intro are not restarted.
 let RELOAD_ON_LANG = true;
 onMessage("ui-lang", () => { if (RELOAD_ON_LANG) window.Reload(); });
-// the custom colour scheme was edited (05 STYLE): work it out again; frame.js imports it when it is in use. The scheme in
+// the custom colour scheme was edited (06 STYLE): work it out again; frame.js imports it when it is in use. The scheme in
 // use is not looked up again here: Columns UI still has the old colours, which no longer match (on_colours_changed does
 // it once the import has landed).
 onMessage("custom-scheme", () => { TOKENS.schemes.custom = customScheme(TOKENS); window.Repaint(); });
@@ -168,14 +175,14 @@ function openFolder(h) {
     return true;
 }
 
-// Keys shared by every scripted panel (the focused panel receives them): 1 – 5 views, T light/dark, P playlist preset,
+// Keys shared by every scripted panel (the focused panel receives them): 1 – 6 views, T light/dark, P playlist preset,
 // B intro film, S shuffle the library, F the playing (else focused) track's folder, H its heart (lib/favourite.js),
 // / search, F11 borderless full screen, M the mini player. A panel calls globalKey(vk) for keys it does not use itself.
 function globalKey(vk) {
     if (vk === 0xBF) { startSearchFwd(); return true; }   // "/"
     // Ctrl+1–5: rate the playing (else focused) track; Ctrl+0: clear its rating (lib/rating.js)
     if (vk >= 0x30 && vk <= 0x35 && utils.IsKeyPressed(0x11)) { setRating(fb.GetNowPlaying() || fb.GetFocusItem(), vk - 0x30, false); return true; }
-    if (vk >= 0x31 && vk <= 0x36) send("view", ["archive", "playlists", "lyrics", "signal", "style", "online"][vk - 0x31]);
+    if (vk >= 0x31 && vk <= 0x36) send("view", ["archive", "playlists", "lyrics", "signal", "online", "style"][vk - 0x31]);
     else if (vk === 0x54) send("mode");
     else if (vk === 0x50) send("preset");
     else if (vk === 0x42) send("boot-play");   // B
@@ -194,8 +201,12 @@ function globalKey(vk) {
 // (foobar2000's own orders only reorder the active playlist: Random picks any track of it each time, repeats
 // allowed; Shuffle tracks / albums / folders play all of it once in a random order.)
 const SHUFFLE_NAME = "Library · Shuffle";
-// the theme's own playlists: never a source of the archive or of the shuffle
-const OWN_PLAYLISTS = new Set(["Search", "Archive · Album", "Archive · Favourites", SHUFFLE_NAME]);
+// the one playlist the Archive's OPEN ALBUM and PLAY ALBUM refill (archive.js), shown under the album it holds
+// the system's double-click time (ms), for the clicks a panel times itself (the playlist rows, the room's cases)
+const DBL_MS = Math.min(Math.max(+regRead("HKCU\\Control Panel\\Mouse\\DoubleClickSpeed") || 500, 200), 900);
+const ARCHIVE_PLAYLIST = "Archive · Album";
+// the theme's own playlists: never a source of the archive or of the shuffle; the manager marks them THEME
+const OWN_PLAYLISTS = new Set(["Search", ARCHIVE_PLAYLIST, "Archive · Favourites", SHUFFLE_NAME]);
 function shuffleLibrary() {
     let items = fb.GetLibraryItems();
     if (!items || !items.Count) {

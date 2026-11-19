@@ -1,5 +1,5 @@
 ﻿"use strict";
-// One-line text fields (the header's search, 05 STYLE's text size), which behave like text boxes elsewhere in
+// One-line text fields (the header's search, 06 STYLE's text size), which behave like text boxes elsewhere in
 // Windows: a caret and a selection set with the mouse (click, drag, Shift+click, double-click a word) and the keys
 // (arrows, Home / End, Ctrl to move by words, Shift to select, Delete / Backspace, Ctrl+A / C / X / V / Z / Y), and a
 // right-click menu. The panel keeps a field (makeField), draws it (fieldDraw) and hands it its mouse and keys

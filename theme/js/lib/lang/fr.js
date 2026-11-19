@@ -95,7 +95,7 @@ I18N["fr"] = {
     "NO COVER": "SANS POCHETTE", "END": "FIN",
 
     // style
-    "STYLE  ·  05": "STYLE  ·  05", "CASE SKIN": "BOÎTIER", "COLOUR SCHEME": "PALETTE", "DISPLAY": "AFFICHAGE",
+    "STYLE  ·  06": "STYLE  ·  06", "CASE SKIN": "BOÎTIER", "COLOUR SCHEME": "PALETTE", "DISPLAY": "AFFICHAGE",
     "IN USE": "UTILISÉ", "MODE": "MODE", "PLAY INTRO": "LIRE L'INTRO", "PREVIEW": "APERÇU", "TEXT": "TEXTE", "INSPECT": "ZOOM",
     "FLOOR": "SOL", "PLAIN": "UNI", "LAB DECK": "PONT DU LABO", "Archive floor": "Sol des archives", "Plain": "Uni", "Lab deck": "Pont du labo", "REAL STYLE": "STYLE RÉALISTE", "Real style": "Style réaliste",
     "CLICK TO SKIP": "CLIQUEZ POUR PASSER",
@@ -151,6 +151,23 @@ I18N["fr"] = {
     "Skip this version": "Ignorer cette version",
     "Check for updates daily": "Vérifier les mises à jour chaque jour",
     "Check for updates…": "Vérifier les mises à jour…",
+    // problem reports (lib/report.js)
+    "Report a problem": "Signaler un problème",
+    "Report on GitHub…": "Signaler sur GitHub…",
+    "Copy the diagnostics (to paste in a comment or message)": "Copier le diagnostic (à coller dans un commentaire ou un message)",
+    "Show the diagnostics…": "Afficher le diagnostic…",
+    "Clear the error log": "Effacer le journal d’erreurs",
+    "Recent errors: {0}": "Erreurs récentes : {0}",
+    "No errors recorded": "Aucune erreur enregistrée",
+    "Copied to the clipboard:": "Copié dans le presse-papiers :",
+    "Could not copy; select the text below and copy it:": "Copie impossible ; sélectionnez le texte ci-dessous et copiez-le :",
+    "ERROR · REPORT": "ERREUR · SIGNALER",
+    "Dismiss": "Ignorer",
+    "Diagnostics (RhinE)": "Diagnostic (RhinE)",
+    "none": "aucune",
+    "What happened?": "Que s’est-il passé ?",
+    "Steps to reproduce": "Étapes pour reproduire",
+    "Diagnostics": "Diagnostic",
     "RhinE {0} is the latest version.": "RhinE {0} est la dernière version.",
     "Could not check for updates: GitHub and jsDelivr did not answer. The releases are at {0}": "Impossible de vérifier les mises à jour : GitHub et jsDelivr n'ont pas répondu. Les versions sont sur {0}",
     "WALLPAPER": "FOND D'ÉCRAN",
@@ -323,8 +340,8 @@ I18N["fr"] = {
     "Spotify answers an app of your own only while its owner has Premium. Without it: export the playlist with Exportify (a CSV) or ask Spotify for your data (Playlist1.json), then OPEN A FILE.": "Spotify ne répond à votre propre app que si son propriétaire a Premium. Sans Premium : exportez la playlist avec Exportify (CSV) ou demandez vos données à Spotify (Playlist1.json), puis OUVRIR UN FICHIER.",
     "Connect Spotify first (below), or open a file exported from it: Exportify's CSV or Spotify's own Playlist1.json.": "Connectez d’abord Spotify (ci-dessous), ou ouvrez un fichier exporté : le CSV d’Exportify ou le Playlist1.json de Spotify.", "Spotify did not give the playlist: {0}": "Spotify n’a pas fourni la playlist : {0}", "Spotify did not log in: {0}": "La connexion à Spotify a échoué : {0}", "That is not a Client ID (32 letters and digits, from developer.spotify.com › your app).": "Ce n’est pas un Client ID (32 lettres et chiffres, sur developer.spotify.com › votre app).", "Your Spotify app's Client ID (developer.spotify.com › Dashboard › your app; its redirect URI: {0})": "Le Client ID de votre app Spotify (developer.spotify.com › Dashboard › votre app ; URI de redirection : {0})", "CONNECTED": "CONNECTÉ", "CONNECTED AS {0}": "CONNECTÉ : {0}", "LOG IN IN THE BROWSER …": "CONNECTEZ-VOUS DANS LE NAVIGATEUR …", "DISCONNECT": "DÉCONNECTER", "CONNECT SPOTIFY": "CONNECTER SPOTIFY",
     // 2.0: QQ Music
-    "06 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "06 EN LIGNE a besoin d’une petite passerelle locale (Node.js et les bibliothèques des services de musique, environ 160 Mo).", "CONNECT QQ MUSIC": "CONNECTER QQ MUSIC", "SEARCH QQ MUSIC": "RECHERCHER QQ MUSIC", "Open the QQ Music app": "Ouvrir l’app QQ Music", "Scan with the app's own scanner": "Scanner avec le lecteur de l’app", "Open QQ on the phone": "Ouvrir QQ sur le téléphone", "Scan with QQ's scanner": "Scanner avec le lecteur de QQ", "Open WeChat on the phone": "Ouvrir WeChat sur le téléphone", "Scan with WeChat's scanner": "Scanner avec le lecteur de WeChat", "SCAN WITH": "SCANNER AVEC", "QQ MUSIC APP": "APP QQ MUSIC", "WECHAT": "WECHAT",
-    "ONLINE": "EN LIGNE", "Online view": "Vue en ligne", "SEARCH NETEASE": "RECHERCHER NETEASE", "ONLINE  ·  06": "EN LIGNE  ·  06",
+    "05 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "05 EN LIGNE a besoin d’une petite passerelle locale (Node.js et les bibliothèques des services de musique, environ 160 Mo).", "CONNECT QQ MUSIC": "CONNECTER QQ MUSIC", "SEARCH QQ MUSIC": "RECHERCHER QQ MUSIC", "Open the QQ Music app": "Ouvrir l’app QQ Music", "Scan with the app's own scanner": "Scanner avec le lecteur de l’app", "Open QQ on the phone": "Ouvrir QQ sur le téléphone", "Scan with QQ's scanner": "Scanner avec le lecteur de QQ", "Open WeChat on the phone": "Ouvrir WeChat sur le téléphone", "Scan with WeChat's scanner": "Scanner avec le lecteur de WeChat", "SCAN WITH": "SCANNER AVEC", "QQ MUSIC APP": "APP QQ MUSIC", "WECHAT": "WECHAT",
+    "ONLINE": "EN LIGNE", "Online view": "Vue en ligne", "SEARCH NETEASE": "RECHERCHER NETEASE", "ONLINE  ·  05": "EN LIGNE  ·  05",
     "NOT CONNECTED": "NON CONNECTÉ", "COMING": "BIENTÔT", "IMPORT · COMING": "IMPORT · BIENTÔT", "SECTION": "SECTION",
     "HOME": "ACCUEIL", "LIKED SONGS": "TITRES AIMÉS", "MY PLAYLISTS": "MES PLAYLISTS", "SEARCH": "RECHERCHE",
     "BRIDGE": "PASSERELLE", "ACCOUNT": "COMPTE", "STANDARD": "STANDARD", "LOG OUT": "SE DÉCONNECTER", "ABSENT": "ABSENT",
@@ -347,4 +364,19 @@ I18N["fr"] = {
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "La recherche en ligne est désactivée (clic droit pour l'activer). Un fichier texte artist.txt à côté des fichiers de l'album s'affiche ici, et artist.jpg sert d'image.",
     "CASE & COLOUR": "BOÎTIER & COULEURS", "PRESETS": "PRÉRÉGLAGES", "WORLDS 2026 · SPECIAL": "MONDIAUX 2026 · SPÉCIAL", "League of Legends World Championship special presets: applying one replaces your custom colours and custom case.": "Préréglages spéciaux du championnat du monde de League of Legends : en appliquer un remplace vos couleurs et votre boîtier personnalisés.", "Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop.": "Fonds générés avec Image-2.6-Sunburst, mis en page dans Photoshop.", "YOURS": "LES VÔTRES", "SAVE THIS LOOK": "ENREGISTRER CE STYLE", "Name of the preset": "Nom du préréglage", "Save current look": "Enregistrer le style actuel", "PRESET": "PRÉRÉGLAGE",
     "Colour": "Couleur", "Black": "Noir", "White": "Blanc", "Follow light / dark": "Suivre clair / sombre",
+    // playlists: play on double-click, the theme's own playlists tagged
+    "Play playlist": "Lire la playlist", "THEME": "THÈME",
+    // archive: group by artist or rating, sort by rating, one shelf per artist or folder
+    "INITIAL": "INITIALE", "Group by artist": "Grouper par artiste", "Group by rating": "Grouper par note", "RATING {0}": "NOTE {0}",
+    "Rating (highest first)": "Note (la plus haute d'abord)", "One shelf per artist or folder": "Une étagère par artiste ou par dossier",
+    // signal: what shows under the ring and along the bottom (PANELS)
+    "PANELS": "PANNEAUX", "Under the ring": "Sous l’anneau", "Along the bottom": "En bas", "Spectrum": "Spectre", "Lyrics": "Paroles", "Level meters": "Vumètres", "Stereo scope": "Goniomètre stéréo",
+    "Signal trace": "Tracé du signal", "Level history": "Historique du niveau", "LEVEL HISTORY  ·  60 S": "HISTORIQUE DU NIVEAU  ·  60 S", "CORR": "CORR", "BALANCE": "BALANCE", "MONO": "MONO", "For the 3D and 2D models": "Pour les modèles 3D et 2D",
+    // mini player: its shape (wide / square), and the MENU entry that opens it
+    "Shape": "Forme", "Wide": "Large", "Square": "Carré", "Open the mini player": "Ouvrir le mini-lecteur",
+    // 06 STYLE: ARRAY CASE, COLOUR SCHEME and ROOM CASE as pages of their own (the room's cases as renders)
+    "ARRAY CASE": "BOÎTIER DES RANGÉES", "ROOM CASE": "BOÎTIER DE LA SALLE",
+    "Frosted cream polymer, lit from the floor below": "Polymère crème dépoli, éclairé par le sol", "Jade glass, lit from the floor below": "Verre de jade, éclairé par le sol",
+    "Matte white cases under lights of their own: pick one under ROOM LIGHT": "Boîtiers blanc mat avec leurs propres lumières : choisissez-en une sous LUMIÈRE", "Black cases under lights of their own: pick one under ROOM LIGHT": "Boîtiers noirs avec leurs propres lumières : choisissez-en une sous LUMIÈRE",
+    "RHINE LAB's own cases, each with its paper label": "Les boîtiers propres à RHINE LAB, chacun avec son étiquette papier", "There is no light to pick for this case.": "Aucune lumière à choisir pour ce boîtier.",
 };

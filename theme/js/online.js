@@ -1,5 +1,5 @@
 ﻿"use strict";
-// 06 · ONLINE (stage.js includes this file; lib/online.js talks to the bridge): the music services the reader has an
+// 05 · ONLINE (stage.js includes this file; lib/online.js talks to the bridge): the music services the reader has an
 // account with, as a player's home page in the archive's manner.
 //   left    SOURCE (NetEase, QQ Music: the one shown; Spotify to come) and the sections (HOME, LIKED SONGS, MY
 //           PLAYLISTS, SEARCH once the header's search box has been used here: it searches the shown service)
@@ -30,9 +30,9 @@ function onlineShown(on) {
 function drawOnline(gr) {
     const m = dp(32), lw = dp(220), rw = W > dp(1400) ? dp(300) : 0, x0 = m + lw + dp(32), x1 = W - m - (rw ? rw + dp(32) : 0);
     for (const [x, y] of [[dp(16), dp(16)], [W - dp(27), dp(16)], [dp(16), H - dp(27)], [W - dp(27), H - dp(27)]]) regCross(gr, x, y);
-    // ■ ONLINE · 06   [NETEASE · <name>] (the shown service)
+    // ■ ONLINE · 05   [NETEASE · <name>] (the shown service)
     gr.FillSolidRect(m, dp(32), dp(5), dp(5), C.fg);
-    const hw = label(gr, tr("ONLINE  ·  06"), st(OV_ST.head, C.fg), m + dp(15), dp(28));
+    const hw = label(gr, tr("ONLINE  ·  05"), st(OV_ST.head, C.fg), m + dp(15), dp(28));
     if (ONL.me) chip(gr, `${onlSrcName()}  ·  ${ONL.me.name}`, m + dp(15) + hw + dp(14), dp(24), dp(18), "acc", 8.5, C.bg);
     const synced = ONL.by[ONL.src].synced;
     if (ONL.state === "ready" && synced) {
@@ -155,7 +155,7 @@ function drawOnlineState(gr, x, y, x1) {
     const s = ONL.state;
     label(gr, s === "absent" ? tr("NOT INSTALLED") : s === "installing" ? tr("INSTALLING") : s === "error" ? tr("FAULT") : tr("STARTING"), st(OV_ST.big, C.fg), x, y);
     y += dp(48);
-    const lines = s === "absent" ? [tr("06 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB)."), tr("It is installed beside the foobar2000 profile and runs only while foobar2000 does.")]
+    const lines = s === "absent" ? [tr("05 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB)."), tr("It is installed beside the foobar2000 profile and runs only while foobar2000 does.")]
         : s === "installing" ? [ONL.detail || tr("Downloading…")]
         : s === "error" ? [ONL.detail || tr("Something went wrong.")]
         : [tr("Waiting for the bridge…")];

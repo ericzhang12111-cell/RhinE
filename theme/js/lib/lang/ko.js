@@ -95,7 +95,7 @@ I18N["ko"] = {
     "NO COVER": "커버 없음", "END": "끝",
 
     // style
-    "STYLE  ·  05": "스타일  ·  05", "CASE SKIN": "케이스", "COLOUR SCHEME": "색 구성표", "DISPLAY": "디스플레이",
+    "STYLE  ·  06": "스타일  ·  06", "CASE SKIN": "케이스", "COLOUR SCHEME": "색 구성표", "DISPLAY": "디스플레이",
     "IN USE": "사용 중", "MODE": "모드", "PLAY INTRO": "인트로 재생", "PREVIEW": "미리 보기", "TEXT": "글자", "INSPECT": "상세 보기",
     "FLOOR": "바닥", "PLAIN": "단색", "LAB DECK": "랩 데크", "Archive floor": "아카이브 바닥", "Plain": "단색", "Lab deck": "랩 데크", "REAL STYLE": "실사 스타일", "Real style": "실사 스타일",
     "CLICK TO SKIP": "클릭하여 건너뛰기",
@@ -151,6 +151,23 @@ I18N["ko"] = {
     "Skip this version": "이 버전 건너뛰기",
     "Check for updates daily": "매일 업데이트 확인",
     "Check for updates…": "업데이트 확인…",
+    // problem reports (lib/report.js)
+    "Report a problem": "문제 신고",
+    "Report on GitHub…": "GitHub에서 신고…",
+    "Copy the diagnostics (to paste in a comment or message)": "진단 정보 복사(댓글이나 메시지에 붙여넣기)",
+    "Show the diagnostics…": "진단 정보 보기…",
+    "Clear the error log": "오류 기록 지우기",
+    "Recent errors: {0}": "최근 오류: {0}건",
+    "No errors recorded": "오류 기록 없음",
+    "Copied to the clipboard:": "클립보드에 복사했습니다:",
+    "Could not copy; select the text below and copy it:": "복사하지 못했습니다. 아래 텍스트를 선택해 복사하세요:",
+    "ERROR · REPORT": "오류 · 신고",
+    "Dismiss": "닫기",
+    "Diagnostics (RhinE)": "진단 정보 (RhinE)",
+    "none": "없음",
+    "What happened?": "어떤 문제가 있었나요?",
+    "Steps to reproduce": "재현 단계",
+    "Diagnostics": "진단 정보",
     "RhinE {0} is the latest version.": "RhinE {0}이(가) 최신 버전입니다.",
     "Could not check for updates: GitHub and jsDelivr did not answer. The releases are at {0}": "업데이트를 확인할 수 없습니다: GitHub와 jsDelivr가 응답하지 않습니다. 릴리스 페이지: {0}",
     "WALLPAPER": "배경화면",
@@ -323,8 +340,8 @@ I18N["ko"] = {
     "Spotify answers an app of your own only while its owner has Premium. Without it: export the playlist with Exportify (a CSV) or ask Spotify for your data (Playlist1.json), then OPEN A FILE.": "Spotify는 소유자가 Premium인 앱에만 데이터를 줍니다. Premium이 없다면 Exportify로 플레이리스트를 내보내거나(CSV) Spotify에 데이터를 요청한 뒤(Playlist1.json) ‘파일 열기’로 불러오세요.",
     "Connect Spotify first (below), or open a file exported from it: Exportify's CSV or Spotify's own Playlist1.json.": "먼저 아래에서 Spotify를 연결하거나, Spotify에서 내보낸 파일(Exportify CSV, Spotify Playlist1.json)을 여세요.", "Spotify did not give the playlist: {0}": "Spotify가 플레이리스트를 주지 않았습니다: {0}", "Spotify did not log in: {0}": "Spotify 로그인에 실패했습니다: {0}", "That is not a Client ID (32 letters and digits, from developer.spotify.com › your app).": "Client ID가 아닙니다(developer.spotify.com 앱 페이지의 32자리 영숫자).", "Your Spotify app's Client ID (developer.spotify.com › Dashboard › your app; its redirect URI: {0})": "내 Spotify 앱의 Client ID(developer.spotify.com › Dashboard › 앱, 리디렉션 URI: {0})", "CONNECTED": "연결됨", "CONNECTED AS {0}": "{0}(으)로 연결됨", "LOG IN IN THE BROWSER …": "브라우저에서 로그인하세요 …", "DISCONNECT": "연결 해제", "CONNECT SPOTIFY": "SPOTIFY 연결",
     // 2.0: QQ Music
-    "06 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "06 온라인에는 작은 로컬 브리지가 필요합니다(Node.js와 음악 서비스 라이브러리, 약 160MB).", "CONNECT QQ MUSIC": "QQ MUSIC 연결", "SEARCH QQ MUSIC": "QQ MUSIC 검색", "Open the QQ Music app": "QQ Music 앱 열기", "Scan with the app's own scanner": "앱의 스캐너로 스캔", "Open QQ on the phone": "휴대폰에서 QQ 열기", "Scan with QQ's scanner": "QQ 스캐너로 스캔", "Open WeChat on the phone": "휴대폰에서 WeChat 열기", "Scan with WeChat's scanner": "WeChat 스캐너로 스캔", "SCAN WITH": "스캔 방법", "QQ MUSIC APP": "QQ MUSIC 앱", "WECHAT": "WECHAT",
-    "ONLINE": "온라인", "Online view": "온라인 보기", "SEARCH NETEASE": "NETEASE 검색", "ONLINE  ·  06": "온라인  ·  06",
+    "05 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "05 온라인에는 작은 로컬 브리지가 필요합니다(Node.js와 음악 서비스 라이브러리, 약 160MB).", "CONNECT QQ MUSIC": "QQ MUSIC 연결", "SEARCH QQ MUSIC": "QQ MUSIC 검색", "Open the QQ Music app": "QQ Music 앱 열기", "Scan with the app's own scanner": "앱의 스캐너로 스캔", "Open QQ on the phone": "휴대폰에서 QQ 열기", "Scan with QQ's scanner": "QQ 스캐너로 스캔", "Open WeChat on the phone": "휴대폰에서 WeChat 열기", "Scan with WeChat's scanner": "WeChat 스캐너로 스캔", "SCAN WITH": "스캔 방법", "QQ MUSIC APP": "QQ MUSIC 앱", "WECHAT": "WECHAT",
+    "ONLINE": "온라인", "Online view": "온라인 보기", "SEARCH NETEASE": "NETEASE 검색", "ONLINE  ·  05": "온라인  ·  05",
     "NOT CONNECTED": "연결 안 됨", "COMING": "준비 중", "IMPORT · COMING": "가져오기 · 준비 중", "SECTION": "섹션", "HOME": "홈",
     "LIKED SONGS": "좋아요 한 곡", "MY PLAYLISTS": "내 플레이리스트", "SEARCH": "검색", "BRIDGE": "브리지", "ACCOUNT": "계정",
     "STANDARD": "일반", "LOG OUT": "로그아웃", "ABSENT": "미설치", "READY": "준비됨", "ERROR": "오류", "NOT INSTALLED": "설치되지 않음",
@@ -345,4 +362,19 @@ I18N["ko"] = {
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "온라인 검색이 꺼져 있습니다(우클릭으로 켤 수 있습니다). 앨범 파일 옆의 artist.txt가 여기에 표시되고, artist.jpg가 사진으로 쓰입니다.",
     "CASE & COLOUR": "케이스와 색상", "PRESETS": "프리셋", "WORLDS 2026 · SPECIAL": "WORLDS 2026 · 특별 프리셋", "League of Legends World Championship special presets: applying one replaces your custom colours and custom case.": "리그 오브 레전드 월드 챔피언십 특별 프리셋입니다. 적용하면 사용자 색상과 사용자 케이스가 바뀝니다.", "Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop.": "배경은 Image-2.6-Sunburst로 생성하고 Photoshop에서 편집했습니다.", "YOURS": "내 프리셋", "SAVE THIS LOOK": "이 모양 저장", "Name of the preset": "프리셋 이름", "Save current look": "현재 모양 저장", "PRESET": "프리셋",
     "Colour": "색상", "Black": "블랙", "White": "화이트", "Follow light / dark": "라이트 / 다크에 맞춤",
+    // playlists: play on double-click, the theme's own playlists tagged
+    "Play playlist": "이 재생목록 재생", "THEME": "테마",
+    // archive: group by artist or rating, sort by rating, one shelf per artist or folder
+    "INITIAL": "첫 글자", "Group by artist": "아티스트별 그룹", "Group by rating": "평점별 그룹", "RATING {0}": "평점 {0}",
+    "Rating (highest first)": "평점 (높은 순)", "One shelf per artist or folder": "아티스트·폴더마다 선반 하나",
+    // signal: what shows under the ring and along the bottom (PANELS)
+    "PANELS": "패널", "Under the ring": "뫼비우스 링 아래", "Along the bottom": "하단", "Spectrum": "스펙트럼", "Lyrics": "가사", "Level meters": "레벨 미터", "Stereo scope": "스테레오 스코프",
+    "Signal trace": "시그널 트레이스", "Level history": "레벨 기록", "LEVEL HISTORY  ·  60 S": "레벨 기록  ·  60초", "CORR": "상관", "BALANCE": "밸런스", "MONO": "모노", "For the 3D and 2D models": "3D·2D 모델용",
+    // mini player: its shape (wide / square), and the MENU entry that opens it
+    "Shape": "모양", "Wide": "와이드", "Square": "정사각형", "Open the mini player": "미니 플레이어 열기",
+    // 06 STYLE: ARRAY CASE, COLOUR SCHEME and ROOM CASE as pages of their own (the room's cases as renders)
+    "ARRAY CASE": "배열 케이스", "ROOM CASE": "자료실 케이스",
+    "Frosted cream polymer, lit from the floor below": "반투명 크림색 폴리머, 바닥 아래에서 빛남", "Jade glass, lit from the floor below": "옥빛 유리, 바닥 아래에서 빛남",
+    "Matte white cases under lights of their own: pick one under ROOM LIGHT": "전용 조명이 있는 무광 흰색 케이스: '조명'에서 선택", "Black cases under lights of their own: pick one under ROOM LIGHT": "전용 조명이 있는 검은색 케이스: '조명'에서 선택",
+    "RHINE LAB's own cases, each with its paper label": "RHINE LAB 전용 케이스, 각각 종이 라벨 부착", "There is no light to pick for this case.": "이 케이스에는 고를 조명이 없습니다.",
 };

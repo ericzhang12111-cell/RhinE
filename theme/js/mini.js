@@ -7,9 +7,17 @@
 // plate with an amber display, or a white one with a paper-grey display (right-click > Colour; it can follow light /
 // dark); the accent is the scheme's.
 //   design: the D3 board of the mini player canvas, 80 dp wider (560 × 136 dp) for the lyric line: 336 dp of window
+// It comes in two shapes (right-click > Shape; MINI_SIZES in lib/bus.js): the wide one, and a square one (304 × 304 dp)
+// with the same parts — a large cover, the lamps, meters, volume fader and time in a column beside it, the window, the
+// progress line and the keys under them.
 
-const MINI_W = 560, MINI_H = 136;
-const MINI_RC = MINI_W - 24 - 96;   // the right column (lamps, meters)
+// where the parts sit on each shape's board, in dp: the engraving, the cover's inset (x, y, side), the window (x, y, w,
+// h), the right column's x (96 dp wide: lamps, meters; on the square also the volume and the time), the progress line's
+// y, the transport keys' x
+const MINI_LAYOUTS = {
+    wide: { mark: ["RHINE LAB · AUDIO TERMINAL", "MT-07 · S/N 0269"], cover: [22, 20, 66], display: [96, 20, 336, 66], col: 440, prog: 94, keys: 221 },
+    square: { mark: ["RHINE LAB", "MT-07 SQ"], cover: [22, 20, 152], display: [22, 182, 258, 66], col: 184, prog: 256, keys: 22 },
+};
 const MC_SETS = {
     dark: {
         plate: 0xff171715, edge: 0xff45443f, hi: 0xff2c2b28,
@@ -30,41 +38,43 @@ const MC_SETS = {
         down: 0xffe2e0d8, downShade: 0x26000000, scan: 0x0f000000, mark: 0xff6b6861, glow: .3,
     },
 };
-const MINI_SKINS = [["dark", "Black"], ["white", "White"], ["auto", "Follow light / dark"]];
 const miniSkin = () => STATE.miniSkin === "auto" ? (MODE === "light" ? "white" : "dark") : STATE.miniSkin === "white" ? "white" : "dark";
 let MC = MC_SETS.dark;
 const MINI = { hover: null, level: [0, 0], drag: false, press: null };   // drag: the volume fader held; press: the plate held (x, y)
 
-// design dp → px in this window (the window is made 560 × 136 dp; a rounding of its size scales the drawing with it)
-const miniK = () => Math.min(W / dp(MINI_W), H / dp(MINI_H)) || 1;
+// design dp → px in this window (the window is made the shape's size; a rounding of its size scales the drawing with
+// it, and until a new shape's window is there the board is drawn in the old one, as large as fits)
+const miniK = () => { const [mw, mh] = miniDims(); return Math.min(W / dp(mw), H / dp(mh)) || 1; };
 const mu = v => Math.round(dp(v) * miniK());
 // a fixed-size label style (the mini window does not follow the text size)
 const mst = (size, colour, bg, weight = 600, track = .12) => ({ size: size * miniK(), weight, track, colour, bg, fixed: true });
 
 function drawMini(gr) {
-    const k = miniK(), w = mu(MINI_W), h = mu(MINI_H), ox = Math.round((W - w) / 2), oy = Math.round((H - h) / 2);
+    const [mw, mh] = miniDims(), sq = STATE.miniShape === "square", L = MINI_LAYOUTS[sq ? "square" : "wide"];
+    const k = miniK(), w = mu(mw), h = mu(mh), ox = Math.round((W - w) / 2), oy = Math.round((H - h) / 2);
     const X = v => ox + mu(v), Y = v => oy + mu(v);
     MC = MC_SETS[miniSkin()];
     gr.FillSolidRect(0, 0, W, H, MC.plate);
     box(gr, ox, oy, w, h, MC.edge, HAIR);
     gr.FillSolidRect(ox + HAIR, oy + HAIR, w - 2 * HAIR, HAIR, MC.hi);
     // the plate's engraving
-    label(gr, "RHINE LAB · AUDIO TERMINAL", mst(7.5, MC.dim, MC.plate, 600, .22), X(24), Y(5));
-    label(gr, "MT-07 · S/N 0269", mst(7.5, MC.dim, MC.plate, 600, .22), X(MINI_W - 24), Y(5), 2);
+    label(gr, L.mark[0], mst(7.5, MC.dim, MC.plate, 600, .22), X(24), Y(5));
+    label(gr, L.mark[1], mst(7.5, MC.dim, MC.plate, 600, .22), X(mw - 24), Y(5), 2);
 
-    const h0 = T.handle, info = T.info;
-    // the cover, in an inset frame
-    inset(gr, X(22), Y(20), mu(66), mu(66));
-    const cv = h0 ? cover(h0, () => window.Repaint()) : null, cs = mu(56), cx = X(27), cy = Y(25);
+    const h0 = T.handle;
+    // the cover, in an inset frame (the placeholder is drawn for the wide unit's 56 dp, and scaled)
+    const [cx0, cy0, side] = L.cover, cd = side - 10, f = cd / 56;
+    inset(gr, X(cx0), Y(cy0), mu(side), mu(side));
+    const cv = h0 ? cover(h0, () => window.Repaint()) : null, cs = mu(cd), cx = X(cx0 + 5), cy = Y(cy0 + 5);
     if (cv && cv.img) gr.DrawImage(cv.img, cx, cy, cs, cs, 0, 0, cv.img.Width, cv.img.Height);
     else {
         gr.FillSolidRect(cx, cy, cs, cs, MC.cover);
-        gr.FillSolidRect(cx + mu(10), cy + mu(32), mu(34), mu(2), C.accent);
-        gr.DrawEllipse(cx + mu(10), cy + mu(12), mu(10), mu(10), Math.max(HAIR, mu(2)), MC.mark);
+        gr.FillSolidRect(cx + mu(10 * f), cy + mu(32 * f), mu(34 * f), mu(2 * f), C.accent);
+        gr.DrawEllipse(cx + mu(10 * f), cy + mu(12 * f), mu(10 * f), mu(10 * f), Math.max(HAIR, mu(2 * f)), MC.mark);
     }
 
     // the dot-matrix window: the lyric line or the track
-    const dx = X(96), dy = Y(20), dw = mu(MINI_RC - 8 - 96), dh = mu(66);
+    const dx = X(L.display[0]), dy = Y(L.display[1]), dw = mu(L.display[2]), dh = mu(L.display[3]);
     inset(gr, dx, dy, dw, dh);
     const d = miniDisplay();
     const head = mst(9, MC.amberLo, MC.win, 500, .08);
@@ -73,39 +83,46 @@ function drawMini(gr) {
     gr.PushClip(dx + mu(2), dy + mu(2), dw - mu(4), dh - mu(4));
     miniLine(gr, d.main, [16, 14.5, 13], MC.amber, 600, .02, dx + mu(10), dy + mu(21), dw - mu(20), d.mainP);
     miniLine(gr, d.sub, [10, 9], MC.amberSub, 500, .04, dx + mu(10), dy + mu(45), dw - mu(20), d.subP);
-    // scan lines over the glass
-    for (let yy = dy + mu(1); yy < dy + dh - mu(1); yy += Math.max(2, Math.round(3 * k * SCALE))) gr.FillSolidRect(dx + mu(1), yy, dw - mu(2), HAIR, MC.scan);
+    miniScan(gr, dx, dy, dw, dh, k);
     gr.PopClip();
 
     // the lamps over the meters
-    const playing = fb.IsPlaying && !fb.IsPaused, lrc = STATE.miniShow !== "trk";
+    const RC = L.col, playing = fb.IsPlaying && !fb.IsPaused, lrc = STATE.miniShow !== "trk";
     const lamps = [["PWR", MC.green, true], ["PLAY", C.accent, playing], ["LRC", C.accent, lrc], ["TRK", C.accent, !lrc]];
     lamps.forEach(([name, col, on], i) => {
-        const lx = X(MINI_RC + 12 + i * 24) - mu(3.5);
+        const lx = X(RC + 12 + i * 24) - mu(3.5);
         if (on) gr.FillEllipse(lx - mu(2), Y(25) - mu(2), mu(11), mu(11), withAlpha(col, MC.glow));
         gr.FillEllipse(lx, Y(25), mu(7), mu(7), on ? col : MC.off);
         label(gr, name, mst(6.5, MC.lbl, MC.plate, 600, .1), lx + mu(3.5), Y(35), 1);
     });
-    gr.FillSolidRect(X(MINI_RC), Y(49), mu(96), HAIR, MC.track);
+    gr.FillSolidRect(X(RC), Y(49), mu(96), HAIR, MC.track);
     ["L", "R"].forEach((ch, r) => {
         const ry = Y(56 + r * 11), lit = Math.round(clamp(MINI.level[r], 0, 1) * 12);
-        label(gr, ch, mst(6.5, MC.lbl, MC.plate), X(MINI_RC), ry - mu(1));
+        label(gr, ch, mst(6.5, MC.lbl, MC.plate), X(RC), ry - mu(1));
         for (let s = 0; s < 12; s++) {
             const col = s >= lit ? MC.off : s < 7 ? MC.green : s < 9 ? MC.yellow : C.accent;
-            gr.FillSolidRect(X(MINI_RC + 11 + s * 7), ry, mu(5), mu(7), col);
+            gr.FillSolidRect(X(RC + 11 + s * 7), ry, mu(5), mu(7), col);
         }
     });
+    // the square: under the meters the volume fader across the column, then the time, down to the cover's foot
+    if (sq) {
+        gr.FillSolidRect(X(RC), Y(80), mu(96), HAIR, MC.track);
+        drawMiniVolume(gr, X(RC), Y(86), mu(30), mu(96));
+        gr.FillSolidRect(X(RC), Y(122), mu(96), HAIR, MC.track);
+        miniTime(gr, X(RC), Y(128), mu(96), mu(44), k);
+    }
 
     // progress: the whole width; a click seeks
-    const px = X(22), pw = mu(MINI_W - 46), py = Y(94), len = fb.PlaybackLength, f = fb.IsPlaying && len > 0 ? clamp(fb.PlaybackTime / len, 0, 1) : 0;
+    const px = X(22), pw = mu(mw - 46), py = Y(L.prog), len = fb.PlaybackLength, pf = fb.IsPlaying && len > 0 ? clamp(fb.PlaybackTime / len, 0, 1) : 0;
     gr.FillSolidRect(px, py, pw, mu(2), MC.track);
-    gr.FillSolidRect(px, py, Math.round(pw * f), mu(2), C.accent);
-    if (fb.IsPlaying) gr.FillSolidRect(px + Math.round(pw * f) - mu(1), py - mu(3), mu(2), mu(8), MC.ink);
+    gr.FillSolidRect(px, py, Math.round(pw * pf), mu(2), C.accent);
+    if (fb.IsPlaying) gr.FillSolidRect(px + Math.round(pw * pf) - mu(1), py - mu(3), mu(2), mu(8), MC.ink);
     hits.add("mini-seek", px, py - mu(5), pw, mu(12));
 
-    // the keys: the volume fader on the left, previous / play-pause / next in the middle, LRC | TRK and back on the right
-    const ky = Y(MINI_H - 31), kh = mu(22), kx = X(MINI_W / 2 - 59);
-    drawMiniVolume(gr, X(24), ky, kh);
+    // the keys: previous / play-pause / next in the middle (the square: on the left), the volume fader left of them on
+    // the wide unit, LRC | TRK and back on the right
+    const ky = Y(mh - 31), kh = mu(22), kx = X(L.keys);
+    if (!sq) drawMiniVolume(gr, X(24), ky, kh);
     miniKey(gr, "mini-prev", kx, ky, mu(34), kh, false, (x, y, s) => { gr.FillSolidRect(x - s * .55, y - s / 2, Math.max(HAIR, s * .16), s, MC.ink); tri(gr, x + s * .5, y, -s * .85, s, MC.ink); });
     miniKey(gr, "mini-play", kx + mu(40), ky, mu(42), kh, playing, (x, y, s) => {
         if (playing) { gr.FillSolidRect(x - s * .42, y - s / 2, s * .26, s, C.accent); gr.FillSolidRect(x + s * .16, y - s / 2, s * .26, s, C.accent); }
@@ -113,19 +130,34 @@ function drawMini(gr) {
     });
     miniKey(gr, "mini-next", kx + mu(88), ky, mu(34), kh, false, (x, y, s) => { tri(gr, x - s * .5, y, s * .85, s, MC.ink); gr.FillSolidRect(x + s * .4, y - s / 2, Math.max(HAIR, s * .16), s, MC.ink); });
     // LRC | TRK
-    const tw = mu(27), tx = X(MINI_W - 24 - 26 - 6) - 2 * tw, hov = MINI.hover === "mini-show";
+    const tw = mu(27), tx = X(mw - 24 - 26 - 6) - 2 * tw, hov = MINI.hover === "mini-show";
     gr.FillSolidRect(tx, ky, 2 * tw, kh, MC.pit);
     box(gr, tx, ky, 2 * tw, kh, hov ? C.accent : MC.keyEdge, HAIR);
     gr.FillSolidRect(tx + (lrc ? HAIR : tw), ky + HAIR, tw - HAIR, kh - 2 * HAIR, C.accent);
     label(gr, "LRC", mst(7.5, lrc ? 0xff111111 : MC.lbl, lrc ? C.accent : MC.pit), tx + tw / 2, ky + Math.round((kh - labelHeight(mst(7.5, 0, 0))) / 2), 1);
     label(gr, "TRK", mst(7.5, !lrc ? 0xff111111 : MC.lbl, !lrc ? C.accent : MC.pit), tx + tw * 1.5, ky + Math.round((kh - labelHeight(mst(7.5, 0, 0))) / 2), 1);
     hits.add("mini-show", tx, ky, 2 * tw, kh);
-    miniKey(gr, "mini-back", X(MINI_W - 24 - 26), ky, mu(26), kh, false, (x, y, s) => {
+    miniKey(gr, "mini-back", X(mw - 24 - 26), ky, mu(26), kh, false, (x, y, s) => {
         const a = s * .5, t = Math.max(HAIR, mu(1.2));
         gr.DrawLine(x - a, y - a, x - a * .2, y - a * .2, t, MC.ink); gr.DrawLine(x + a, y + a, x + a * .2, y + a * .2, t, MC.ink);
         gr.FillSolidRect(x - a, y - a, a * .9, t, MC.ink); gr.FillSolidRect(x - a, y - a, t, a * .9, MC.ink);
         gr.FillSolidRect(x + a * .1, y + a - t, a * .9, t, MC.ink); gr.FillSolidRect(x + a - t, y + a * .1, t, a * .9, MC.ink);
     });
+}
+// scan lines over a window's glass
+function miniScan(gr, x, y, w, h, k) {
+    for (let yy = y + mu(1); yy < y + h - mu(1); yy += Math.max(2, Math.round(3 * k * SCALE))) gr.FillSolidRect(x + mu(1), yy, w - mu(2), HAIR, MC.scan);
+}
+// the square's time: a small window, the track's length over the time played
+function miniTime(gr, x, y, w, h, k) {
+    inset(gr, x, y, w, h);
+    const on = fb.IsPlaying, len = fb.PlaybackLength, head = mst(9, MC.amberLo, MC.win, 500, .08);
+    label(gr, "TIME", head, x + mu(8), y + mu(6));
+    label(gr, on && len > 0 ? fmtTime(len) : "--:--", head, x + w - mu(8), y + mu(6), 2);
+    label(gr, on ? fmtTime(fb.PlaybackTime) : "--:--", mst(16, MC.amber, MC.win, 600, .02), x + mu(8), y + mu(19));
+    gr.PushClip(x + mu(2), y + mu(2), w - mu(4), h - mu(4));
+    miniScan(gr, x, y, w, h, k);
+    gr.PopClip();
 }
 
 // The volume: VOL, a fader (its groove, the accent up to its cap) and the level in dB. The same curve as the transport
@@ -133,10 +165,12 @@ function drawMini(gr) {
 // player steps it.
 const miniPos2Vol = p => p <= 0 ? -100 : 50 * Math.log10(0.99 * p + 0.01);
 const miniVol2Pos = db => db <= -100 ? 0 : clamp((Math.pow(10, db / 50) - 0.01) / 0.99, 0, 1);
-function drawMiniVolume(gr, x, y, h) {
-    const cy = Math.round(y + h / 2), muted = fb.Volume <= -100;
-    label(gr, "VOL", mst(7, MC.dim, MC.plate, 600, .14), x, cy - Math.round(labelHeight(mst(7, 0, 0)) / 2));
-    const gx = x + mu(26), gw = mu(84), p = miniVol2Pos(fb.Volume), hov = MINI.hover === "mini-vol" || MINI.drag;
+// In a row (the wide unit's keys): VOL, the fader, the level. Given a width cw (the square's column): VOL and the level
+// over the fader, which runs across it.
+function drawMiniVolume(gr, x, y, h, cw = 0) {
+    const cy = cw ? y + mu(20) : Math.round(y + h / 2), muted = fb.Volume <= -100, lh = Math.round(labelHeight(mst(7, 0, 0)) / 2);
+    label(gr, "VOL", mst(7, MC.dim, MC.plate, 600, .14), x, cw ? y : cy - lh);
+    const gx = x + mu(cw ? 4 : 26), gw = cw ? cw - mu(8) : mu(84), p = miniVol2Pos(fb.Volume), hov = MINI.hover === "mini-vol" || MINI.drag;
     // the groove, its ticks, the level up to the cap
     gr.FillSolidRect(gx, cy - mu(2), gw, mu(4), MC.groove);
     box(gr, gx, cy - mu(2), gw, mu(4), MC.rim, HAIR);
@@ -150,7 +184,8 @@ function drawMiniVolume(gr, x, y, h) {
     gr.FillSolidRect(capX + HAIR, Math.round(cy - HAIR / 2), capW - 2 * HAIR, HAIR, hov ? C.accent : MC.ink);
     // the level
     const db = fb.Volume, txt = muted ? "MUTE" : db > -0.05 ? "0 dB" : `${db.toFixed(db > -10 ? 1 : 0)} dB`;
-    label(gr, txt, mst(7, muted ? C.accent : MC.lbl, MC.plate, 500, .06), gx + gw + mu(8), cy - Math.round(labelHeight(mst(7, 0, 0)) / 2));
+    const lst = mst(7, muted ? C.accent : MC.lbl, MC.plate, 500, .06);
+    if (cw) label(gr, txt, lst, x + cw, y, 2); else label(gr, txt, lst, gx + gw + mu(8), cy - lh);
     hits.add("mini-vol", gx - mu(4), y, gw + mu(8), h, { x0: gx, w: gw });
 }
 function miniVolumeAt(x) {
@@ -278,13 +313,16 @@ function miniClick(x, a) {
     else if (a.id === "mini-seek" && fb.IsPlaying && fb.PlaybackLength > 0) fb.PlaybackTime = clamp((x - a.x) / a.w, 0, 1) * fb.PlaybackLength;
     window.Repaint();
 }
-// right-click: the corner it sits in, and back to the full window
+// right-click: the corner it sits in, its shape and colours, and back to the full window
 const MINI_CORNERS = [["tl", "Top left"], ["tr", "Top right"], ["bl", "Bottom left"], ["br", "Bottom right"]];
 function miniMenu(x, y) {
-    const m = window.CreatePopupMenu(), c = window.CreatePopupMenu(), k = window.CreatePopupMenu();
+    const m = window.CreatePopupMenu(), c = window.CreatePopupMenu(), k = window.CreatePopupMenu(), sh = window.CreatePopupMenu();
     MINI_CORNERS.forEach(([, name], i) => c.AppendMenuItem(0, 10 + i, tr(name)));
     c.CheckMenuRadioItem(10, 13, 10 + Math.max(0, MINI_CORNERS.findIndex(k => k[0] === STATE.miniCorner)));
     c.AppendTo(m, 0, tr("Corner"));
+    MINI_SHAPES.forEach(([, name], i) => sh.AppendMenuItem(0, 40 + i, tr(name)));
+    sh.CheckMenuRadioItem(40, 41, 40 + Math.max(0, MINI_SHAPES.findIndex(f => f[0] === STATE.miniShape)));
+    sh.AppendTo(m, 0, tr("Shape"));
     MINI_SKINS.forEach(([, name], i) => k.AppendMenuItem(0, 30 + i, tr(name)));
     k.CheckMenuRadioItem(30, 32, 30 + Math.max(0, MINI_SKINS.findIndex(f => f[0] === STATE.miniSkin)));
     k.AppendTo(m, 0, tr("Colour"));
@@ -295,5 +333,6 @@ function miniMenu(x, y) {
     if (id >= 10 && id <= 13) send("mini-corner", MINI_CORNERS[id - 10][0]);
     else if (id === 20) send("mini-show", STATE.miniShow === "trk" ? "lrc" : "trk");
     else if (id >= 30 && id <= 32) send("mini-skin", MINI_SKINS[id - 30][0]);
+    else if (id >= 40 && id <= 41) send("mini-shape", MINI_SHAPES[id - 40][0]);
     else if (id === 1) send("mini", false);
 }

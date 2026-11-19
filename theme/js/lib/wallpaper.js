@@ -1,5 +1,5 @@
 ﻿"use strict";
-// Wallpaper (05 STYLE › DISPLAY › WALLPAPER): a picture behind the views the user picks: ARCHIVE, PLAYLISTS (its side
+// Wallpaper (06 STYLE › DISPLAY › WALLPAPER): a picture behind the views the user picks: ARCHIVE, PLAYLISTS (its side
 // columns: the native playlist cannot show one), LYRICS and SIGNAL; one that comes with the theme or one of the user's
 // own. It covers the whole window (cropped to fill it) and each panel draws its own part, so the parts line up across
 // the panels (frame.js sends where each panel sits: "geom"); a veil of the page colour keeps the text readable. Looks:
@@ -136,7 +136,7 @@ function drawWallpaper(gr, panel, x, y, w, h, dx = x, dy = y) {
     }
     return true;
 }
-// the stage panel's part (the Style view is drawn there) fitted into a box, for 05 STYLE's preview
+// the stage panel's part (the Style view is drawn there) fitted into a box, for 06 STYLE's preview
 function wallpaperPreview(gr, x, y, w, h) {
     const c = wpComp("stage");
     if (!c) return false;

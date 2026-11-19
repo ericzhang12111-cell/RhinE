@@ -7,6 +7,8 @@ const AUDIO = {
     bands: new Float32Array(48), energy: 0, avg: 0, surge: 0,
     peakDb: -Infinity, rmsDb: -Infinity, corr: 0, live: false,
     l: 0, r: 0,   // the left and right channel's level, 0 (−48 dBFS and below) – 1 (0 dBFS): the mini player's meters
+    pl: 0, pr: 0, // each channel's sample peak on the same scale (the Signal view's meters)
+    n: 0, ch: 2,  // frames and channels of the last chunk in _pcm (interleaved): the Signal view's stereo scope
 };
 
 const FFT_N = 2048;
@@ -34,19 +36,20 @@ function analyseAudio(dt) {
     const B = AUDIO.bands;
     if (!got) {
         for (let b = 0; b < 48; b++) B[b] *= Math.pow(0.02, dt);   // fall away
-        AUDIO.l = AUDIO.r = 0;
+        AUDIO.l = AUDIO.r = AUDIO.pl = AUDIO.pr = 0;
+        AUDIO.n = 0;
         AUDIO.energy *= Math.pow(0.05, dt);
         AUDIO.surge = 0;
         return;
     }
     const ch = Math.max(1, _info.ChannelCount || 2), n = Math.min(FFT_N, Math.floor(got / ch));
     // mono mix into the FFT input; level and correlation from the first two channels
-    let peak = 0, sum = 0, lr = 0, ll = 0, rr = 0;
+    let peak = 0, sum = 0, lr = 0, ll = 0, rr = 0, pl = 0, pr = 0;
     for (let i = 0; i < FFT_N; i++) {
         let v = 0;
         if (i < n) {
             for (let c = 0; c < ch; c++) { const s = _pcm[i * ch + c]; v += s; const a = Math.abs(s); if (a > peak) peak = a; sum += s * s; }
-            if (ch >= 2) { const l = _pcm[i * ch], r = _pcm[i * ch + 1]; lr += l * r; ll += l * l; rr += r * r; }
+            if (ch >= 2) { const l = _pcm[i * ch], r = _pcm[i * ch + 1]; lr += l * r; ll += l * l; rr += r * r; if (Math.abs(l) > pl) pl = Math.abs(l); if (Math.abs(r) > pr) pr = Math.abs(r); }
             v /= ch;
         }
         _re[_rev[i]] = v * _win[i]; _im[_rev[i]] = 0;
@@ -85,6 +88,10 @@ function analyseAudio(dt) {
     const lvl = s2 => clamp((20 * Math.log10(Math.sqrt(s2 / Math.max(1, n)) + 1e-9) + 48) / 48, 0, 1);
     AUDIO.l = ch >= 2 ? lvl(ll) : lvl(sum / ch);
     AUDIO.r = ch >= 2 ? lvl(rr) : AUDIO.l;
+    const db48 = a => clamp((20 * Math.log10(a + 1e-9) + 48) / 48, 0, 1);
+    AUDIO.pl = db48(ch >= 2 ? pl : peak);
+    AUDIO.pr = ch >= 2 ? db48(pr) : AUDIO.pl;
+    AUDIO.n = n; AUDIO.ch = ch;
 }
 
 const fmtDb = db => !isFinite(db) || db < -96 ? "−∞ DB" : `${db < 0 ? "−" : ""}${Math.abs(db).toFixed(1)} DB`;

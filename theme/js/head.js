@@ -1,7 +1,7 @@
 ﻿"use strict";
 // 02 · PLAYLISTS, above the native playlist: the playlist head.
-//   row 1  bracketed PLAYLIST NO. 003 (the number rolls on a switch), the name (scrambles in; double-click renames),
-//          041 TRACKS · 3:02:11 · 1.9 GB on the right
+//   row 1  bracketed PLAYLIST NO. 003 (the number rolls on a switch), the name (scrambles in; double-click renames;
+//          the Archive's album playlist shows the album it holds), 041 TRACKS · 3:02:11 · 1.9 GB on the right
 //   row 2  state chips (PLAYING, AUTOPLAYLIST, LOCKED) and the selection count; LAYOUT [ALBUM | INDEX] on the right
 //   a heavy rule, then the playlist's column titles: the native header is off (Windows draws it white on paper), so
 //   they are drawn here, placed the way Columns UI sizes the preset's columns (columns/preset-*.json). Clicking a
@@ -33,7 +33,8 @@ const clock = Clock(() => {
 
 function load(animate) {
     const pl = plman.ActivePlaylist;
-    const name = pl >= 0 ? plman.GetPlaylistName(pl) : tr("NO PLAYLIST");
+    // the Archive's album playlist goes by the album it holds (lib/playlists.js)
+    const name = pl >= 0 ? albumPlaylistTitle(pl) || plman.GetPlaylistName(pl) : tr("NO PLAYLIST");
     if (pl !== P.pl || !P.name || P.name.text !== name) {
         P.name = animate ? Scramble(name) : { text: name, tw: Tween(0), seed: 0 };
         if (animate) setRoll(P.no, pad(pl + 1, 3)); else P.no = Roll(pad(pl + 1, 3));
@@ -205,8 +206,10 @@ function on_key_down(vk) { if (searchKey(vk)) return; if (vk === 0x20) fb.PlayOr
 // ----------------------------------------------------------------------------------------------- callbacks
 function on_playlist_switch() { load(true); }
 function on_playlists_changed() { plDirty(); load(false); }
-function on_playlist_items_added(i) { plDirty(i); if (i === P.pl) window.Repaint(); }
-function on_playlist_items_removed(i) { plDirty(i); if (i === P.pl) { countSelection(); window.Repaint(); } }
+// (the album playlist's name follows what it holds: refilled, it scrambles in as the new album. Both callbacks come
+// after the refill, so the removal already sees the new album; load() only animates a name that changed)
+function on_playlist_items_added(i) { plDirty(i); if (i === P.pl) load(true); }
+function on_playlist_items_removed(i) { plDirty(i); if (i === P.pl) load(true); }
 function on_playlist_items_selection_change() { countSelection(); window.Repaint(); }
 function on_playlist_items_reordered(i) { plDirty(i); }
 function on_playback_new_track() { window.Repaint(); }

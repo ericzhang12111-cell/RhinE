@@ -95,7 +95,7 @@ I18N["zh-CN"] = {
     "NO COVER": "无封面", "END": "结束",
 
     // style
-    "STYLE  ·  05": "外观  ·  05", "CASE SKIN": "唱片盒", "COLOUR SCHEME": "配色方案", "DISPLAY": "显示",
+    "STYLE  ·  06": "外观  ·  06", "CASE SKIN": "唱片盒", "COLOUR SCHEME": "配色方案", "DISPLAY": "显示",
     "IN USE": "使用中", "MODE": "模式", "PLAY INTRO": "播放开场动画", "PREVIEW": "预览", "TEXT": "文字", "INSPECT": "放大",
     "FLOOR": "背景", "PLAIN": "纯色", "LAB DECK": "实验台", "Archive floor": "曲库背景", "Plain": "纯色", "Lab deck": "实验台", "REAL STYLE": "写实", "Real style": "写实",
     "CLICK TO SKIP": "点击跳过",
@@ -151,6 +151,23 @@ I18N["zh-CN"] = {
     "Skip this version": "跳过此版本",
     "Check for updates daily": "每天检查更新",
     "Check for updates…": "检查更新…",
+    // problem reports (lib/report.js)
+    "Report a problem": "反馈问题",
+    "Report on GitHub…": "在 GitHub 上反馈…",
+    "Copy the diagnostics (to paste in a comment or message)": "复制诊断信息（可贴到评论或私信）",
+    "Show the diagnostics…": "查看诊断信息…",
+    "Clear the error log": "清除错误记录",
+    "Recent errors: {0}": "最近的错误：{0} 条",
+    "No errors recorded": "没有错误记录",
+    "Copied to the clipboard:": "已复制到剪贴板：",
+    "Could not copy; select the text below and copy it:": "无法复制，请选中下面的文字手动复制：",
+    "ERROR · REPORT": "出错了 · 反馈",
+    "Dismiss": "忽略",
+    "Diagnostics (RhinE)": "诊断信息（RhinE）",
+    "none": "无",
+    "What happened?": "遇到了什么问题？",
+    "Steps to reproduce": "复现步骤",
+    "Diagnostics": "诊断信息",
     "RhinE {0} is the latest version.": "RhinE {0} 已是最新版本。",
     "Could not check for updates: GitHub and jsDelivr did not answer. The releases are at {0}": "无法检查更新：GitHub 和 jsDelivr 都没有响应。可以到这里下载新版本：{0}",
     "WALLPAPER": "壁纸",
@@ -323,8 +340,8 @@ I18N["zh-CN"] = {
     "Spotify answers an app of your own only while its owner has Premium. Without it: export the playlist with Exportify (a CSV) or ask Spotify for your data (Playlist1.json), then OPEN A FILE.": "Spotify 只为 Premium 账号注册的应用提供数据。没有 Premium 的话：用 Exportify 导出歌单（CSV），或向 Spotify 申请你的数据（Playlist1.json），再点“打开文件”。",
     "Connect Spotify first (below), or open a file exported from it: Exportify's CSV or Spotify's own Playlist1.json.": "请先在下方连接 Spotify，或者打开从 Spotify 导出的文件：Exportify 的 CSV 或 Spotify 自己的 Playlist1.json。", "Spotify did not give the playlist: {0}": "Spotify 没有返回这个歌单：{0}", "Spotify did not log in: {0}": "Spotify 登录没有成功：{0}", "That is not a Client ID (32 letters and digits, from developer.spotify.com › your app).": "这不是 Client ID（应为 32 位字母和数字，在 developer.spotify.com 的应用页面里）。", "Your Spotify app's Client ID (developer.spotify.com › Dashboard › your app; its redirect URI: {0})": "你的 Spotify 应用的 Client ID（developer.spotify.com › Dashboard › 你的应用；回调地址填：{0}）", "CONNECTED": "已连接", "CONNECTED AS {0}": "已连接：{0}", "LOG IN IN THE BROWSER …": "请在浏览器中登录 …", "DISCONNECT": "断开连接", "CONNECT SPOTIFY": "连接 Spotify",
     // 2.0: QQ Music
-    "06 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "06 在线需要安装一个本地小服务（Node.js 和各音乐平台的接口库，约 160 MB）。", "CONNECT QQ MUSIC": "连接 QQ 音乐", "SEARCH QQ MUSIC": "搜索 QQ 音乐", "Open the QQ Music app": "打开 QQ 音乐 App", "Scan with the app's own scanner": "用 App 自带的扫一扫扫码", "Open QQ on the phone": "在手机上打开 QQ", "Scan with QQ's scanner": "用 QQ 的扫一扫扫码", "Open WeChat on the phone": "在手机上打开微信", "Scan with WeChat's scanner": "用微信的扫一扫扫码", "SCAN WITH": "扫码方式", "QQ MUSIC APP": "QQ 音乐 App", "WECHAT": "微信",
-    "ONLINE": "在线", "Online view": "在线视图", "SEARCH NETEASE": "搜索网易云", "ONLINE  ·  06": "在线  ·  06", "NOT CONNECTED": "未连接",
+    "05 ONLINE needs a small local bridge (Node.js and the music services' libraries, about 160 MB).": "05 在线需要安装一个本地小服务（Node.js 和各音乐平台的接口库，约 160 MB）。", "CONNECT QQ MUSIC": "连接 QQ 音乐", "SEARCH QQ MUSIC": "搜索 QQ 音乐", "Open the QQ Music app": "打开 QQ 音乐 App", "Scan with the app's own scanner": "用 App 自带的扫一扫扫码", "Open QQ on the phone": "在手机上打开 QQ", "Scan with QQ's scanner": "用 QQ 的扫一扫扫码", "Open WeChat on the phone": "在手机上打开微信", "Scan with WeChat's scanner": "用微信的扫一扫扫码", "SCAN WITH": "扫码方式", "QQ MUSIC APP": "QQ 音乐 App", "WECHAT": "微信",
+    "ONLINE": "在线", "Online view": "在线视图", "SEARCH NETEASE": "搜索网易云", "ONLINE  ·  05": "在线  ·  05", "NOT CONNECTED": "未连接",
     "COMING": "即将推出", "IMPORT · COMING": "导入 · 即将推出", "SECTION": "分区", "HOME": "主页", "LIKED SONGS": "我喜欢的音乐",
     "MY PLAYLISTS": "我的歌单", "SEARCH": "搜索", "BRIDGE": "本地服务", "ACCOUNT": "账号", "STANDARD": "普通用户", "LOG OUT": "退出登录",
     "ABSENT": "未安装", "READY": "就绪", "ERROR": "错误", "NOT INSTALLED": "未安装", "INSTALLING": "正在安装", "STARTING": "正在启动",
@@ -345,4 +362,19 @@ I18N["zh-CN"] = {
     "Artist lookups are off (right-click to turn them on). A text file artist.txt beside the album's files is shown here, and artist.jpg as the picture.": "已关闭联网查找（右键可以重新打开）。专辑文件旁的 artist.txt 会显示在这里，artist.jpg 会用作艺人图片。",
     "CASE & COLOUR": "唱片盒与配色", "PRESETS": "预设", "WORLDS 2026 · SPECIAL": "WORLDS 2026 · 特别预设", "League of Legends World Championship special presets: applying one replaces your custom colours and custom case.": "此为英雄联盟世界赛特别预设：应用后会替换你的自定义配色和自定义唱片盒。", "Backgrounds generated with Image-2.6-Sunburst, laid out in Photoshop.": "背景由 Image-2.6-Sunburst 生成，Photoshop 排版。", "YOURS": "我的预设", "SAVE THIS LOOK": "保存当前外观", "Name of the preset": "预设名称", "Save current look": "保存当前外观", "PRESET": "预设",
     "Colour": "颜色", "Black": "黑色", "White": "白色", "Follow light / dark": "跟随深浅色",
+    // playlists: play on double-click, the theme's own playlists tagged
+    "Play playlist": "播放此列表", "THEME": "主题",
+    // archive: group by artist or rating, sort by rating, one shelf per artist or folder
+    "INITIAL": "首字母", "Group by artist": "按艺人分组", "Group by rating": "按评分分组", "RATING {0}": "评分 {0}",
+    "Rating (highest first)": "评分（最高在前）", "One shelf per artist or folder": "每位艺人、每个文件夹单独一排",
+    // signal: what shows under the ring and along the bottom (PANELS)
+    "PANELS": "面板", "Under the ring": "莫比乌斯环下方", "Along the bottom": "底部", "Spectrum": "频谱", "Lyrics": "歌词", "Level meters": "电平表", "Stereo scope": "立体声相位图",
+    "Signal trace": "整首波形", "Level history": "电平历史", "LEVEL HISTORY  ·  60 S": "电平历史  ·  60 秒", "CORR": "相关性", "BALANCE": "声道平衡", "MONO": "单声道", "For the 3D and 2D models": "用于 3D 和 2D 样式",
+    // mini player: its shape (wide / square), and the MENU entry that opens it
+    "Shape": "形状", "Wide": "长条", "Square": "方形", "Open the mini player": "打开迷你播放器",
+    // 06 STYLE: ARRAY CASE, COLOUR SCHEME and ROOM CASE as pages of their own (the room's cases as renders)
+    "ARRAY CASE": "陈列唱片盒", "ROOM CASE": "展室唱片盒",
+    "Frosted cream polymer, lit from the floor below": "磨砂奶白树脂，由地面底光照亮", "Jade glass, lit from the floor below": "翡翠玻璃，由地面底光照亮",
+    "Matte white cases under lights of their own: pick one under ROOM LIGHT": "哑光白色唱片盒，带专属灯光：在下方“灯光”中选择", "Black cases under lights of their own: pick one under ROOM LIGHT": "黑色唱片盒，带专属灯光：在下方“灯光”中选择",
+    "RHINE LAB's own cases, each with its paper label": "RHINE LAB 专属唱片盒，每个都带纸质标签", "There is no light to pick for this case.": "这款唱片盒没有可选的灯光。",
 };

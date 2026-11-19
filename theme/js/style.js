@@ -1,12 +1,14 @@
 ﻿"use strict";
-// 05 · STYLE (stage.js includes this file): the case skins and colour schemes as cards, with a large preview of the
-// card under the mouse (else of what is in use) and one click to apply. Applying is live: a skin changes the cases
+// 06 · STYLE (stage.js includes this file): the array's case skins, the colour schemes and the room's cases as cards,
+// with a large preview of the card under the mouse (else of what is in use) and one click to apply. Applying is live: a skin changes the cases
 // everywhere at once, a scheme runs under the light / dark sweep. PLAY INTRO (the boot film of the skin in use, in the
 // scheme's colours) and LIGHT / DARK sit at the top right.
-//   left   CASE SKIN: every skin (built-in and hand-installed) as its archive sprite on the page;
-//          COLOUR SCHEME: every scheme as a miniature of the interface in its light and dark sets
-//   right  the preview: a skin's front view and archive sprite, or a scheme's miniature large with its swatches; the
-//          editors (wallpaper, custom case, custom scheme) and the factory tags (the TITLE TAG card FACTORY) open here
+//   left   ARRAY CASE: every skin (built-in and hand-installed) as its archive sprite on the page;
+//          COLOUR SCHEME: every scheme as a miniature of the interface in its light and dark sets;
+//          ROOM CASE: the Archive room's cases, each as a render of the room, and the lights of the one in use
+//   right  the preview: a skin's front view and archive sprite, a scheme's miniature large with its swatches, or the
+//          room's render large; the editors (wallpaper, custom case, custom scheme) and the factory tags (the TITLE
+//          TAG card FACTORY) open here
 
 const STY_ST = {
     head: { size: 9, weight: 600, track: .16 },
@@ -45,13 +47,15 @@ const SCHEME_ABOUT = {
 const STY = { img: new Map(), thumbs: new Map(), hover: null, gen: 0, shown: false,   // img: skin id -> { array, hero }; thumbs: wpThumb
               scroll: 0, max: 0, drag: null, barHover: false,     // the left column's scroll (px), how far it goes, its bar
               tab: "look", tabHover: null };
-// The left column is four pages (the page last open is kept): the cards of one kind with the settings that go with them,
+// The left column is six pages (the page last open is kept): the cards of one kind with the settings that go with them,
 // so each page fits most windows without scrolling and its cards can be as large as their names need.
-//   look     CASE SKIN and COLOUR SCHEME
+//   look     ARRAY CASE: the case skins of the array and the grid
+//   scheme   COLOUR SCHEME
+//   room     ROOM CASE: the cases of the Archive room (ROOM_MATS), then the lights of the one in use (ROOM_LIGHTS)
 //   tag      TITLE TAG: the finishes, then the tag's shape, colours, body and opacity
 //   display  TEXT, ARCHIVE and PAGE
 //   presets  whole looks, one click each: the theme's own and the ones saved here (PRESETS, below)
-const STYLE_TABS = [["look", "CASE & COLOUR"], ["tag", "TITLE TAG"], ["display", "DISPLAY"], ["presets", "PRESETS"]];
+const STYLE_TABS = [["look", "ARRAY CASE"], ["scheme", "COLOUR SCHEME"], ["room", "ROOM CASE"], ["tag", "TITLE TAG"], ["display", "DISPLAY"], ["presets", "PRESETS"]];
 STY.tab = STYLE_TABS.some(t => t[0] === readSettings().styleTab) ? readSettings().styleTab : "look";
 function setStyleTab(t) {
     if (t === STY.tab || !STYLE_TABS.some(k => k[0] === t)) return;
@@ -124,14 +128,22 @@ function drawMock(gr, x, y, w, h, t) {
 // window too short for the page scrolls it instead, drawStyle)
 function styleGeom(skins, ids, tags) {
     const m = dp(48), top = dp(62), gap = dp(16), lx1 = Math.round(W * .62), lw = lx1 - m, body = top + dp(48);
-    const tab = STY.tab, n = tab === "tag" ? tags.length : tab === "presets" ? 10 : Math.max(skins.length, ids.length);
+    const tab = STY.tab, n = tab === "tag" ? tags.length : tab === "look" ? skins.length : tab === "scheme" ? ids.length : 10;
     const cols = Math.max(5, Math.min(9, Math.ceil(n / 2)));
     const byW = (lw - (cols - 1) * gap) / cols, avail = H - body - dp(18) - dp(24), ns = st(STY_ST.nameS, 0);
     let byH = byW, need = 0;
     if (tab === "look") {
-        const r = Math.ceil(skins.length / cols), s = Math.ceil(ids.length / cols);
-        byH = (avail - dp(70) - (r + s) * gap) / (r * 1.02 + s * .86);
-        need = Math.max(...skins.map(k => labelWidth(k.name, ns) + dp(18)), ...ids.map(id => labelWidth(TOKENS.schemes[id].name, ns) + dp(34)));
+        const r = Math.ceil(skins.length / cols);
+        byH = (avail - dp(40) - r * gap) / (r * 1.02);
+        need = Math.max(...skins.map(k => labelWidth(k.name, ns) + dp(18)));
+    } else if (tab === "scheme") {
+        const s = Math.ceil(ids.length / cols);
+        byH = (avail - dp(40) - s * gap) / (s * .86);
+        need = Math.max(...ids.map(id => labelWidth(TOKENS.schemes[id].name, ns) + dp(34)));
+    } else if (tab === "room") {
+        // the cases on one row, the lights on the next: the render 16:9 over the name
+        byH = (avail - dp(80) - 2 * gap - 2 * dp(40)) / (2 * ROOM_CARD_H);
+        need = Math.max(...ROOM_MATS.concat(...Object.values(ROOM_LIGHTS)).map(([, l]) => labelWidth(tr(l), ns) + dp(44)));
     } else if (tab === "tag") {
         const r = Math.ceil(tags.length / cols);
         // (not under 120 dp wide, so the finishes can be told apart: a low window scrolls to the rows under them)
@@ -139,7 +151,8 @@ function styleGeom(skins, ids, tags) {
         need = Math.max(...tags.map(([, name]) => labelWidth(tr(name), ns) + dp(30)));
     }
     const cw = Math.floor(Math.min(byW, Math.max(dp(64), need, byH)));
-    return { m, top, body, gap, lx1, cols, cw, skinH: Math.round(cw * 1.02), schemeH: Math.round(cw * .86), tagH: Math.round(cw * TAG_CARD_H) };
+    return { m, top, body, gap, lx1, cols, cw, skinH: Math.round(cw * 1.02), schemeH: Math.round(cw * .86), tagH: Math.round(cw * TAG_CARD_H),
+             roomH: Math.round(cw * ROOM_CARD_H) + dp(40) };
 }
 
 // the skin cards: every skin, and the custom case's card while it has not been made yet
@@ -149,9 +162,9 @@ const TAG_CARD_H = .62, styleTags = () => TAGS.filter(([id]) => id === "off" || 
 function drawStyle(gr) {
     const skins = styleSkins(), ids = Object.keys(TOKENS.schemes), tags = styleTags(), g = styleGeom(skins, ids, tags);
     for (const [x, y] of [[dp(16), dp(16)], [W - dp(27), dp(16)], [dp(16), H - dp(27)], [W - dp(27), H - dp(27)]]) regCross(gr, x, y);
-    // ■ STYLE · 05   [MARBLE · ARCHIVE]                                              ▶ PLAY INTRO   MODE [LIGHT | DARK]
+    // ■ STYLE · 06   [MARBLE · ARCHIVE]                                              ▶ PLAY INTRO   MODE [LIGHT | DARK]
     gr.FillSolidRect(g.m, dp(32), dp(5), dp(5), C.fg);
-    const hw = label(gr, tr("STYLE  ·  05"), st(STY_ST.head, C.fg), g.m + dp(15), dp(28));
+    const hw = label(gr, tr("STYLE  ·  06"), st(STY_ST.head, C.fg), g.m + dp(15), dp(28));
     const cur = skins.find(s => s.id === STATE.skin), now = `${cur ? cur.name : "—"}  ·  ${TOKENS.schemes[SCHEME].name}  ·  ${tr(MODE.toUpperCase())}`;
     chip(gr, now, g.m + dp(15) + hw + dp(14), dp(24), dp(18), "acc", 8.5, C.bg);
     const mx = drawModeToggle(gr, W - g.m, dp(22));
@@ -164,15 +177,17 @@ function drawStyle(gr) {
     gr.PushClip(0, vy, g.lx1 + dp(12), H - vy);
     let y = g.body + dp(18) - STY.scroll;
     if (STY.tab === "look") {
-        label(gr, `${tr("CASE SKIN")}  ·  ${pad(skins.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
+        label(gr, `${tr("ARRAY CASE")}  ·  ${pad(skins.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
         y += dp(30);
         skins.forEach((s, i) => { const [x, dy] = at(i, g.skinH); drawSkinCard(gr, s, i, x, y + dy, g.cw, g.skinH); });
-        y += Math.ceil(skins.length / g.cols) * (g.skinH + g.gap) + dp(10);
+        y += Math.ceil(skins.length / g.cols) * (g.skinH + g.gap);
+    } else if (STY.tab === "scheme") {
         label(gr, `${tr("COLOUR SCHEME")}  ·  ${pad(ids.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
         y += dp(30);
         ids.forEach((id, i) => { const [x, dy] = at(i, g.schemeH); drawSchemeCard(gr, id, i, x, y + dy, g.cw, g.schemeH); });
         y += Math.ceil(ids.length / g.cols) * (g.schemeH + g.gap);
-    } else if (STY.tab === "tag") {
+    } else if (STY.tab === "room") y = drawRoomCases(gr, g, y);
+    else if (STY.tab === "tag") {
         // each finish in the chosen shape and colours, then the settings they are shown with
         label(gr, `${tr("TITLE TAG")}  ·  ${pad(tags.length - 1, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
         y += dp(30);
@@ -193,15 +208,22 @@ function drawStyle(gr) {
     drawStylePreview(gr, g, skins);
     drawStyleBar(gr, g);
 }
-// the pages' tabs, under the head line: [01 CASE & COLOUR | 02 TITLE TAG | 03 DISPLAY | 04 PRESETS]
+// the pages' tabs, under the head line: [01 ARRAY CASE | 02 COLOUR SCHEME | 03 ROOM CASE | 04 TITLE TAG | 05 DISPLAY | 06 PRESETS]
+// (kept within the left column: too narrow for them all, the tabs drop their numbers, then the names of the ones not
+// open are shortened alike)
 function drawStyleTabs(gr, g) {
-    const hh = dp(26), y = g.top + dp(14), nw = labelWidth("00", st(STY_ST.tiny, 0));
+    const hh = dp(26), y = g.top + dp(14), sec = st(STY_ST.sec, 0), avail = g.lx1 + dp(12) - g.m, nw = labelWidth("00", st(STY_ST.tiny, 0));
+    const names = STYLE_TABS.map(([, n]) => tr(n)), nat = names.map(t => labelWidth(t, sec)), sum = nat.reduce((a, b) => a + b, 0);
+    const num = sum + STYLE_TABS.length * (dp(36) + nw) <= avail, padL = num ? dp(20) + nw : dp(10), padW = padL + (num ? dp(16) : dp(10));
+    const open = Math.max(0, STYLE_TABS.findIndex(t => t[0] === STY.tab)), rest = sum - nat[open];
+    const k = sum + STYLE_TABS.length * padW > avail ? clamp((avail - STYLE_TABS.length * padW - nat[open]) / Math.max(1, rest), .15, 1) : 1;
     let x = g.m;
-    STYLE_TABS.forEach(([id, name], i) => {
-        const on = id === STY.tab, hov = STY.tabHover === id, t = tr(name), w = dp(12) + nw + dp(8) + labelWidth(t, st(STY_ST.sec, 0)) + dp(16), bg = on ? C.fg : C.bg;
+    STYLE_TABS.forEach(([id], i) => {
+        const on = id === STY.tab, hov = STY.tabHover === id, t = k < 1 && !on ? fitLabel(names[i], sec, Math.floor(nat[i] * k)) : names[i];
+        const w = padW + labelWidth(t, sec), bg = on ? C.fg : C.bg, lx = x + padL;
         if (on) gr.FillSolidRect(x, y, w, hh, C.fg);
-        label(gr, pad(i + 1, 2), st(STY_ST.tiny, on ? C.bg : C["text-muted"], bg), x + dp(12), y + Math.round((hh - labelHeight(STY_ST.tiny)) / 2));
-        label(gr, t, st(STY_ST.sec, on ? C.bg : hov ? C.fg : C["fg-soft"], bg), x + dp(12) + nw + dp(8), y + Math.round((hh - labelHeight(STY_ST.sec)) / 2));
+        if (num) label(gr, pad(i + 1, 2), st(STY_ST.tiny, on ? C.bg : C["text-muted"], bg), x + dp(12), y + Math.round((hh - labelHeight(STY_ST.tiny)) / 2));
+        label(gr, t, st(STY_ST.sec, on ? C.bg : hov ? C.fg : C["fg-soft"], bg), lx, y + Math.round((hh - labelHeight(STY_ST.sec)) / 2));
         hits.add("sty-tab", x, y, w, hh, id);
         x += w;
     });
@@ -430,11 +452,11 @@ function drawPresetPreview(gr, p, x0, y, w, y1) {
     const sc = TOKENS.schemes[p.scheme] || TOKENS.schemes[SCHEME], t = sc[presetMode(p) || MODE], rows = [];
     const s = listSkins().find(k => k.id === p.skin), e = s && s.dir ? skinImages(s) : null;
     const nameOf = (list, v) => { const f = list.find(k => k[0] === v); return f ? tr(f[1]) : String(v).toUpperCase(); };
-    if (s) rows.push(["CASE SKIN", s.name]);
+    if (s) rows.push(["ARRAY CASE", s.name]);
     rows.push(["COLOUR SCHEME", sc.name + (presetMode(p) ? `  ·  ${tr(presetMode(p).toUpperCase())}` : "")]);
     if (p.floor) rows.push(["FLOOR", nameOf(FLOORS, p.floor)]);
     if (p.tag) rows.push(["TITLE TAG", nameOf(TAGS, p.tag)]);
-    if (p.roomMat) rows.push(["ROOM", nameOf(ROOM_MATS, p.roomMat)]);
+    if (p.roomMat) rows.push(["ROOM CASE", nameOf(ROOM_MATS, p.roomMat) + (p.roomLight && ROOM_LIGHTS[p.roomMat] ? `  ·  ${nameOf(ROOM_LIGHTS[p.roomMat], p.roomLight)}` : "")]);
     if (p.wallpaper) rows.push(["WALLPAPER", p.wallpaper.path ? wpName(p.wallpaper.path) : tr("NONE")]);
     if (p.font) rows.push(["FONT", nameOf(FONTS, p.font)]);
     const th = dp(14) + labelHeight(STY_ST.big) + dp(14) + rows.length * dp(20), ph = Math.max(dp(80), Math.min(Math.round(w * .7), y1 - y - th - dp(16)));
@@ -527,6 +549,85 @@ function drawSchemeCard(gr, id, i, x, y, w, h) {
     hits.add("sty-scheme", x, y, w, h, id);
 }
 
+// ---------------------------------------------------------------------------------------------------- ROOM CASE
+// The Archive room's cases (ROOM_MATS, lib/bus.js), each card the room as it renders that case (in the light it has, in
+// this mode: assets/render/room/<set>/<mode>/preview.jpg, the room's own render with no covers in the cases), then the
+// lights of the case in use (the white and blackout cases are lit by lights of their own; the others glow from the
+// floor below). A click puts a case on (with the light it had), or a light on the case in use.
+const ROOM_CARD_H = .5625;   // the render's height to the card's width (16:9; the name under it)
+const ROOM_ABOUT = {
+    cream: "Frosted cream polymer, lit from the floor below",
+    glass: "Jade glass, lit from the floor below",
+    white: "Matte white cases under lights of their own: pick one under ROOM LIGHT",
+    blackout: "Black cases under lights of their own: pick one under ROOM LIGHT",
+    rhine: "RHINE LAB's own cases, each with its paper label",
+};
+// a room set's render (its mode's, else the other's: RHINE LAB has a light one only); null while it loads
+function roomPreview(set) {
+    const k = `room:${set}-${MODE}`;
+    if (STY.thumbs.has(k)) return STY.thumbs.get(k);
+    STY.thumbs.set(k, null);
+    const g = STY.gen, file = md => `${ROOM_ROOT}${set}\\${md}\\preview.jpg`, md = utils.IsFile(file(MODE)) ? MODE : MODE === "dark" ? "light" : "dark";
+    d2d.LoadImageAsyncV2(0, file(md)).then(img => { if (img && g === STY.gen) { STY.thumbs.set(k, img); window.Repaint(); } }, () => {});
+    return null;
+}
+// a card's or the preview's key ("mat:white", "light:l3") as the room set it shows
+const roomKeySet = key => { const [kind, id] = key.split(":"); return kind === "mat" ? roomSet(id) : `${STATE.roomMat}-${id}`; };
+function drawRoomCases(gr, g, y) {
+    const at = i => [g.m + (i % g.cols) * (g.cw + g.gap), Math.floor(i / g.cols) * (g.roomH + g.gap)];
+    label(gr, `${tr("ROOM CASE")}  ·  ${pad(ROOM_MATS.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
+    y += dp(30);
+    ROOM_MATS.forEach(([id, name], i) => { const [x, dy] = at(i); drawRoomCard(gr, "mat:" + id, tr(name), i, x, y + dy, g.cw, g.roomH, id === STATE.roomMat); });
+    y += Math.ceil(ROOM_MATS.length / g.cols) * (g.roomH + g.gap) + dp(10);
+    const L = ROOM_LIGHTS[STATE.roomMat], mat = ROOM_MATS.find(f => f[0] === STATE.roomMat);
+    label(gr, `${tr("ROOM LIGHT")}  ·  ${mat ? tr(mat[1]) : ""}${L ? "  ·  " + pad(L.length, 2) : ""}`, st(STY_ST.sec, C.fg), g.m, y);
+    y += dp(30);
+    if (!L) {
+        text(gr, tr("There is no light to pick for this case."), 10, 500, C["text-muted"], g.m, y, g.lx1 - g.m, dp(18));
+        return y + dp(18);
+    }
+    L.forEach(([id, name], i) => { const [x, dy] = at(i); drawRoomCard(gr, "light:" + id, tr(name), i, x, y + dy, g.cw, g.roomH, id === roomLightOf()); });
+    return y + Math.ceil(L.length / g.cols) * (g.roomH + g.gap);
+}
+function drawRoomCard(gr, key, name, i, x, y, w, h, inUse) {
+    const ih = h - dp(40), hov = STY.hover && STY.hover.kind === "room" && STY.hover.id === key, img = roomPreview(roomKeySet(key));
+    gr.FillSolidRect(x, y, w, h, C.panel);
+    if (img) {
+        // (cover-fit: the render is 16:9, as the card)
+        const k = Math.max(w / img.Width, ih / img.Height), dw = img.Width * k, dh = img.Height * k;
+        gr.PushClip(x, y, w, ih);
+        gr.DrawImage(img, x + (w - dw) / 2, y + (ih - dh) / 2, dw, dh, 0, 0, img.Width, img.Height);
+        gr.PopClip();
+    }
+    gr.FillSolidRect(x, y + ih, w, HAIR, C["line-faint"]);
+    const nx = cardNameX(name, w), ns = nx.st;
+    if (nx.num) label(gr, pad(i + 1, 2), st(STY_ST.tiny, C["text-muted"], C.panel), x + dp(10), y + ih + dp(14));
+    label(gr, fitLabel(name, st(ns, C.fg, C.panel), w - nx.x - dp(8)), st(ns, C.fg, C.panel), x + nx.x, y + ih + Math.round((dp(40) - labelHeight(ns)) / 2));
+    if (inUse) chip(gr, tr("IN USE"), x + w - dp(8) - labelWidth(tr("IN USE"), st(STY_ST.tiny, 0)) - dp(16), y + dp(8), dp(16), "inv", 8);
+    cardFrame(gr, x, y, w, h, inUse, hov);
+    hits.add("sty-roomcard", x, y, w, h, key);
+}
+// the room large: the render as wide as the column, then the case's name, its line, and which case and light it is
+function drawRoomPreview(gr, key, x0, y, w, y1) {
+    const [kind, id] = key.split(":"), matId = kind === "mat" ? id : STATE.roomMat, set = roomKeySet(key), img = roomPreview(set);
+    const mi = ROOM_MATS.findIndex(f => f[0] === matId), L = ROOM_LIGHTS[matId], light = L ? set.slice(matId.length + 1) : "";
+    const lf = L ? L.find(f => f[0] === light) : null, ty = y1 - dp(104), ph = Math.max(dp(60), Math.min(Math.round(w * ROOM_CARD_H), ty - y - dp(20)));
+    gr.FillSolidRect(x0, y, w, ph, C.panel);
+    if (img) {
+        const k = Math.max(w / img.Width, ph / img.Height), dw = img.Width * k, dh = img.Height * k;
+        gr.PushClip(x0, y, w, ph);
+        gr.DrawImage(img, x0 + (w - dw) / 2, y + (ph - dh) / 2, dw, dh, 0, 0, img.Width, img.Height);
+        gr.PopClip();
+    }
+    box(gr, x0, y, w, ph, C["line-faint"]);
+    gr.FillSolidRect(x0, ty, w, dp(3), C.fg);
+    label(gr, mi >= 0 ? tr(ROOM_MATS[mi][1]) : "—", st(STY_ST.big, C.fg), x0, ty + dp(14));
+    const ay = ty + dp(14) + labelHeight(STY_ST.big) + dp(6);
+    text(gr, tr(ROOM_ABOUT[matId] || ""), 10, 500, C["fg-soft"], x0, ay, w, Math.round(dp(18) * TEXT_SCALE));
+    label(gr, `${tr("ROOM CASE")}  ${pad(mi + 1, 2)} / ${pad(ROOM_MATS.length, 2)}${lf ? `  ·  ${tr("ROOM LIGHT")}  ${tr(lf[1])}` : ""}`,
+          st(STY_ST.tiny, C["text-muted"]), x0, ay + Math.round(dp(26) * TEXT_SCALE));
+}
+
 // a tag card: the finish as the card and the album file would show it, its name under it
 function drawTagCard(gr, id, name, x, y, w, h) {
     const ih = h - dp(40), inUse = id === STATE.tag, hov = STY.hover && STY.hover.kind === "tag" && STY.hover.id === id;
@@ -581,9 +682,8 @@ function drawIntroButton(gr, xr, y) {
 
 // DISPLAY: the settings that are not cards, in four groups whose rows line up (a label column, then the control):
 //   TEXT       SIZE [− 10.0 +] (typed, or stepped by 0.5; 10 is 100 %), FONT
-//   ARCHIVE    ARRAY, INSPECT, FLOOR (with REAL STYLE, the offer of its colour scheme under it), GLASS (frosted or clear),
-//              ROOM (the Archive room's cases: cream, jade, white, blackout), ROOM LIGHT (the white and blackout
-//              cases' lights; dimmed for the others, which glow from the floor)
+//   ARCHIVE    ARRAY, INSPECT, FLOOR (with REAL STYLE, the offer of its colour scheme under it), GLASS (frosted or clear)
+//              (the room's cases and lights have their own page: ROOM CASE)
 //   PAGE       WALLPAPER ›, HALFTONE, DOTS, EMBLEM, WINDOW (normal, or borderless full screen)
 //   TITLE TAG  TAG SHAPE, TAG COLOURS (the custom ones under it), TAG BODY, TAG OPACITY (the finish: the cards above)
 // The groups flow into as many columns as the width takes. A row that does not apply now (DOTS with the halftone off,
@@ -598,10 +698,7 @@ function displayGroups() {
         { title: "TEXT", rows: [{ title: "SIZE", kind: "size" }, row("FONT", FONTS.filter(([id]) => FONT_FAMILIES[id].ok), STATE.font, "sty-font")] },
         { title: "ARCHIVE", rows: [row("ARRAY", sc(ARRAY_SCALES), STATE.arrayScale, "sty-array"), row("INSPECT", sc(INSPECT_SCALES), STATE.inspectScale, "sty-inspect"),
                                    row("FLOOR", FLOORS, STATE.floor, "sty-floor"), ...(hearthOffer() ? [{ title: "", kind: "hearth" }] : []),
-                                   row("GLASS", [["frost", "FROST"], ["clear", "CLEAR"]], AR.frost ? "frost" : "clear", "sty-glass"),
-                                   row("ROOM", ROOM_MATS, STATE.roomMat, "sty-room"),
-                                   ROOM_LIGHTS[STATE.roomMat] ? row("ROOM LIGHT", ROOM_LIGHTS[STATE.roomMat], roomLightOf(), "sty-roomlight")
-                                       : row("ROOM LIGHT", [["floor", "FROM BELOW"]], "floor", "sty-roomlight", true)] },
+                                   row("GLASS", [["frost", "FROST"], ["clear", "CLEAR"]], AR.frost ? "frost" : "clear", "sty-glass")] },
         { title: "PAGE", rows: [{ title: "WALLPAPER", kind: "wallpaper" }, row("HALFTONE", HALFTONES, STATE.halftone, "sty-ht"),
                                 row("DOTS", HALFTONE_LEVELS, STATE.halftoneLevel, "sty-htl", STATE.halftone === "off"), row("EMBLEM", EMBLEMS, STATE.emblem, "sty-emblem"),
                                 row("WINDOW", [["window", "NORMAL"], ["borderless", "BORDERLESS"]], STATE.borderless ? "borderless" : "window", "sty-window")] },
@@ -923,35 +1020,45 @@ function drawStylePreview(gr, g, skins) {
     gr.FillSolidRect(x0 - dp(20), g.top + dp(12), HAIR, y1 - g.top - dp(12), C["line-faint"]);
     const hv = STY.hover && STY.hover.kind !== "intro" && STY.hover.kind !== "save" ? STY.hover : null;
     label(gr, tr(hv ? "PREVIEW" : "IN USE"), st(STY_ST.sec, hv ? C.accent : C["text-muted"]), x0, y0);
-    if (hv && hv.kind === "scheme") {
-        const sc = TOKENS.schemes[hv.id], mh = Math.min(Math.round(w * .56), Math.round((y1 - y0 - dp(170)) / 2));
-        drawMock(gr, x0, y0 + dp(30), w, mh, sc.light);
-        drawMock(gr, x0, y0 + dp(30) + mh + dp(10), w, mh, sc.dark);
-        box(gr, x0, y0 + dp(30), w, mh * 2 + dp(10), C["line-faint"]);
-        let y = y0 + dp(30) + mh * 2 + dp(26);
-        label(gr, sc.name, st(STY_ST.big, C.fg), x0, y);
-        text(gr, tr(SCHEME_ABOUT[hv.id] || ""), 10, 500, C["fg-soft"], x0, y + dp(34), w, dp(18));
-        y += dp(64);
-        for (const [mi, m] of [[0, "light"], [1, "dark"]]) {
-            const t = sc[m], keys = ["bg", "fg", "fg-soft", "text-muted", "line-dim", "accent"], sw = Math.floor((w - dp(40)) / keys.length);
-            label(gr, m.toUpperCase(), st(STY_ST.tiny, C["text-muted"]), x0, y + mi * dp(30) + dp(4));
-            keys.forEach((k, i) => {
-                const sx = x0 + dp(40) + i * sw;
-                gr.FillSolidRect(sx, y + mi * dp(30), dp(14), dp(14), argb(t[k]));
-                box(gr, sx, y + mi * dp(30), dp(14), dp(14), C["line-faint"]);
-                text(gr, t[k].toUpperCase(), 8, 500, C["fg-soft"], sx + dp(18), y + mi * dp(30) - dp(1), sw - dp(20), dp(16));
-            });
-        }
-        return;
-    }
+    if (hv && hv.kind === "scheme") { drawSchemePreview(gr, hv.id, x0, y0, w, y1); return; }
     if (hv && hv.kind === "preset") { drawPresetPreview(gr, presetOf(hv.id), x0, y0 + dp(30), w, y1); return; }
     if (hv && hv.kind === "tag") { drawTagPreview(gr, hv.id, x0, y0 + dp(30), w, y1); return; }
+    if (hv && hv.kind === "room") { drawRoomPreview(gr, hv.id, x0, y0 + dp(30), w, y1); return; }
+    // (with nothing under the mouse, a page's own: the room in use (before an editor left open on another page), the
+    // scheme in use or its editor, the custom case's editor on ARRAY CASE)
+    if (!hv && STY.tab === "room") { drawRoomPreview(gr, "mat:" + STATE.roomMat, x0, y0 + dp(30), w, y1); return; }
     if (!hv && STY.edit === "factory" && STATE.tag === "factory") { drawFactoryPicker(gr, x0, y0 + dp(30), w, y1); return; }
     if (!hv && STY.edit === "wallpaper") { drawWallpaperEditor(gr, x0, y0 + dp(30), w, y1); return; }
-    if (!hv && (STY.making || (STATE.skin === "custom" && STY.edit !== "scheme"))) { drawCaseEditor(gr, x0, y0 + dp(30), w, y1); return; }
-    if (!hv && SCHEME === "custom") { drawCustomEditor(gr, x0, y0 + dp(30), w, y1); return; }
+    if (!hv && STY.tab === "scheme") { if (SCHEME === "custom") drawCustomEditor(gr, x0, y0 + dp(30), w, y1); else drawSchemePreview(gr, SCHEME, x0, y0, w, y1); return; }
+    if (!hv && (STY.making || (STATE.skin === "custom" && (STY.tab === "look" || STY.edit !== "scheme")))) { drawCaseEditor(gr, x0, y0 + dp(30), w, y1); return; }
+    if (!hv && SCHEME === "custom" && STY.tab !== "look") { drawCustomEditor(gr, x0, y0 + dp(30), w, y1); return; }
     const s = hv ? skins.find(k => k.id === hv.id) : skins.find(k => k.id === STATE.skin);
     if (!s || !s.dir) return;
+    drawSkinPreview(gr, s, skins, x0, y0, w, y1);
+}
+// a scheme large: its two miniatures, its name and line, its swatches
+function drawSchemePreview(gr, id, x0, y0, w, y1) {
+    const sc = TOKENS.schemes[id], mh = Math.min(Math.round(w * .56), Math.round((y1 - y0 - dp(170)) / 2));
+    drawMock(gr, x0, y0 + dp(30), w, mh, sc.light);
+    drawMock(gr, x0, y0 + dp(30) + mh + dp(10), w, mh, sc.dark);
+    box(gr, x0, y0 + dp(30), w, mh * 2 + dp(10), C["line-faint"]);
+    let y = y0 + dp(30) + mh * 2 + dp(26);
+    label(gr, sc.name, st(STY_ST.big, C.fg), x0, y);
+    text(gr, tr(SCHEME_ABOUT[id] || ""), 10, 500, C["fg-soft"], x0, y + dp(34), w, dp(18));
+    y += dp(64);
+    for (const [mi, m] of [[0, "light"], [1, "dark"]]) {
+        const t = sc[m], keys = ["bg", "fg", "fg-soft", "text-muted", "line-dim", "accent"], sw = Math.floor((w - dp(40)) / keys.length);
+        label(gr, m.toUpperCase(), st(STY_ST.tiny, C["text-muted"]), x0, y + mi * dp(30) + dp(4));
+        keys.forEach((k, i) => {
+            const sx = x0 + dp(40) + i * sw;
+            gr.FillSolidRect(sx, y + mi * dp(30), dp(14), dp(14), argb(t[k]));
+            box(gr, sx, y + mi * dp(30), dp(14), dp(14), C["line-faint"]);
+            text(gr, t[k].toUpperCase(), 8, 500, C["fg-soft"], sx + dp(18), y + mi * dp(30) - dp(1), sw - dp(20), dp(16));
+        });
+    }
+}
+// a skin large: its front view, its archive sprite under it, its name, line and index
+function drawSkinPreview(gr, s, skins, x0, y0, w, y1) {
     const e = skinImages(s), ph = y1 - y0 - dp(150);
     if (e.hero) {
         const k = Math.min(w / e.hero.Width, (ph * .62) / e.hero.Height), dw = e.hero.Width * k, dh = e.hero.Height * k;
@@ -969,7 +1076,7 @@ function drawStylePreview(gr, g, skins) {
     label(gr, s.name, st(STY_ST.big, C.fg), x0, ty + dp(14));
     const ay = ty + dp(14) + labelHeight(STY_ST.big) + dp(6);
     text(gr, tr(SKIN_ABOUT[s.id] || ""), 10, 500, C["fg-soft"], x0, ay, w, Math.round(dp(18) * TEXT_SCALE));
-    label(gr, `${tr("CASE SKIN")}  ${pad(skins.indexOf(s) + 1, 2)} / ${pad(skins.length, 2)}`, st(STY_ST.tiny, C["text-muted"]), x0, ay + Math.round(dp(26) * TEXT_SCALE));
+    label(gr, `${tr("ARRAY CASE")}  ${pad(skins.indexOf(s) + 1, 2)} / ${pad(skins.length, 2)}`, st(STY_ST.tiny, C["text-muted"]), x0, ay + Math.round(dp(26) * TEXT_SCALE));
 }
 
 // The tag card under the mouse: the tag large, with the playing (else the focused) track's title, then as large as
@@ -1167,6 +1274,7 @@ function styleMouseMove(a) {
     if (dl !== (STY.delHover || null)) { STY.delHover = dl; window.Repaint(); }
     const h = a && (a.id === "sty-preset" || a.id === "sty-preset-del") ? { kind: "preset", id: a.data } : a && a.id === "sty-preset-save" ? { kind: "save", id: "" }
         : a && (a.id === "sty-skin" || a.id === "sty-scheme" || a.id === "sty-tagcard" && a.data !== "off") ? { kind: { "sty-skin": "skin", "sty-scheme": "scheme", "sty-tagcard": "tag" }[a.id], id: a.data }
+        : a && a.id === "sty-roomcard" ? { kind: "room", id: a.data }
         : a && a.id === "sty-intro" ? { kind: "intro", id: "" } : null;
     const o = STY.hover;
     if ((h && (!o || o.kind !== h.kind || o.id !== h.id)) || (!h && o)) { STY.hover = h; window.Repaint(); }
@@ -1206,8 +1314,12 @@ function styleClick(a) {
     else if (a.id === "sty-ht" && a.data !== STATE.halftone) send("halftone", a.data);
     else if (a.id === "sty-htl" && a.data !== STATE.halftoneLevel) send("halftone-level", a.data);
     else if (a.id === "sty-emblem" && a.data !== STATE.emblem) send("emblem", a.data);
-    else if (a.id === "sty-room" && a.data !== STATE.roomMat) send("room-mat", a.data);
-    else if (a.id === "sty-roomlight" && ROOM_LIGHTS[STATE.roomMat] && a.data !== roomLightOf()) send("room-light", a.data);
+    else if (a.id === "sty-roomcard") {
+        // a case: put on (with the light it had); a light: of the case in use (the only lights shown)
+        const [kind, id] = a.data.split(":");
+        if (kind === "mat" && id !== STATE.roomMat) send("room-mat", id);
+        else if (kind === "light" && ROOM_LIGHTS[STATE.roomMat] && id !== roomLightOf()) send("room-light", id);
+    }
     else if (a.id === "sty-tag" && a.data !== STATE.tag) send("tag", a.data);
     else if (a.id === "sty-tagshape" && a.data !== STATE.tagShape) send("tag-shape", a.data);
     else if (a.id === "sty-tagcol" && a.data !== STATE.tagColours) send("tag-colours", a.data);

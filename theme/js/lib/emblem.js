@@ -1,5 +1,5 @@
 ﻿"use strict";
-// The header plate's small vector emblem, as chosen in 05 STYLE (STATE.emblem): the Möbius ring ("ring", the default)
+// The header plate's small vector emblem, as chosen in 06 STYLE (STATE.emblem): the Möbius ring ("ring", the default)
 // or nested triangles ("delta"). Both turn slowly while music plays.
 //
 // DELTA: equilateral triangles about one centre, each 0.88 × the size of the one outside it and turned 4° further, ~50

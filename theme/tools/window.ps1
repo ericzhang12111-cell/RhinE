@@ -1,5 +1,5 @@
 <#
-  Borderless full screen for foobar2000 (05 STYLE › DISPLAY › WINDOW, or F11): the theme's root panel runs this with
+  Borderless full screen for foobar2000 (06 STYLE › DISPLAY › WINDOW, or F11): the theme's root panel runs this with
   its own window handle, and the main window it belongs to loses its title bar and frame and covers the whole monitor
   it is on (the taskbar too), or gets them back:
     powershell -File window.ps1 -Panel <hwnd> -Mode borderless|window -State <file>
@@ -14,7 +14,8 @@
   a foobar2000 that has just closed serves another window), and removes the file when it ends.
   The window's place before the first switch (its frame, its rectangle, maximized or not) is kept in the state file,
   so the way back finds it after a restart too; foobar2000 itself starts as it closed, and the theme runs this again
-  then. The mini player's own place, once dragged, is kept there too ("mini": corner, x, y), until a corner is picked.
+  then. The mini player's own place, once dragged, is kept there too ("mini": corner, x, y and its size w, h, so that the
+  other shape keeps the edges nearest the corner where they were), until a corner is picked.
 #>
 param([Parameter(Mandatory)][long]$Panel, [ValidateSet('borderless', 'window', 'mini')][string]$Mode = 'window',
       [Parameter(Mandatory)][string]$State, [ValidateSet('tl', 'tr', 'bl', 'br')][string]$Corner = 'br', [string]$Size = '560x136',
@@ -126,7 +127,8 @@ function Apply($mode, $corner, $size, $snap) {
             # Size dp at the window's own DPI; where it was dragged to (pulled inside the work area of the monitor that
             # place is on), else 12 dp in from the corner of the work area (the taskbar stays clear); over every other
             # window (HWND_TOPMOST); SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOACTIVATE. A corner picked (snap) forgets
-            # the dragged place.
+            # the dragged place. At a new size (the other shape) a dragged one keeps the edges nearest its corner where
+            # they were: the right one for tr / br, the bottom one for bl / br.
             $sc = $W::GetDpiForWindow($main) / 96
             if ($sc -le 0) { $sc = 1 }
             $wh = $size -split 'x'
@@ -134,8 +136,11 @@ function Apply($mode, $corner, $size, $snap) {
             $m = if ($script:saved -and $script:saved.PSObject.Properties['mini']) { $script:saved.mini } else { $null }
             if ($snap -and $m) { SetMini $null; $m = $null }
             if ($m -and $m.corner -eq $corner) {
-                $a = (MonitorAt ([int]$m.x + [int]($pw / 2)) ([int]$m.y + [int]($ph / 2))).Work
-                $x = [Math]::Max($a.Left, [Math]::Min([int]$m.x, $a.Right - $pw)); $y = [Math]::Max($a.Top, [Math]::Min([int]$m.y, $a.Bottom - $ph))
+                $mx = [int]$m.x; $my = [int]$m.y
+                if ($m.PSObject.Properties['w'] -and $corner -like '*r') { $mx += [int]$m.w - $pw }
+                if ($m.PSObject.Properties['h'] -and $corner -like 'b*') { $my += [int]$m.h - $ph }
+                $a = (MonitorAt ($mx + [int]($pw / 2)) ($my + [int]($ph / 2))).Work
+                $x = [Math]::Max($a.Left, [Math]::Min($mx, $a.Right - $pw)); $y = [Math]::Max($a.Top, [Math]::Min($my, $a.Bottom - $ph))
             } else {
                 $a = (MonitorOf $main).Work
                 $x = if ($corner -like '*l') { $a.Left + $mg } else { $a.Right - $pw - $mg }
@@ -205,7 +210,7 @@ function Drag {
     }
     Start-Sleep -Milliseconds 60
     [void]$W::GetWindowRect($main, [ref]$r)
-    if ($script:miniCorner) { SetMini ([pscustomobject]@{ corner = $script:miniCorner; x = $r.Left; y = $r.Top }) }
+    if ($script:miniCorner) { SetMini ([pscustomobject]@{ corner = $script:miniCorner; x = $r.Left; y = $r.Top; w = $r.Right - $r.Left; h = $r.Bottom - $r.Top }) }
 }
 
 if (-not $Serve) { Apply $Mode $Corner $Size $false; exit 0 }

@@ -251,7 +251,7 @@ const vol2pos = db => clamp((Math.pow(10, db / 50) - 0.01) / 0.99, 0, 1);
 const pos2vol = p => p <= 0 ? -100 : 50 * Math.log10(0.99 * p + 0.01);
 
 // right group, right to left: ORDER, VOL. Returns its left edge.
-// (The LIGHT / DARK switch that stood at the right end is gone in 2.0.1: T, MENU › Audio Archive and 05 STYLE switch the mode.)
+// (The LIGHT / DARK switch that stood at the right end is gone in 2.0.1: T, MENU › Audio Archive and 06 STYLE switch the mode.)
 function drawRight(gr) {
     const cy = dp(ROW_Y), keyH = labelHeight(ST.key), ky = cy - Math.round(keyH / 2);
     const th = dp(26), ty = cy - th / 2;

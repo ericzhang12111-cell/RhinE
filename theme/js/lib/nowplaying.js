@@ -93,7 +93,7 @@ function hitsCard(ox, oy) {
 
 function drawCard(gr, w, h, kind = "pager", ghost = "INFO") {
     gr.FillSolidRect(0, 0, w, h, C.panel);
-    // the halftone (05 STYLE), under the ghost number
+    // the halftone (06 STYLE), under the ghost number
     halftoneDecor(gr, w, h, dp(220));
     box(gr, 0, 0, w, h, C.hair);
     const I = T.info, px = dp(16), iw = w - 2 * px;
@@ -125,7 +125,7 @@ function drawCard(gr, w, h, kind = "pager", ghost = "INFO") {
         if (I.track) chip(gr, `${I.track}${I.total ? " / " + I.total : ""}`, tx, y, dp(18), "", 9);
     }
     y += dp(18 + 10);
-    // title: on the title tag (05 STYLE), or plain, up to two lines
+    // title: on the title tag (06 STYLE), or plain, up to two lines
     const title = I ? (T.title ? scrambleText(T.title) : I.title) : tr("NO SIGNAL");
     const tagVals = I ? { track: I.track, total: I.total, arc: T.no ? pad(T.no, 4) : "", year: I.year, codec: I.codec, artist: I.artist, file: T.file ? pad(T.file, 3) : "" } : {};
     if (!drawTag(gr, px, y, iw, title, tagVals, C.panel))
