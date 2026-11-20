@@ -15,6 +15,10 @@ are fetched online when your files have none.
 
 <img width="1834" height="1043" alt="683fd30edaa5d4e8a1d8128c912cda46" src="https://github.com/user-attachments/assets/d45ea8d4-01bd-4a08-9cbb-ad52c88cf2bf" />
 
+<img width="1853" height="619" alt="image" src="https://github.com/user-attachments/assets/ba4e8c4e-249f-4b10-a949-f7a0c2a6bbb1" />
+
+<img width="3825" height="2014" alt="image" src="https://github.com/user-attachments/assets/25547c23-b52e-4c43-9708-151857661f3a" />
+
 <img width="1932" height="1050" alt="archive-light" src="https://github.com/user-attachments/assets/b976cbf7-bd5b-4a20-bc41-62a6bdee1099" />
 
 <img width="1932" height="1050" alt="inspect" src="https://github.com/user-attachments/assets/e117132d-6e33-4986-9fc5-911678d7b723" />
