@@ -376,7 +376,7 @@ I18N["zh-TW"] = {
     "Play playlist": "播放此清單", "THEME": "主題",
     // archive: group by artist or rating, sort by rating, one shelf per artist or folder
     "INITIAL": "首字母", "Group by artist": "依藝人分組", "Group by rating": "依評分分組", "RATING {0}": "評分 {0}",
-    "Rating (highest first)": "評分（最高在前）", "One shelf per artist or folder": "每位藝人、每個資料夾單獨一排",
+    "Rating (highest first)": "評分（最高在前）", "One shelf per artist, folder or playlist": "每位藝人、資料夾或歌單單獨一排",
     // signal: what shows under the ring and along the bottom (PANELS)
     "PANELS": "面板", "Under the ring": "莫比烏斯環下方", "Along the bottom": "底部", "Spectrum": "頻譜", "Lyrics": "歌詞", "Level meters": "音量表", "Stereo scope": "立體聲相位圖",
     "Signal trace": "整首波形", "Level history": "音量歷程", "LEVEL HISTORY  ·  60 S": "音量歷程  ·  60 秒", "CORR": "相關性", "BALANCE": "聲道平衡", "MONO": "單聲道", "For the 3D and 2D models": "用於 3D 和 2D 樣式",
@@ -387,4 +387,16 @@ I18N["zh-TW"] = {
     "Frosted cream polymer, lit from the floor below": "霧面奶白樹脂，由地面底光照亮", "Jade glass, lit from the floor below": "翡翠玻璃，由地面底光照亮",
     "Matte white cases under lights of their own: pick one under ROOM LIGHT": "霧面白色唱片盒，帶專屬燈光：在下方「燈光」中選擇", "Black cases under lights of their own: pick one under ROOM LIGHT": "黑色唱片盒，帶專屬燈光：在下方「燈光」中選擇",
     "RHINE LAB's own cases, each with its paper label": "RHINE LAB 專屬唱片盒，每個都附紙質標籤", "There is no light to pick for this case.": "這款唱片盒沒有可選的燈光。",
+    // NetEase playlists in the Archive (GROUP › ONLINE, lib/onlarchive.js)
+    "UNKNOWN ALBUM": "未知專輯",
+    "PLAYLIST": "歌單", "Group by online playlist (NetEase)": "依網易雲歌單分組",
+    "ONLINE · INSTALL THE BRIDGE IN 05 ONLINE": "線上 · 請先在 05 線上 中安裝本機服務",
+    "ONLINE · LOG IN TO NETEASE IN 05 ONLINE": "線上 · 請在 05 線上 中登入網易雲",
+    "ONLINE · READING PLAYLISTS …": "線上 · 正在讀取歌單 …", "ONLINE · NO PLAYLISTS CHOSEN (RIGHT-CLICK)": "線上 · 未選擇歌單（右鍵選擇）",
+    "ONLINE · THE BRIDGE IS NOT ANSWERING": "線上 · 本機服務沒有回應", "ONLINE · NETEASE IS BUSY · TRYING AGAIN LATER": "線上 · 網易雲請求太頻繁 · 稍後重試",
+    "ONLINE · THE PLAYLISTS CHOSEN ARE EMPTY": "線上 · 所選歌單是空的",
+    "SOURCE · NETEASE · {0}": "來源 · 網易雲 · {0}", "OFFLINE COPY": "離線副本",
+    "PLAY PLAYLIST": "播放歌單", "Open in playlist": "在播放清單中開啟",
+    "Online playlists in the Archive": "曲庫中顯示的網易雲歌單", "Use my created playlists and liked songs": "使用我建立的歌單和喜歡的音樂", "Refresh online playlists": "重新整理網易雲歌單",
+    "Liked songs": "我喜歡的音樂", "New NetEase playlist…": "新增網易雲歌單…", "Add to playlist": "加入歌單", "Remove from “{0}”": "從「{0}」中移除", "Rename playlist…": "重新命名歌單…", "Delete playlist": "刪除歌單", "Delete “{0}” from NetEase (cannot be undone)": "從網易雲刪除「{0}」（無法復原）", "Remove from my playlists": "從我的歌單中移除", "Collect into my playlists": "收藏到我的歌單", "Working…": "處理中…", "Restart foobar2000 to edit NetEase playlists (the bridge running is from before this update).": "請重新啟動 foobar2000 後再編輯網易雲歌單（正在執行的本機服務還是更新前的版本）。", "NetEase did not do it: {0}": "網易雲沒有完成：{0}", "the bridge did not answer": "本機服務沒有回應", "Already in “{0}”": "已在「{0}」中", "Added to “{0}”": "已加入「{0}」", "Removed from “{0}”": "已從「{0}」中移除", "NetEase playlist name": "網易雲歌單名稱", "New NetEase playlist": "新增網易雲歌單", "Created “{0}”": "已建立「{0}」", "Rename NetEase playlist": "重新命名網易雲歌單", "Renamed to “{0}”": "已重新命名為「{0}」", "Deleted “{0}”": "已刪除「{0}」", "Collected “{0}”": "已收藏「{0}」", "Removed “{0}” from your playlists": "已將「{0}」從我的歌單中移除",
 };

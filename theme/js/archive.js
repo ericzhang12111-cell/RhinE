@@ -52,6 +52,7 @@ const AR = {
     title: null, tracks: { key: "", rows: [], total: 0 },
     page: ["tracks", "artist"].includes(getSetting("archiveInfoPage", "file")) ? getSetting("archiveInfoPage", "file") : "file",   // the album file's page
     list: null, listVer: 0, listScroll: 0, listMax: 0, listKey: "",   // the TRACKS page: its rows, their scroll
+    onl: null,                     // an online case's track rows (onlineTrackRows), for both pages
     rateHover: null, mouseX: -1, mouseY: -1,   // { i, n }: the rating under the mouse (previewed); the mouse (-1: not over the panel)
     rulerStart: Spring(0, 14), ticks: new Map(),
     dirtyInfo: true, info: null,
@@ -79,8 +80,8 @@ try { AR.selAlbum = String(JSON.parse(getSetting("archiveSel", "{}")).key || "")
 // file panel say which group a case belongs to). A larger one starts a shelf of its own, after topping up a shelf left
 // short of SHELF_MIN, and is shared out evenly over as few shelves as hold the rest (45: 23 + 22, rather than 20 + 20
 // + 5, which leaves a few cases alone on the last shelf). A shelf's rail is as long as its cases, SHELF_MIN slots at
-// least. Grouped by artist or folder, every group starts a shelf of its own (AR.shelfPerGroup, on unless turned off in
-// the context menu), so a shelf is one artist or one folder however few cases it has.
+// least. Grouped by artist, folder or online playlist, every group starts a shelf of its own (AR.shelfPerGroup, on
+// unless turned off in the context menu), so a shelf is one artist, one folder or one playlist however few cases it has.
 // shelf: { name, albums, slot (each album's slot), slots, segs: [{ gi, name, from, n, slot, part, parts, total }] }
 // The grid's sections are the plain groups; both layouts share the selected album.
 const SHELF_MIN = 10, SHELF_MAX = 30;
@@ -98,7 +99,7 @@ function buildShelves() {
         if (!parts.has(gi)) parts.set(gi, []);
         parts.get(gi).push(seg);
     };
-    const alone = AR.shelfPerGroup && (LIB.groupBy === "albumartist" || LIB.groupBy === "folder");
+    const alone = AR.shelfPerGroup && (LIB.groupBy === "albumartist" || LIB.groupBy === "folder" || LIB.groupBy === "online");
     LIB.groups.forEach((g, gi) => {
         const N = g.albums.length;
         let i = 0;
@@ -157,13 +158,19 @@ function placeSelection(key) {
     const R = arRows();
     // An album or track not listed yet (a track before the worker has listed them, an album still indexing) is kept as
     // wanted and looked for again with the next catalog, until something else is selected by hand.
-    const want = AR.wantKey || key;
-    // across ALBUMS / TRACKS / FOLDERS the selection moves to what holds the item's first track (or to that track)
-    const was = !want ? null : want.startsWith("t|") ? LIB.items.find(t => t.key === want) : want.startsWith(FOLDER_KEY) ? LIB.folderMap.get(want) : LIB.albumMap.get(want);
-    const alt = was && was.idx && libHandles && LIB.live ? itemKeyOf(libHandles[was.idx[0]]) : "";
-    let at = null;
-    for (const k of [want, alt, key]) if (k) for (let gi = 0; gi < R.length && !at; gi++) { const i = R[gi].albums.findIndex(a => a.key === k); if (i >= 0) at = [gi, i]; }
-    AR.wantKey = at || !LIB.live ? (at ? "" : want) : "";
+    const want = AR.wantKey || key, onl = !!want && want.startsWith(ONL_KEY);
+    // across ALBUMS / TRACKS / FOLDERS the selection moves to what holds the item's first track (or to that track); an
+    // online case's to the case of the same list holding its first song (lib/onlarchive.js)
+    const was = !want ? null : onl ? ONLA.map.get(want) : want.startsWith("t|") ? LIB.items.find(t => t.key === want) : want.startsWith(FOLDER_KEY) ? LIB.folderMap.get(want) : LIB.albumMap.get(want);
+    const alt = onl ? onlaKeyIn(was, itemUnit()) : was && was.idx && libHandles && LIB.live ? itemKeyOf(libHandles[was.idx[0]]) : "";
+    let at = null, hit = "";
+    for (const k of [want, alt, key]) if (k) for (let gi = 0; gi < R.length && !at; gi++) { const i = R[gi].albums.findIndex(a => a.key === k); if (i >= 0) { at = [gi, i]; hit = k; } }
+    // An online case is kept as wanted until GROUP › ONLINE has read its lists through (ONLA.state "ready"): the copy on
+    // disk may not hold its list yet (one never read, or read only in part), and while the bridge cannot be reached the
+    // case stays wanted, as a local one does while the library loads. Only finding it (or what holds it) lets it go:
+    // `key` found is just the case shown meanwhile (selectionChanged below makes it AR.selAlbum).
+    const hold = !LIB.live || (onl && LIB.groupBy === "online" && ONLA.state !== "ready");
+    AR.wantKey = hit && (hit === want || hit === alt) ? "" : hold ? want : "";
     AR.group = at ? at[0] : clamp(AR.group, 0, Math.max(0, R.length - 1));
     AR.rows.clear(); AR.ticks.clear(); AR.selKey.clear();
     AR.tracks.key = "";
@@ -218,11 +225,13 @@ function slotsInView() {
 
 function selectionChanged(animate = true) {
     const g = curGroup(), a = curAlbum();
-    if (animate) AR.wantKey = "";   // chosen by hand
+    if (animate) { AR.wantKey = ""; inspectAskDrop(); }   // chosen by hand
     AR.groupName = g ? g.name : "";
     if (g && a) { AR.selKey.set(g.name, a.key); AR.selAlbum = a.key; }
     AF.dirty = true;   // an open artist file follows the selection (artist.js)
-    setSetting("archiveSel", JSON.stringify({ key: AR.selAlbum }));
+    // (a selection still waiting for its case is the one kept: the case shown meanwhile would replace it for good,
+    // GROUP › ONLINE's while the bridge cannot be reached)
+    setSetting("archiveSel", JSON.stringify({ key: AR.wantKey || AR.selAlbum }));
     const r = AR.rows.get(AR.group), n = g ? g.albums.length : 0, w = Math.max(2, String(n).length);
     const sel = pad(r ? r.sel + 1 : 0, w), gno = pad(AR.group + 1, 2), no = pad(a ? a.no : 0, 4);
     // during a RANDOM PICK run the file panel stays as it is (redrawing it on every hop and every frame of its rolling
@@ -331,6 +340,13 @@ function pickStop() { const on = !!PICK.steps || PICK.after; PICK.steps = null; 
 const TF_AR_TRACK = fb.TitleFormat("[%tracknumber%]\u0001%title%\u0001[%length_seconds%]");
 const sameTrack = (h, k) => !!(h && k && h.RawPath === k.RawPath && h.SubSong === k.SubSong);
 function albumTracks(a, max) {
+    if (isOnline(a)) {
+        const O = onlineTrackRows(a), key = `${O.key}|${max}`;
+        if (AR.tracks.key === key) return AR.tracks;
+        const at = O.rows.findIndex(r => r.own), n = O.rows.length, first = at > max - 2 ? Math.max(0, Math.min(at - 1, n - max)) : 0;
+        AR.tracks = { key, rows: O.rows.slice(first, first + max), first, total: n };
+        return AR.tracks;
+    }
     const key = `${a.key}|${LIB.live}|${max}`;
     if (AR.tracks.key === key) return AR.tracks;
     const list = albumHandles(a), np = fb.GetNowPlaying(), own = itemTrack(a), fold = !!(albumOf(a) || a).folder;   // a folder: numbered in order
@@ -355,6 +371,13 @@ function albumTracks(a, max) {
 // when a track changes (a rating, tags) or another one plays
 const TF_AR_LIST = fb.TitleFormat("[%discnumber%]\u0001[%tracknumber%]\u0001%title%\u0001[%length_seconds%]");
 function albumTrackList(a) {
+    if (isOnline(a)) {
+        const O = onlineTrackRows(a);
+        if (AR.list && AR.list.key === O.key) return AR.list;
+        AR.list = { key: O.key, rows: O.rows, handles: null, online: true, discs: new Set(O.rows.map(r => r.disc)).size,
+                    total: O.rows.reduce((n, r) => n + r.len, 0), rated: 0, avg: 0 };
+        return AR.list;
+    }
     const key = `${a.key}|${LIB.live}|${AR.listVer}|${ratingStore()}`;
     if (AR.list && AR.list.key === key) return AR.list;
     const list = albumHandles(a), np = fb.GetNowPlaying(), own = itemTrack(a), fold = !!(albumOf(a) || a).folder;   // a folder: no discs
@@ -371,6 +394,38 @@ function albumTrackList(a) {
     AR.list = { key, rows, handles: list, discs: new Set(rows.map(r => r.disc)).size, total: rows.reduce((n, r) => n + r.len, 0),
                 rated: rated.length, avg: rated.length ? rated.reduce((n, r) => n + r.rating, 0) / rated.length : 0 };
     return AR.list;
+}
+// GROUP › ONLINE's cases (lib/onlarchive.js): NetEase songs, with no foobar2000 tracks behind them
+const isOnline = a => !!(a && a.online);
+const isOnlineList = a => isOnline(a) && !a.album && !!a.list;   // a whole list as one case (SHOW FOLDERS)
+// An online case's rows for both pages, from its songs: its album's in disc / track order, a list case's in the list's
+// order with each song's artists (they change from song to song there). A song this account cannot play whole is
+// tagged: LOCKED (NetEase gives it to no one here), VIP · TRIAL (a VIP's only; this account gets a short trial). No
+// ratings and no hearts: those are kept on foobar2000's tracks. Made again when another song plays, the cases are
+// built again (ONLA.ver) or the account's VIP changes.
+function onlineTrackRows(a) {
+    const al = albumOf(a) || a, np = fb.GetNowPlaying(), now = np ? onlineSongOf(np) : null, pid = now && now.src === "ne" ? String(now.id) : "";
+    const key = `${a.key}|onl|${ONLA.ver}|${pid}|${onlVip({ src: "ne" })}`;
+    if (AR.onl && AR.onl.key === key) return AR.onl;
+    const list = isOnlineList(al), discs = !list && al.discs > 1, own = a.song ? a.song.id : "";
+    const rows = al.online.songs.map((s, i) => {
+        const locked = s.ok === false, trial = !locked && !onlPlayable(s);
+        return { i, disc: discs ? String(s.cd) : "", no: pad(!list && s.no ? s.no : i + 1, 2), len: s.ms / 1000, rating: 0, fav: false,
+                 title: list && s.artists.length ? `${s.title}  ·  ${s.artists.join(" / ")}` : s.title,
+                 playing: s.id === pid, own: s.id === own, inst: isInstrumental(s.title, "", s.album),
+                 locked: locked || trial, tag: locked ? tr("LOCKED") : trial ? tr("VIP · TRIAL") : "" };
+    });
+    AR.onl = { key, rows };
+    return AR.onl;
+}
+// the line under the buttons: where the music comes from, when it is not the media library's folders (an online case's
+// list, and whether what is shown is the copy kept from before, NetEase not answering or the account logged out)
+function sourceNote(a) {
+    if (isOnline(a)) {
+        const off = ONLA.state === "offline" || ONLA.state === "nologin";
+        return tr("SOURCE · NETEASE · {0}", onlaListTitle(a.online.pl)) + (off ? "  ·  " + tr("OFFLINE COPY") : "");
+    }
+    return LIB.source === "playlists" ? tr("SOURCE · ALL PLAYLISTS (NO MEDIA LIBRARY FOLDERS)") : "";
 }
 function setInfoPage(page) {
     if (page === AR.page) return;
@@ -476,8 +531,16 @@ const ROOM_INSP_HOLD = Math.min(DBL_MS, 320);
 const inspHeld = () => AR.inspAt > 0 && Date.now() - AR.inspAt < ROOM_INSP_HOLD;
 // a click opens the inspection: held while a double-click can still come (the room; the array's lift hides it)
 function inspectClicked() {
-    AR.inspOn = true;
+    inspectOpen();
     AR.inspAt = Date.now();
+}
+// The selected case inspected, by hand (a click, Enter). Chosen by hand, it lets go of what was still waiting: a
+// selection waiting for its case (GROUP › ONLINE's while its lists are read) or an inspection asked for from elsewhere
+// (inspectRequest), either of which would otherwise move the shelves under this inspection when its case comes.
+function inspectOpen() {
+    AR.wantKey = "";
+    inspectAskDrop();
+    AR.inspOn = true;
     inspectImages();
     clock.wake();
 }
@@ -1161,10 +1224,12 @@ ${pad(gi + 1, 2)}`, LABEL_FONTS.lipS, tone(0xFFF2F1EC), -84, 10 + ph * .52, 76, 
 }
 
 function drawArchiveEmpty(gr) {
-    const t = LIB.filter ? tr("NOTHING MATCHES \"{0}\"", LIB.filter.toUpperCase()) : tr(LIB.live ? "NO ALBUMS · THE MEDIA LIBRARY AND THE PLAYLISTS ARE EMPTY" : "INDEXING LIBRARY …");
+    // (GROUP › ONLINE lists the NetEase playlists, not the library: what it is waiting for, lib/onlarchive.js)
+    const online = LIB.groupBy === "online";
+    const t = LIB.filter ? tr("NOTHING MATCHES \"{0}\"", LIB.filter.toUpperCase()) : online ? tr(onlaEmptyText()) : tr(LIB.live ? "NO ALBUMS · THE MEDIA LIBRARY AND THE PLAYLISTS ARE EMPTY" : "INDEXING LIBRARY …");
     label(gr, t, st(AR_ST.meta, C["text-muted"]), arrayW() / 2, H / 2 - dp(6), 1);
     // nothing to show yet: a way to the media library's folders (Preferences › Media Library)
-    if (LIB.live && !LIB.filter) {
+    if (LIB.live && !LIB.filter && !online) {
         const bt = tr("+ ADD MUSIC FOLDER"), bw = labelWidth(bt, st(AR_ST.btn, 0)) + dp(36), bh = dp(40);
         const bx = Math.round(arrayW() / 2 - bw / 2), by = Math.round(H / 2 + dp(26));
         gr.FillSolidRect(bx, by, bw, bh, C.fg);
@@ -1278,8 +1343,10 @@ function inspectK(k0, meta = CASE_META) {
 // (fade: the whole of it faded, the room's, which shows it square-on at once, e = 1: over the room's own background
 // colour, whatever the mode (RHINE LAB's white under a dark theme), the text inked to suit it)
 // what a room case's label says of an album (lib/album.js drawInfoLabel: the inspection's frame, the room's selected case)
+// the item's group as printed by the inspection (an online case's is a playlist id: its name instead)
+const shelfOf = a => isOnline(a) ? groupName(a.grp || "") : a.grp || "";
 const albumInfoLabel = a => ({ title: a.title || tr("UNTITLED"), sub: a.artist || "",
-    rows: [["YEAR", a.year || "—"], ["TRACKS", pad(a.tracks || 0, 2)], ["GENRE", [...(a.genre || a.grp || "—")].slice(0, 14).join("")]], foot: `ARC-${pad(a.no, 4)}`, foot2: fmtChip(a, true) });
+    rows: [["YEAR", a.year || "—"], ["TRACKS", pad(a.tracks || 0, 2)], ["GENRE", [...(a.genre || shelfOf(a) || "—")].slice(0, 14).join("")]], foot: `ARC-${pad(a.no, 4)}`, foot2: fmtChip(a, true) });
 function drawInspection(gr, e, fade = 1) {
     const frames = ARIMG.inspect, a = curAlbum(), aw = arrayW(), S = swapState(), sa = Math.round(255 * S.a * fade), room = roomOn();
     const bg = room ? fadeBg() : C.bg, lit = ((bg >>> 16 & 255) * .3 + (bg >>> 8 & 255) * .59 + (bg & 255) * .11) / 255 > .5;
@@ -1316,7 +1383,7 @@ function drawInspection(gr, e, fade = 1) {
             const y2 = Math.round(top - dp(16) - labelHeight(AR_ST.inspM)), y1 = y2 - dp(6) - labelHeight(AR_ST.insp);
             label(gr, `${tr("INSPECTION")}  ·  ARC-${pad(a.no, 4)}`, st(AR_ST.insp, ink, bg), left, y1);
             const sub = a.album ? (albumOf(a) || {}).title || "" : tr("{0} TRACKS", pad(a.tracks, 2));
-            label(gr, `${fmtChip(a)}  ·  ${sub}  ·  ${a.grp || ""}`, st(AR_ST.inspM, muted, bg), left, y2);
+            label(gr, `${fmtChip(a)}  ·  ${sub}  ·  ${shelfOf(a)}`, st(AR_ST.inspM, muted, bg), left, y2);
             // ← RETURN TO ARCHIVE
             const bx = left, by = Math.round(bottom + dp(16)), bs = st(AR_ST.btn, ink, bg), bw = labelWidth("←  RETURN TO ARCHIVE", bs) + dp(22), bh = dp(26);
             gr.FillSolidRect(bx, by, bw, bh, bg);
@@ -1375,10 +1442,12 @@ function drawInfoPages(gr, x, iw, h) {
 }
 
 // ▶ PLAY ALBUM / PLAY TRACK / PLAY FOLDER (inverse) · OPEN ALBUM ↗ (orange focus frame); the key that does the same
-// (Space) is printed on the button, dimmed. Returns its height.
+// (Space) is printed on the button, dimmed. Returns its height. An online case (lib/onlarchive.js) has no heart: hearts
+// are kept on foobar2000's tracks; a whole online list says PLAY PLAYLIST / OPEN IN PLAYLIST.
 function drawInfoButtons(gr, x, y, isTrack) {
-    const fold = !isTrack && !!(curAlbum() || {}).folder, openTxt = tr(fold ? "OPEN IN PLAYLIST" : "OPEN ALBUM");
-    const bh = dp(40), bs = st(AR_ST.btn, C.bg, C.fg), playTxt = tr(isTrack ? "PLAY TRACK" : fold ? "PLAY FOLDER" : "PLAY ALBUM");
+    const c = curAlbum(), onl = isOnline(c), lst = !isTrack && isOnlineList(c);
+    const fold = !isTrack && !!(c || {}).folder, openTxt = tr(fold || lst ? "OPEN IN PLAYLIST" : "OPEN ALBUM");
+    const bh = dp(40), bs = st(AR_ST.btn, C.bg, C.fg), playTxt = tr(isTrack ? "PLAY TRACK" : fold ? "PLAY FOLDER" : lst ? "PLAY PLAYLIST" : "PLAY ALBUM");
     const ks = st(AR_ST.key, mix(C.bg, C.fg, .45), C.fg), kt = tr("SPACE"), kw = labelWidth(kt, ks);
     const pw = dp(14) + dp(10) + dp(10) + labelWidth(playTxt, bs) + dp(14) + kw + dp(14);
     gr.FillSolidRect(x, y, pw, bh, C.fg);
@@ -1396,8 +1465,9 @@ function drawInfoButtons(gr, x, y, isTrack) {
     gr.DrawLine(ax0 + dp(2.5), ay0 - aL, ax0 + aL, ay0 - aL, sw, C.accent);
     gr.DrawLine(ax0 + aL, ay0 - aL, ax0 + aL, ay0 - dp(2.5), sw, C.accent);
     INFO_HITS.push(["ar-open", ox2, y, ow, bh]);
+    if (onl) return bh;
     // ♥: the album's heart (a track item's own, while SHOW TRACKS is on; lib/favourite.js)
-    const c = curAlbum(), on = !!c && (isTrack ? isFav(itemTrack(c)) : isFavAlbum(c.key)), hx = ox2 + ow + dp(14), hs = dp(16);
+    const on = !!c && (isTrack ? isFav(itemTrack(c)) : isFavAlbum(c.key)), hx = ox2 + ow + dp(14), hs = dp(16);
     if (!LABEL_LIVE) gr.FillSolidRect(hx, y, bh, bh, C.bg);
     box(gr, hx, y, bh, bh, AR.favHover ? C.accent : C.fg);
     drawHeart(gr, hx + (bh - hs) / 2, y + (bh - hs) / 2 + dp(1), hs, on, on ? C.accent : C.fg);
@@ -1407,8 +1477,8 @@ function drawInfoButtons(gr, x, y, isTrack) {
 
 // FILE: the album file as it always was (the first tracks, as many as fit; "+ N MORE" turns to the TRACKS page)
 function drawInfoFile(gr, a, x, y, iw, w, h) {
-    // bracketed ALBUM NO. 0269 (FOLDER NO. for a folder) + format chip
-    const noTxt = tr(a.folder ? "FOLDER NO." : "ALBUM NO.") + " ", hh = dp(34), hs = st(AR_ST.head, C.fg), lw = labelWidth(noTxt, hs);
+    // bracketed ALBUM NO. 0269 (FOLDER NO. for a folder, PLAYLIST NO. for an online list) + format chip
+    const noTxt = tr(a.folder ? "FOLDER NO." : isOnlineList(a) ? "PLAYLIST NO." : "ALBUM NO.") + " ", hh = dp(34), hs = st(AR_ST.head, C.fg), lw = labelWidth(noTxt, hs);
     const f = font(13, 600), cell = Math.round(gr.CalcTextWidth("0", f, true) + .12 * dp(13)), bw = dp(20) + lw + cell * 4 + dp(16);
     for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) gr.FillSolidRect(x + cx * (bw - dp(5)), y + cy * (hh - dp(5)), dp(5), dp(5), C.fg);
     const ty = y + Math.round((hh - labelHeight(AR_ST.head)) / 2);
@@ -1463,15 +1533,19 @@ function drawInfoFile(gr, a, x, y, iw, w, h) {
     // the album's tracks, as many as fit above the buttons: click one to play the album from it (the selected track
     // item is marked, the playing track has ▶)
     // (below the list: the "+ N MORE" row, the buttons, the page dots and a margin, more with the source note)
-    const below = dp(24 + 18 + 40) + dp(26) + dp(LIB.source === "playlists" ? 56 : 28);
+    const note = sourceNote(a), below = dp(24 + 18 + 40) + dp(26) + dp(note ? 56 : 28);
     const rowH = dp(24), fit = clamp(Math.floor((h - y - below) / rowH), 1, 40), TL = albumTracks(a, fit);
-    if (!TL.rows.length) label(gr, tr(LIB.live ? "NO TRACKS" : "INDEXING …"), st(AR_ST.more, C["text-muted"]), x + dp(34), y + dp(6));
+    if (!TL.rows.length) label(gr, tr(LIB.live || isOnline(a) ? "NO TRACKS" : "INDEXING …"), st(AR_ST.more, C["text-muted"]), x + dp(34), y + dp(6));
+    // (an online song this account cannot play whole: dimmed, its tag before the time; lib/onlarchive.js)
+    const tgs = st(AR_ST.key, C["text-muted"]), tgy = Math.round((rowH - labelHeight(AR_ST.key)) / 2);
     TL.rows.forEach((t, k) => {
         const ry = y + k * rowH, hov = AR.infoHover === t.i;
         if (t.own || hov) gr.FillSolidRect(x - dp(8), ry, iw + dp(16), rowH, t.own ? C.panel : withAlpha(C.fg, .06));
         if (t.own) gr.FillSolidRect(x - dp(8), ry, dp(3), rowH, C.accent);
         gr.DrawText(t.playing ? "▶" : t.no, font(12, 400), t.playing ? C.accent : C["text-muted"], x, ry, dp(34), rowH, DT_SINGLE);
-        text(gr, t.title, 12, t.own ? 600 : 400, AR.skipInst && t.inst && !t.own ? C["text-muted"] : C.fg, x + dp(34), ry, iw - dp(34) - dp(70), rowH);
+        const tgw = t.tag ? labelWidth(t.tag, tgs) + dp(12) : 0;
+        text(gr, t.title, 12, t.own ? 600 : 400, (AR.skipInst && t.inst && !t.own) || t.locked ? C["text-muted"] : C.fg, x + dp(34), ry, iw - dp(34) - dp(70) - tgw, rowH);
+        if (t.tag) label(gr, t.tag, tgs, x + iw - dp(70) - tgw + dp(6), ry + tgy);
         gr.DrawText(fmtTime(t.len), font(12, 400), C["fg-soft"], x + iw - dp(70), ry, dp(70), rowH, DT_RIGHT_SINGLE);
         INFO_HITS.push(["ar-track", x - dp(8), ry, iw + dp(16), rowH, t.i]);
     });
@@ -1483,14 +1557,15 @@ function drawInfoFile(gr, a, x, y, iw, w, h) {
     }
     y += dp(24 + 18);
     const bh = drawInfoButtons(gr, x, y, isTrack);
-    if (LIB.source === "playlists") label(gr, tr("SOURCE · ALL PLAYLISTS (NO MEDIA LIBRARY FOLDERS)"), st(AR_ST.key, C["text-muted"]), x, y + bh + dp(16));
+    if (note) label(gr, fitLabel(note, st(AR_ST.key, 0), iw), st(AR_ST.key, C["text-muted"]), x, y + bh + dp(16));
 }
 
 // TRACKS: the album's title and totals, then every track with its rating, scrolled by the wheel over the panel;
 // discs get a header row. A click on the marks rates the track (the same mark again clears it), elsewhere on the row
-// it plays the album from there. The buttons stay at the bottom.
+// it plays the album from there. The buttons stay at the bottom. An online case's songs have no ratings or hearts: their
+// column says which ones this account cannot play whole (STATE: LOCKED, VIP · TRIAL).
 function drawInfoTracks(gr, a, x, y, iw, w, h) {
-    const al = albumOf(a) || a, isTrack = al !== a, L = albumTrackList(a);
+    const al = albumOf(a) || a, isTrack = al !== a, L = albumTrackList(a), onl = !!L.online;
     const tt = al.title || tr("UNTITLED");
     text(gr, tt, 18, 600, C.fg, x, y, iw, dp(28));
     y += dp(30);
@@ -1499,7 +1574,7 @@ function drawInfoTracks(gr, a, x, y, iw, w, h) {
     const n = L.rows.length, meta = `${al.year || a.year || "—"} / ${tr("{0} TRACKS", pad(n, 2))} / ${fmtTime(L.total)}`;
     label(gr, fitLabel(meta, st(AR_ST.meta, 0), iw), st(AR_ST.meta, C["text-muted"]), x, y);
     // RATED 7 / 12 · ◆ 3.8, right
-    if (n) {
+    if (n && !onl) {
         const rs = st(AR_ST.meta, L.rated ? C.fg : C["text-muted"]), rt = L.rated ? `${tr("RATED {0} / {1}", L.rated, n)}  ·  ${L.avg.toFixed(1)}` : tr("NOT RATED");
         label(gr, rt, rs, x + iw, y, 2);
     }
@@ -1512,15 +1587,15 @@ function drawInfoTracks(gr, a, x, y, iw, w, h) {
     const fs = dp(10), fx = rx - dp(16) - fs;
     label(gr, tr("NO."), ks, x, y);
     label(gr, tr("TITLE"), ks, tx, y);
-    drawHeart(gr, fx, y + Math.round((labelHeight(AR_ST.key) - fs) / 2), fs, false, C["text-muted"]);
-    label(gr, tr("RATING"), ks, rx, y);
+    if (!onl) drawHeart(gr, fx, y + Math.round((labelHeight(AR_ST.key) - fs) / 2), fs, false, C["text-muted"]);
+    label(gr, tr(onl ? "STATE" : "RATING"), ks, rx, y);
     label(gr, tr("TIME"), ks, x + iw, y, 2);
     y += dp(18);
     hline(gr, x, y, iw, C["line-faint"]);
     y += dp(4);
     // the rows, between the heads and the buttons
-    const bh = dp(40), by = h - dp(22) - dp(20) - bh - (LIB.source === "playlists" ? dp(24) : 0), listH = by - dp(18) - y, rowH = dp(26);
-    if (!n) { label(gr, tr(LIB.live ? "NO TRACKS" : "INDEXING …"), st(AR_ST.more, C["text-muted"]), tx, y + dp(8)); }
+    const note = sourceNote(a), bh = dp(40), by = h - dp(22) - dp(20) - bh - (note ? dp(24) : 0), listH = by - dp(18) - y, rowH = dp(26);
+    if (!n) { label(gr, tr(LIB.live || onl ? "NO TRACKS" : "INDEXING …"), st(AR_ST.more, C["text-muted"]), tx, y + dp(8)); }
     else {
         // the display rows: a header per disc when there are several, then its tracks
         const D = [];
@@ -1542,6 +1617,13 @@ function drawInfoTracks(gr, a, x, y, iw, w, h) {
             if (r.own || hov) gr.FillSolidRect(x - dp(8), ry, iw + dp(16), rowH, r.own ? C.panel : withAlpha(C.fg, .06));
             if (r.own) gr.FillSolidRect(x - dp(8), ry, dp(3), rowH, C.accent);
             gr.DrawText(r.playing ? "▶" : r.no, font(12, 400), r.playing ? C.accent : C["text-muted"], x, ry, dp(34), rowH, DT_SINGLE);
+            if (onl) {   // (the whole row plays from it)
+                text(gr, r.title, 12, r.own ? 600 : 400, (AR.skipInst && r.inst && !r.own) || r.locked ? C["text-muted"] : C.fg, tx, ry, rx - dp(10) - tx, rowH);
+                if (r.tag) label(gr, r.tag, ks, rx, ry + Math.round((rowH - labelHeight(AR_ST.key)) / 2));
+                gr.DrawText(fmtTime(r.len), font(12, 400), C["fg-soft"], x + iw - timeW, ry, timeW, rowH, DT_RIGHT_SINGLE);
+                INFO_HITS.push(["ar-track", x - dp(8), ry, iw + dp(16), rowH, r.i]);
+                return;
+            }
             text(gr, r.title, 12, r.own ? 600 : 400, AR.skipInst && r.inst && !r.own ? C["text-muted"] : C.fg, tx, ry, fx - dp(10) - tx, rowH);
             if (r.fav || hov) drawHeart(gr, fx, ry + (rowH - fs) / 2 + dp(1), fs, r.fav, r.fav ? C.accent : AR.favRow === r.i ? C.fg : C["line-dim"]);
             drawRating(gr, rx, ry + (rowH - ms) / 2, ms, r.rating, rh);
@@ -1559,7 +1641,7 @@ function drawInfoTracks(gr, a, x, y, iw, w, h) {
         }
     }
     drawInfoButtons(gr, x, by, isTrack);
-    if (LIB.source === "playlists") label(gr, tr("SOURCE · ALL PLAYLISTS (NO MEDIA LIBRARY FOLDERS)"), st(AR_ST.key, C["text-muted"]), x, by + bh + dp(12));
+    if (note) label(gr, fitLabel(note, st(AR_ST.key, 0), iw), st(AR_ST.key, C["text-muted"]), x, by + bh + dp(12));
 }
 
 // ------------------------------------------------------------------------------------------------------ actions
@@ -1584,6 +1666,7 @@ function loadAlbum(a, keep) {
 }
 // plays the selected item's album from track `at` (default: the item's own track, else the first)
 function playAlbum(at) {
+    if (isOnline(curAlbum())) { playOnline(curAlbum(), at); return; }
     const a = curAlbum(), full = albumHandles(a);
     if (!full || !full.Count) return;
     const want = at !== undefined ? full[clamp(at, 0, full.Count - 1)] : itemTrack(a);
@@ -1596,8 +1679,33 @@ function playAlbum(at) {
     plman.ExecutePlaylistDefaultAction(pl, i);
     AR.tracks.key = "";
 }
-// the playing track is this item (a track item) or on this album, or in this folder
-function itemPlaying(a, np = fb.GetNowPlaying()) { return !!(a && np && (a.album ? sameTrack(itemTrack(a), np) : (a.folder ? folderKeyOf(np.Path) : albumKey(np)) === a.key)); }
+// An online case (lib/onlarchive.js) plays its album's songs from row `at` (default: a track case's own song, else the
+// first), a list case the whole list, in "NetEase · Archive" (onlaPlay starts the bridge first when it is not running);
+// instrumentals are left out as an album's are (lib/playlists.js), except the song asked for. noplay: OPEN IN
+// PLAYLIST, the playlist shown in the playlists view instead. What could not be done is said in a note.
+function playOnline(a, at, noplay = false) {
+    const al = albumOf(a) || a, all = al.online.songs, name = al.title || "";
+    if (!all.length) return;
+    const want = at !== undefined ? all[clamp(at, 0, all.length - 1)] : a.song || all[0];
+    let songs = all;
+    if (AR.skipInst) {
+        const kept = all.filter(s => s === want || !isInstrumental(s.title, "", s.album));
+        if (kept.length) songs = kept;
+    }
+    onlaPlay(songs, want, al.online.pl, noplay, what => {
+        if (what === "wait") archiveNote(tr("Waiting for the bridge…"));
+        else if (what === "absent") archiveNote(tr("ONLINE · INSTALL THE BRIDGE IN 05 ONLINE"));
+        else if (what === "bridge") archiveNote(tr("ONLINE · THE BRIDGE IS NOT ANSWERING"));
+        else if (what === "none") archiveNote(tr("Nothing in “{0}” can be played here now.", name));
+        else if (noplay) send("view", "playlists");
+    });
+}
+// the playing track is this item (a track item) or on this album, or in this folder; an online case: the playing song
+// is on it (lib/onlarchive.js onlaHolds)
+function itemPlaying(a, np = fb.GetNowPlaying()) {
+    if (isOnline(a)) return !!np && onlaHolds(a, onlineSongOf(np));
+    return !!(a && np && (a.album ? sameTrack(itemTrack(a), np) : (a.folder ? folderKeyOf(np.Path) : albumKey(np)) === a.key));
+}
 // a double-click on a case or a cover (array, room, grid): the selected item's album plays; when it is the one playing it
 // goes on (paused: it resumes) rather than starting again
 function playCase() {
@@ -1607,13 +1715,29 @@ function playCase() {
 // Inspect from elsewhere: the transport's cover and the signal profile card ask for the playing (else focused) track.
 // The Archive opens on its album (or on the track itself while SHOW TRACKS is on) and inspects it once the view is
 // shown and the item is listed; the grid gives way to the case array for it (the room inspects in place).
-const INSPECT_ASK = { key: "", timer: 0 };
+const INSPECT_ASK = { key: "", timer: 0, at: 0 };
 function inspectRequest() {
     const h = fb.GetNowPlaying() || fb.GetFocusItem();
     if (!h) return;
     INSPECT_ASK.key = itemKeyOf(h);
+    // A NetEase song (05 ONLINE's or the Archive's own) has a case only under GROUP › ONLINE: the Archive is grouped so
+    // when the song is on one of the lists shown there (the copy on disk read first, lib/onlarchive.js), else it just
+    // opens as it is
+    if (!INSPECT_ASK.key && ONLINE_SONG.test(h.RawPath) && LIB.groupBy !== "online") {
+        const s = onlineSongOf(h);
+        if (s && s.src === "ne") {
+            onlaLoad();
+            if (ONLA.bySong.has("ne:" + s.id)) { setGroupBy("online"); INSPECT_ASK.key = itemKeyOf(h); }
+        }
+    }
+    INSPECT_ASK.at = Date.now();
     if (STATE.view !== "archive") send("view", "archive");   // the view comes back here with the next "state"
     else inspectPending(0);
+}
+// what was asked from elsewhere let go (something chosen by hand since: archive.js inspectOpen, selectionChanged)
+function inspectAskDrop() {
+    INSPECT_ASK.key = "";
+    if (INSPECT_ASK.timer) { window.ClearTimeout(INSPECT_ASK.timer); INSPECT_ASK.timer = 0; }
 }
 function inspectPending(delay = 450) {
     if (!INSPECT_ASK.key || !ARCHIVE_ON || INSPECT_ASK.timer) return;
@@ -1622,14 +1746,18 @@ function inspectPending(delay = 450) {
         INSPECT_ASK.timer = 0;
         const key = INSPECT_ASK.key;
         if (!key || !ARCHIVE_ON) return;
-        // not listed: wait for the catalog while the library is still being read, else leave the selection alone
+        // not listed: wait for the catalog while the library (or GROUP › ONLINE's lists) is still being read, else leave
+        // the selection alone
+        // (an online case: while GROUP › ONLINE is still reading its lists, for a minute at most)
         if (!LIB.groups.some(g => g.albums.some(x => x.key === key))) {   // the groups list every item, in either layout
-            if (LIB.live) INSPECT_ASK.key = "";
+            const onl = key.startsWith(ONL_KEY) && LIB.groupBy === "online" && ONLA.state === "syncing" && Date.now() - INSPECT_ASK.at < 60000;
+            if (LIB.live && !onl) INSPECT_ASK.key = "";
             return;
         }
         INSPECT_ASK.key = "";
         if (AR.layout === "grid") setLayout("array");
         AR.inspOn = false; AR.insp = 0;
+        AR.wantKey = "";   // (asked for by hand: a selection still waiting for its case gives way)
         placeSelection(key);
         if (!curAlbum()) return;
         AR.inspOn = true; inspectImages(); clock.wake(); window.Repaint();
@@ -1638,6 +1766,7 @@ function inspectPending(delay = 450) {
 LIB_LISTENERS.push(kind => { if (kind === "catalog") inspectPending(0); });
 
 function openAlbum() {
+    if (isOnline(curAlbum())) { playOnline(curAlbum(), undefined, true); return; }
     const pl = loadAlbum(curAlbum());
     if (pl < 0) return;
     plman.ActivePlaylist = pl;
@@ -1713,7 +1842,7 @@ function archiveClick(x, y, a) {
             }
             case "ar-page": setInfoPage(a.data); return;
             case "ar-unit": setUnit(a.data); return;
-            case "ar-fav": { const c = curAlbum(); if (c && c.album) setFav(itemTrack(c)); else if (c) setFavAlbum(c.key); return; }
+            case "ar-fav": { const c = curAlbum(); if (isOnline(c)) return; if (c && c.album) setFav(itemTrack(c)); else if (c) setFavAlbum(c.key); return; }
             case "ar-favt": { const L = AR.list, h = L && L.handles ? L.handles[a.data] : null; if (h) setFav(h); return; }
             case "ar-prev": moveAlbum(-1); return;
             case "ar-next": moveAlbum(1); return;
@@ -1814,7 +1943,8 @@ function archiveKey(vk) {
     if (AF.open && (vk === 0x4D || vk === 0x09)) { artistTab(); return true; }
     if (vk === 0x49) { artistFileOpen(); return true; }
     if (vk === 0x52) { randomPick(); return true; }   // R
-    if (vk === 0x46 && curAlbum()) { openFolder(itemTrack(curAlbum()) || albumFirst(curAlbum())); return true; }   // F: the selected item's folder
+    // F: the selected item's folder (an online case has none)
+    if (vk === 0x46 && curAlbum()) { if (!isOnline(curAlbum())) openFolder(itemTrack(curAlbum()) || albumFirst(curAlbum())); return true; }
     if (PICK.steps && (vk === 0x1B || vk === 0x0D || vk === 0x20 || vk === 0x47 || (vk >= 0x21 && vk <= 0x28))) {
         pickStop();
         if (vk === 0x1B) return true;
@@ -1839,7 +1969,7 @@ function archiveKey(vk) {
         case 0x22: moveAlbum(10); return true;          // Page Down
         case 0x24: moveAlbum(-1e6); return true;        // Home
         case 0x23: moveAlbum(1e6); return true;         // End
-        case 0x0D: if (curAlbum()) { AR.inspOn = true; inspectImages(); clock.wake(); } return true;
+        case 0x0D: if (curAlbum()) inspectOpen(); return true;
         case 0x20: {                                    // Space: play the album (play / pause when it is the one playing)
             const a = curAlbum(), np = fb.GetNowPlaying();
             if (itemPlaying(a, np)) fb.PlayOrPause(); else playAlbum();
@@ -1884,6 +2014,13 @@ function addToPlaylist(tg, to) {
     const n = tg.list.Count;
     archiveNote(`${tr(n === 1 ? "{0} TRACK" : "{0} TRACKS", n)}  ·  ${tr("ADDED TO {0}", plman.GetPlaylistName(to).toUpperCase())}`);
 }
+// every artist, folder or online playlist on shelves of its own, or not (the context menu, GROUP's menu: grid.js barMenu)
+function setShelfPerGroup(on) {
+    AR.shelfPerGroup = !!on;
+    setSetting("archiveShelfPerGroup", AR.shelfPerGroup);
+    placeSelection(AR.selAlbum);
+    window.Repaint();
+}
 // a short note under the top bar (what a menu did where it cannot be seen), gone after a moment
 function archiveNote(text) {
     AR.note = { text, at: Date.now() };
@@ -1919,7 +2056,11 @@ function archiveMenu(x, y) {
     const m = window.CreatePopupMenu(), by = GROUP_BY.map(([k]) => k), sorts = SORT_BY.map(([k]) => k);
     GROUP_BY.forEach(([k, t], i) => m.AppendMenuItem(0, 30 + i, tr(GROUP_MENU[k] || t)));
     m.CheckMenuRadioItem(30, 30 + by.length - 1, 30 + Math.max(0, by.indexOf(LIB.groupBy)));
-    m.AppendMenuItem(AR.shelfPerGroup ? 0x8 : 0, 26, tr("One shelf per artist or folder"));
+    m.AppendMenuItem(AR.shelfPerGroup ? 0x8 : 0, 26, tr("One shelf per artist, folder or playlist"));
+    // GROUP › ONLINE: which of the account's NetEase lists are shelves, and the lists asked for again now rather than
+    // when the half hour is up (lib/onlarchive.js; ids 3000 and up, past the playlists' 801 + n)
+    const onlGroup = LIB.groupBy === "online", onlLists = onlGroup ? onlaMenu(m, 3000) : null;
+    if (onlGroup) m.AppendMenuItem(0, 27, tr("Refresh online playlists"));
     const so = window.CreatePopupMenu();
     SORT_BY.forEach(([k, t], i) => so.AppendMenuItem(0, 400 + i, tr(SORT_MENU[k] || t)));
     so.CheckMenuRadioItem(400, 400 + sorts.length - 1, 400 + Math.max(0, sorts.indexOf(LIB.sortBy)));
@@ -1937,10 +2078,11 @@ function archiveMenu(x, y) {
     per.AppendTo(m, 0, tr("Grid: covers per page"));
     m.AppendMenuItem(AR.barCompact ? 0x8 : 0, 25, tr("Compact top bar"));
     m.AppendMenuSeparator();
-    const fold = !!(curAlbum() || {}).folder;
-    m.AppendMenuItem(curAlbum() ? 0 : 1, 9, tr(fold ? "Play folder" : "Play album"));
-    m.AppendMenuItem(curAlbum() ? 0 : 1, 5, tr(fold ? "Open folder in playlist" : "Open album in playlist"));
-    m.AppendMenuItem(curAlbum() ? 0 : 1, 13, tr("Open containing folder") + "\tF");
+    // (an online case: no folder, no heart; a whole online list plays as a playlist)
+    const fold = !!(curAlbum() || {}).folder, onl = isOnline(curAlbum()), lst = isOnlineList(curAlbum());
+    m.AppendMenuItem(curAlbum() ? 0 : 1, 9, tr(fold ? "Play folder" : lst ? "Play playlist" : "Play album"));
+    m.AppendMenuItem(curAlbum() ? 0 : 1, 5, tr(fold ? "Open folder in playlist" : lst ? "Open in playlist" : "Open album in playlist"));
+    m.AppendMenuItem(curAlbum() && !onl ? 0 : 1, 13, tr("Open containing folder") + "\tF");
     // what the mouse is on (a track row, a case, a cover), else the selected item: into a playlist, or its tags
     const tg = menuTarget(x, y), tgOn = !!(tg && tg.list && tg.list.Count), lists = [], ap = window.CreatePopupMenu();
     ap.AppendMenuItem(0, 800, tr("New playlist") + "…");
@@ -1958,8 +2100,8 @@ function archiveMenu(x, y) {
     m.AppendMenuItem(curAlbum() ? 0 : 1, 19, tr("Artist file") + "	I");
     m.AppendMenuItem(ART.online ? 0x8 : 0, 24, tr("Artist file: look artists up online"));
     ratingMenu(m, 600);
-    const c = curAlbum(), cOn = !!c && (c.album ? isFav(itemTrack(c)) : isFavAlbum(c.key));
-    m.AppendMenuItem((c ? 0 : 1) | (cOn ? 0x8 : 0), 16, tr(c && c.album ? "Favourite track" : c && c.folder ? "Favourite folder" : "Favourite album"));
+    const c = curAlbum(), cOn = !!c && !onl && (c.album ? isFav(itemTrack(c)) : isFavAlbum(c.key));
+    m.AppendMenuItem((c && !onl ? 0 : 1) | (cOn ? 0x8 : 0), 16, tr(c && c.album ? "Favourite track" : c && c.folder ? "Favourite folder" : "Favourite album"));
     m.AppendMenuItem(0, 17, tr("Open favourites playlist"));
     favMenu(m, 700);
     const hv = window.CreatePopupMenu();
@@ -1971,18 +2113,20 @@ function archiveMenu(x, y) {
     m.AppendMenuItem(0, 6, tr("Re-index library"));
     const id = m.TrackPopupMenu(x, y);
     if (id >= 30 && id < 30 + by.length) setGroupBy(by[id - 30]);
+    else if (onlGroup && id >= 3000) onlaMenuPick(id, 3000, onlLists);   // (the cases are built again: onlaPick)
+    else if (onlGroup && id === 27) { archiveNote(tr("ONLINE · READING PLAYLISTS …")); onlaSync(true); }
     else if (id >= 800) addToPlaylist(tg, id === 800 ? -1 : lists[id - 801]);
     else if (id === 23) fb.RunContextCommandWithMetadb("Properties", tg.list);
     else if (id === 25) setBarCompact(!AR.barCompact);
-    else if (id === 26) { AR.shelfPerGroup = !AR.shelfPerGroup; setSetting("archiveShelfPerGroup", AR.shelfPerGroup); placeSelection(AR.selAlbum); window.Repaint(); }
+    else if (id === 26) setShelfPerGroup(!AR.shelfPerGroup);
     else if (id === 24) { artistOnline(!ART.online); AF.prefKey = ""; AR.dirtyInfo = true; AF.dirty = true; window.Repaint(); }
-    else if (id === 16) { if (c.album) setFav(itemTrack(c)); else setFavAlbum(c.key); }
+    else if (id === 16 && !onl) { if (c.album) setFav(itemTrack(c)); else setFavAlbum(c.key); }
     else if (id === 17) { favPlaylist(libHandles); send("view", "playlists"); }
     else if (id >= 700 && favMenuPick(id, 700)) { /* the listeners read the hearts again */ }
     else if (id >= 400 && sorts[id - 400]) setSortBy(sorts[id - 400]);
     else if (id === 9) playAlbum();
     else if (id === 11) randomPick();
-    else if (id === 13) openFolder(itemTrack(curAlbum()) || albumFirst(curAlbum()));
+    else if (id === 13 && !onl) openFolder(itemTrack(curAlbum()) || albumFirst(curAlbum()));
     else if (id >= 500 && HOVER_MODES[id - 500]) { AR.hoverMode = HOVER_MODES[id - 500]; setSetting("caseHover", AR.hoverMode); window.Repaint(); }
     else if (id === 12) { AR.topTitles = !AR.topTitles; setSetting("caseTopTitles", AR.topTitles); window.Repaint(); }
     else if (id === 20) setFrost(!AR.frost);

@@ -24,6 +24,8 @@ let libHandles = null, libWorker = null, libTimer = 0;
 const libNotify = kind => LIB_LISTENERS.forEach(f => f(kind));
 
 function libStart() {
+    // GROUP › ONLINE: its copy on disk at once (the bridge is asked only once the Archive is shown, stage.js)
+    if (LIB.groupBy === "online") onlaLoad();
     if (utils.IsFile(LIB_DB)) {
         const db = utils.OpenDatabase(LIB_DB);
         if (db) {
@@ -38,10 +40,14 @@ function libStart() {
     libIndex();
 }
 
-// the theme's own playlists (lib/bus.js) are not part of the archive
+// the theme's own playlists (lib/bus.js) are not part of the archive, nor are the ones 05 ONLINE fills ("NetEase · …",
+// "QQ Music · …", lib/online.js onlinePlay): their items are the bridge's addresses, songs whose tags are not read until
+// they play, so each would be a nameless "|" case (and its address carries the bridge's key). ONL_SOURCES comes from
+// lib/online.js, included after this file in the same panel: only looked up when called.
+const libPlaylist = name => !OWN_PLAYLISTS.has(name) && !(typeof ONL_SOURCES === "object" && Object.values(ONL_SOURCES).some(s => name.startsWith(s.list + " · ")));
 function playlistItems() {
     const list = fb.CreateHandleList();
-    for (let i = 0; i < plman.PlaylistCount; i++) if (!OWN_PLAYLISTS.has(plman.GetPlaylistName(i))) list.AddRange(plman.GetPlaylistItems(i));
+    for (let i = 0; i < plman.PlaylistCount; i++) if (libPlaylist(plman.GetPlaylistName(i))) list.AddRange(plman.GetPlaylistItems(i));
     list.Sort();   // also removes duplicates
     return list;
 }
@@ -130,7 +136,8 @@ function withCueTracks(list, gen, post) {
         for (; i < n && Date.now() < until; i++) {
             const h = list[i], p = h.Path;
             if (/\.cue$/i.test(p)) listed.add(p.toLowerCase());
-            else if (h.Length >= CUE_MIN_S && /^([a-z]:\\|\\\\)/i.test(p)) cands.push([i, p]);
+            // (the path first: a stream's handle, an online song not opened yet, is never asked its length, see plStats)
+            else if (/^([a-z]:\\|\\\\)/i.test(p) && h.Length >= CUE_MIN_S) cands.push([i, p]);
         }
         // 2: each long track's folder, read once
         for (; i >= n && k < cands.length && Date.now() < until; k++) {
@@ -173,8 +180,8 @@ function on_library_items_added(handles) { cueForget(handles); libChanged(); }
 function on_library_items_removed() { libChanged(); }
 function on_library_items_changed(handles) { cueForget(handles); libChanged(); }
 const playlistsChanged = () => { if (LIB.source === "playlists") libChanged(); };
-function on_playlist_items_added(i) { plDirty(i); if (!OWN_PLAYLISTS.has(plman.GetPlaylistName(i))) playlistsChanged(); }
-function on_playlist_items_removed(i) { plDirty(i); if (!OWN_PLAYLISTS.has(plman.GetPlaylistName(i))) playlistsChanged(); }
+function on_playlist_items_added(i) { plDirty(i); if (libPlaylist(plman.GetPlaylistName(i))) playlistsChanged(); }
+function on_playlist_items_removed(i) { plDirty(i); if (libPlaylist(plman.GetPlaylistName(i))) playlistsChanged(); }
 function on_playlists_changed() { plDirty(); playlistsChanged(); }
 
 function libMessage(m) {
@@ -187,7 +194,9 @@ function libMessage(m) {
         console.log(`audio-archive library: ${m.tracks} tracks, ${m.albums.length} albums, index ${m.ms.index.toFixed(0)} ms, cache ${m.ms.cache.toFixed(0)} ms (${m.written} rows)`);
     } else if (m.type === "cover") {
         thumbPending.delete(m.key);
-        if (m.img || LIB.live) THUMBS.set(m.key, m.img ? { img: m.img, blur: m.blur } : null);
+        // (an online cover the worker could not make, m.retry: not kept as one without artwork, asked for again later)
+        if (m.key.startsWith(ONL_KEY)) onlaThumbDone(m.key, !m.retry);
+        if (!m.retry && (m.img || LIB.live)) THUMBS.set(m.key, m.img ? { img: m.img, blur: m.blur } : null);
         trimThumbs();
         libNotify("cover");
     }
@@ -207,17 +216,20 @@ function setAlbums(albums, items = [], folders = []) {
     groupAlbums();
 }
 
-// The saved "artist" is the initial-letter group (A–Z); "albumartist" is one group per album artist.
-const GROUP_BY = [["genre", "GENRE"], ["decade", "DECADE"], ["albumartist", "ARTIST"], ["artist", "A–Z"], ["folder", "FOLDER"], ["favourites", "FAV"], ["rating", "RATING"], ["none", "NONE"]];
+// The saved "artist" is the initial-letter group (A–Z); "albumartist" is one group per album artist. "online" lists
+// the NetEase playlists chosen instead of the library, one group per list (lib/onlarchive.js).
+const GROUP_BY = [["genre", "GENRE"], ["decade", "DECADE"], ["albumartist", "ARTIST"], ["artist", "A–Z"], ["folder", "FOLDER"], ["favourites", "FAV"], ["rating", "RATING"], ["online", "ONLINE"], ["none", "NONE"]];
 const SORT_BY = [["artist", "ARTIST"], ["title", "TITLE"], ["year", "YEAR"], ["added", "ADDED"], ["rating", "RATING"]];
-const GROUP_LABEL = { genre: "GENRE", decade: "DECADE", albumartist: "ARTIST", artist: "INITIAL", folder: "FOLDER", favourites: "FAVOURITES", rating: "RATING", none: "ALL" };
+const GROUP_LABEL = { genre: "GENRE", decade: "DECADE", albumartist: "ARTIST", artist: "INITIAL", folder: "FOLDER", favourites: "FAVOURITES", rating: "RATING", online: "PLAYLIST", none: "ALL" };
 // the Archive's right-click menu words for them
 const GROUP_MENU = { genre: "Group by genre", decade: "Group by decade", albumartist: "Group by artist", artist: "Group by artist initial", folder: "Group by folder",
-                     favourites: "Group by favourites", rating: "Group by rating", none: "No groups" };
+                     favourites: "Group by favourites", rating: "Group by rating", online: "Group by online playlist (NetEase)", none: "No groups" };
 const SORT_MENU = { artist: "Artist", title: "Album title", year: "Year", added: "Date added (newest first)", rating: "Rating (highest first)" };
 // a group's name as shown: the fixed ones and decades translated, genres as they are tagged, artists as most of their
-// albums spell them, folders by their own name (the full path is the group's own name: the shelf list shows it)
+// albums spell them, folders by their own name (the full path is the group's own name: the shelf list shows it), online
+// playlists by their title (the group is the list's id; SHOW FOLDERS puts every list on the one NETEASE shelf)
 function groupName(g) {
+    if (LIB.groupBy === "online") return onlaListTitle(g) || tr(g === "NETEASE" ? "NETEASE" : "UNKNOWN");
     if (LIB.groupBy === "folder") return String(g).split(" › ").pop() || tr("UNKNOWN");
     if (LIB.groupBy === "albumartist") return g || tr("UNKNOWN");
     if (LIB.groupBy === "rating") return g === "NOT RATED" ? tr(g) : tr("RATING {0}", g);
@@ -227,6 +239,8 @@ function setGroupBy(by) {
     if (by === LIB.groupBy || !GROUP_LABEL[by]) return;
     LIB.groupBy = by;
     setSetting("archiveGroup", by);
+    // (the copy on disk read, if it is not yet, and the lists asked for again when it is time: it rebuilds the groups)
+    if (by === "online") onlaEnsure();
     groupAlbums();
 }
 // ALBUMS, TRACKS or FOLDERS: what the archive's cases and tiles stand for
@@ -237,15 +251,30 @@ function setUnit(u) {
     setSetting("archiveUnit", u);
     groupAlbums();
 }
-// the unit shown: tracks and folders once the worker has listed them (the cache holds the albums only)
-const itemUnit = () => LIB.unit === "tracks" && LIB.items.length ? "tracks" : LIB.unit === "folders" && LIB.folders.length ? "folders" : "albums";
+// the unit shown: tracks and folders once the worker has listed them (the cache holds the albums only); GROUP › ONLINE
+// has its own (lib/onlarchive.js: a case per song, per list)
+function itemUnit() {
+    const on = LIB.groupBy === "online", items = on ? ONLA.items : LIB.items, folders = on ? ONLA.playlists : LIB.folders;
+    return LIB.unit === "tracks" && items.length ? "tracks" : LIB.unit === "folders" && folders.length ? "folders" : "albums";
+}
 const showTracks = () => itemUnit() === "tracks";
 const UNIT_WORDS = { albums: ["{0} ALBUM", "{0} ALBUMS"], tracks: ["{0} TRACK", "{0} TRACKS"], folders: ["{0} FOLDER", "{0} FOLDERS"] };
 const unitWord = n => tr(UNIT_WORDS[itemUnit()][n === 1 ? 0 : 1], fmtCount(n));
-// the key of the item a track is in as the unit chosen lists them: the track's own, its folder's or its album's
-const itemKeyOf = h => !h ? "" : LIB.unit === "tracks" ? `t|${h.Path.toLowerCase()}|${h.SubSong}` : LIB.unit === "folders" ? folderKeyOf(h.Path) : albumKey(h);
-// the album a track item belongs to (an album or a folder is its own)
-const albumOf = a => a && a.album ? LIB.albumMap.get(a.album) || null : a;
+// the key of the item a track is in as the unit chosen lists them: the track's own, its folder's or its album's. An
+// online song (05 ONLINE's bridge address, lib/album.js ONLINE_SONG) is in none of them: its address carries the
+// bridge's key (?k=), which must never end up in a key the Archive keeps (archiveSel), and its tags are not read until
+// it plays, so its album key would be a nameless "|" anyway. Under GROUP › ONLINE a NetEase song is in the online case
+// that holds it (lib/onlarchive.js: keys of their own, with no bridge key in them).
+function itemKeyOf(h) {
+    if (!h) return "";
+    if (ONLINE_SONG.test(h.RawPath)) {
+        const s = LIB.groupBy === "online" ? onlineSongOf(h) : null;
+        return s && s.src === "ne" ? onlaSongKey(s.id, itemUnit()) : "";
+    }
+    return LIB.unit === "tracks" ? `t|${h.Path.toLowerCase()}|${h.SubSong}` : LIB.unit === "folders" ? folderKeyOf(h.Path) : albumKey(h);
+}
+// the album a track item belongs to (an album or a folder is its own; an online track case's is an online case)
+const albumOf = a => a && a.album ? LIB.albumMap.get(a.album) || ONLA.map.get(a.album) || null : a;
 function setSortBy(by) {
     if (by === LIB.sortBy || !SORT_BY.some(([k]) => k === by)) return;
     LIB.sortBy = by;
@@ -354,22 +383,25 @@ const filteredCount = () => LIB.groups.reduce((n, g) => n + g.albums.length, 0);
 // case first. By artist: one group per album artist (a track goes with its album), named as most of its albums spell
 // it, in sort-name order with Various Artists and the untagged last. By initial: the first letter of the artist's sort
 // name, accents set aside. By rating: 5 to 1, then the ones not rated; an album's rating is the mean of its rated
-// tracks', rounded.
+// tracks', rounded. By online playlist (lib/onlarchive.js): the online cases instead of the library's, one group per
+// list in the account's order (its liked songs first), SHOW FOLDERS every list on the one NETEASE shelf; they have no
+// ratings or hearts of their own.
 function groupAlbums() {
-    const by = LIB.groupBy, map = new Map();
+    const by = LIB.groupBy, map = new Map(), online = by === "online";
     const words = LIB.filter ? LIB.filter.split(/\s+/) : null;
     const fav = by === "favourites" ? favFlags(libHandles) : null, idx = a => a.idx || [];   // (no idx before the worker has run)
     const dirFav = fav && libHandles && [...favAlbums()].some(k => k.startsWith(FOLDER_KEY));
     const inDir = a => dirFav && idx(a).length > 0 && isFavAlbum(folderKeyOf(libHandles[idx(a)[0]].Path));
     const inFav = a => (a.album ? !!fav[idx(a)[0]] || isFavAlbum(a.album) : isFavAlbum(a.key) || idx(a).some(i => fav[i])) || inDir(a);
-    const R = ratingsOn() ? libRatings() : null;
+    const R = !online && ratingsOn() ? libRatings() : null;
     const rateOf = a => { let s = 0, n = 0; for (const i of idx(a)) if (R[i]) { s += R[i]; n++; } return n ? Math.round(s / n) : 0; };
     const unit = itemUnit();
-    for (const a of unit === "tracks" ? LIB.items : unit === "folders" ? LIB.folders : LIB.albums) {
+    for (const a of online ? onlaCases(unit) : unit === "tracks" ? LIB.items : unit === "folders" ? LIB.folders : LIB.albums) {
         if (words) { const t = searchText(a); if (!words.every(w => t.includes(w))) continue; }
         a.rt = R ? rateOf(a) : 0;
         let g;
-        if (by === "none") g = "ALL ALBUMS";
+        if (online) g = String(a.shelf);
+        else if (by === "none") g = "ALL ALBUMS";
         else if (by === "decade") g = /^\d{4}$/.test(a.year) ? a.year.slice(0, 3) + "0S" : "UNDATED";
         else if (by === "artist") { const c = sortKey(a).replace(/^[^a-z0-9\u00c0-\uffff]+/, "").charAt(0).toUpperCase(); g = /[A-Z]/.test(c) ? c : /\d/.test(c) ? "0–9" : "OTHER"; }
         else if (by === "albumartist") { g = artistKeyOf(albumOf(a) || a); if (VARIOUS.has(g)) g = "various artists"; }   // named below
@@ -382,7 +414,7 @@ function groupAlbums() {
         map.get(g).push(a);
     }
     const dirs = by === "folder", sorted = albumOrder(LIB.sortBy);
-    const last = new Set(dirs ? [] : ["UNDATED", "OTHER", "OTHERS", "UNKNOWN", "NOT RATED"]);
+    const last = new Set(dirs || online ? [] : ["UNDATED", "OTHER", "OTHERS", "UNKNOWN", "NOT RATED"]);
     const order = dirs ? (p, q) => (!p.loose - !q.loose) || sorted(p, q) : sorted;
     const groups = [...map.entries()].map(([name, albums]) => ({ name, albums }));
     if (by === "albumartist") {
@@ -399,6 +431,9 @@ function groupAlbums() {
             for (const a of g.albums) a.grp = g.name;
         }
         groups.sort((x, y) => (x.end - y.end) || strCmp(x.sort, y.sort));
+    } else if (online) {
+        const rank = new Map(onlaShown().map((p, i) => [p.id, i])), at = g => rank.has(g.name) ? rank.get(g.name) : rank.size;
+        groups.sort((x, y) => at(x) - at(y));
     } else if (by === "rating") groups.sort((x, y) => (last.has(x.name) - last.has(y.name)) || strCmp(y.name, x.name));
     else groups.sort((x, y) => (last.has(x.name) - last.has(y.name)) || (dirs ? strCmp(lcs(x.name), lcs(y.name)) : strCmp(x.name, y.name)));
     LIB.groups = groups.map(({ name, albums }) => ({ name, albums: albums.sort(order) }));
@@ -419,8 +454,8 @@ function albumHandles(a) {
     return list;
 }
 const albumFirst = a => LIB.live && a && a.idx && libHandles ? libHandles[a.idx[0]] : null;
-// a track item's own track (null for an album)
-const itemTrack = a => a && a.album && LIB.live && libHandles ? libHandles[a.idx[0]] : null;
+// a track item's own track (null for an album, and for an item with no library tracks behind it, such as an online one)
+const itemTrack = a => a && a.album && a.idx && LIB.live && libHandles ? libHandles[a.idx[0]] : null;
 
 // ------------------------------------------------------------------------------------------------------ covers
 // Thumbnails are keyed by album (a track item uses its album's: a.cover). THUMB_MAX grows with what the cover grid
@@ -445,22 +480,27 @@ function trimThumbs() {
         if (!THUMB_KEEP.has(k)) THUMBS.delete(k);
     }
 }
-// asks the worker for the thumbnails of `albums` (nearest first, at most `max`) that are neither loaded nor on their way
+// asks the worker for the thumbnails of `albums` (nearest first, at most `max`) that are neither loaded nor on their way.
+// An online case's cover is downloaded first (lib/onlarchive.js onlaThumbs), never left to the worker to look for: it
+// would find no track to read it from and have the case kept as one without artwork.
 let thumbAsked = "";
 function requestThumbs(albums, max = 48) {
-    const list = [], seen = new Set();
+    const list = [], onl = [], seen = new Set();
     for (const a of albums) {
         const k = coverKey(a);
         if (seen.has(k) || THUMBS.has(k) || thumbPending.has(k)) continue;
         seen.add(k);
-        list.push({ key: k, i: a.idx ? a.idx[0] : -1 });
-        if (list.length >= max) break;
+        if (k.startsWith(ONL_KEY)) onl.push(a);
+        else list.push({ key: k, i: a.idx ? a.idx[0] : -1 });
+        if (list.length + onl.length >= max) break;
     }
+    if (libWorker) onlaThumbs(onl);   // (also when there are none: the downloads no longer wanted are dropped)
     const sig = list.map(j => j.key).join("");
     if (!list.length || sig === thumbAsked || !libWorker) return;
     thumbAsked = sig;
-    // the worker replaces its queue, so whatever was pending and not asked again will not arrive
-    thumbPending.clear();
+    // the worker replaces its queue, so whatever was pending and not asked again will not arrive (the online covers are
+    // not in that queue: they stay pending until they come)
+    for (const k of thumbPending) if (!k.startsWith(ONL_KEY)) thumbPending.delete(k);
     list.forEach(j => thumbPending.add(j.key));
     libWorker.postMessage({ type: "covers", gen: LIB.gen, list });
 }

@@ -22,10 +22,10 @@ const TR_STATE_TEXT = { TRANSLATING: "TRANSLATING…", QUOTA: "TRANSLATION QUOTA
 // "machine" or "auto" (community first, machine when it has none). community/machine are derived from it, so the one
 // choice in MENU › Translate lyrics drives both; target is the language to translate into, provider the machine service.
 function trSettings() {
-    const target = getSetting("lyricsTarget", SYSTEM_LANG), provider = getSetting("trProvider", "mymemory");
+    const target = getSetting("lyricsTarget", defaultLyricsTarget()), provider = getSetting("trProvider", "mymemory");
     const source = pickLyricsTrans(STATE.lyricsTrans || defaultLyricsTrans());
     return { source,
-             target: TR_TARGETS.some(t => t[0] === target) ? target : SYSTEM_LANG,
+             target: TR_TARGETS.some(t => t[0] === target) ? target : defaultLyricsTarget(),
              community: source === "netease" || source === "auto",
              machine: source === "machine" || source === "auto",
              provider: TR_PROVIDERS.some(p => p[0] === provider) ? provider : "mymemory" };
@@ -198,8 +198,10 @@ function trBatch(api, texts, src, target, done) {
 }
 
 // ------------------------------------------------------------------------------------------------------ community
-// NetEase Cloud Music: search by title and artist, keep the songs whose length is within 4 s of the track's, and take
-// the first one (exact title first) that has a translation, or failing that any lyrics. The result is cached as
+// NetEase Cloud Music: search by title and artist, keep the songs whose length is within 4 s of the track's and whose
+// title (or one of its aliases or translated names) is the track's (lib/lyrics.js sameTitle: the artist's other songs of
+// the same length come back too), and take the first one (exact title first) that has a translation, or failing that
+// any lyrics. The result is cached as
 // ne-<key>.json: { lrc, tlyric, romalrc } or { none: time } (a miss is remembered for a week). romalrc: its romaji
 // (lib/roman.js); a file cached before they were asked for has no romalrc and is looked up again when they are wanted.
 const NE_MISS_DAYS = 7;
@@ -209,9 +211,10 @@ const NE_CREDIT = /^\s*(作词|作曲|编曲|制作人|制作|混音|母带|和�
 
 function neteaseFetch(handle, done, opts = {}) {
     const [artist, title] = TF_NE.EvalWithMetadb(handle).split("\u0001").map(v => v.trim());
-    const len = handle.Length;
+    const len = hLength(handle);   // (lib/bus.js: never .Length on a song that may be online and not opened)
     if (!title || !(len > 0)) { done(null); return; }
-    const file = TR_DIR + `ne-${fnv(`${artist}|${title}|${Math.round(len)}`)}.json`;
+    // (ne2: matched by their title as well; what an older version found by the length alone is looked up again)
+    const file = TR_DIR + `ne2-${fnv(`${artist}|${title}|${Math.round(len)}`)}.json`;
     if (utils.IsFile(file)) {
         try {
             const c = JSON.parse(utils.ReadTextFile(file, 65001));
@@ -225,7 +228,7 @@ function neteaseFetch(handle, done, opts = {}) {
         if (!st) { done(null, "OFFLINE"); return; }
         let songs = [];
         try { songs = (JSON.parse(txt).result || {}).songs || []; } catch (e) { songs = []; }
-        const cands = songs.filter(s => Math.abs((s.dt || 0) / 1000 - len) <= 4)
+        const cands = songs.filter(s => Math.abs((s.dt || 0) / 1000 - len) <= 4 && sameTitle(title, [s.name, ...(s.alia || []), ...(s.tns || [])]))
             .sort((a, b) => (norm(b.name) === norm(title)) - (norm(a.name) === norm(title)) || Math.abs(a.dt / 1000 - len) - Math.abs(b.dt / 1000 - len))
             .slice(0, 3);
         let fallback = null;

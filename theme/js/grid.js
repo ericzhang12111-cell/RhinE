@@ -132,6 +132,7 @@ function drawGrid(gr) {
     if (AF.open) { drawArtistFile(gr); drawInfoLayer(gr); return; }   // artist.js
     if (GRID.reveal) { gridReveal(true); gridThumbs(); }
     const G = gridGeom(), sy = Math.round(GRID.scroll.x), aw = G.aw, np = fb.GetNowPlaying(), playingKey = np ? itemKeyOf(np) : "";
+    const npSong = np && LIB.groupBy === "online" ? onlineSongOf(np) : null;   // (once, not per cover)
     const selR = AR.rows.get(AR.group), selI = selR ? selR.sel : -1;
     gr.PushClip(0, G.top, aw, H - G.top);
     for (const s of G.secs) {
@@ -167,7 +168,8 @@ function drawGrid(gr) {
             gr.FillSolidRect(x, y, yw, dp(16), C.bg);
             label(gr, yt, ys, x + dp(5), y + Math.round((dp(16) - labelHeight(GRID_ST.year)) / 2));
         }
-        if (np && (a.album ? sameTrack(itemTrack(a), np) : a.key === playingKey)) gr.FillSolidRect(x, y + c - dp(4), dp(18), dp(4), C.accent);
+        // (an online case has no tracks of its own: every case holding the playing song is marked, lib/onlarchive.js)
+        if (np && (a.online ? onlaHolds(a, npSong) : a.album ? sameTrack(itemTrack(a), np) : a.key === playingKey)) gr.FillSolidRect(x, y + c - dp(4), dp(18), dp(4), C.accent);
         if (sel) {
             box(gr, x - dp(5), y - dp(5), c + dp(10), c + dp(10), C.fg, Math.max(HAIR, dp(1.5)));
             for (const [px, py] of [[x, y], [x + c, y], [x, y + c], [x + c, y + c]]) gr.FillSolidRect(Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), dp(6), C.accent);
@@ -199,10 +201,10 @@ function drawGrid(gr) {
 
 // The archive's top bar, in both layouts (a plate behind each control: the array's cases pass under them):
 //   ■ ALBUM GRID · 250 ALBUMS · BY GENRE (grid)   SHOW [ALBUMS | TRACKS | FOLDERS]   PER PAGE [10 … 200] (grid)   LAYOUT [ARRAY | GRID]
-//   [FILTER · "word" · 12 ALBUMS ×]     GROUP [GENRE | DECADE | A–Z | FOLDER | FAV | NONE]   SORT [ARTIST | TITLE | YEAR | ADDED]
-// A control that does not fit its row folds to the choice in use, the rest in a menu (TITLE [CURRENT ⌄]): the widest
-// first, LAYOUT last. "Compact top bar" (the archive's menu) folds all but LAYOUT whatever the width, and puts the two
-// rows on one when that fits.
+//   [FILTER · "word" · 12 ALBUMS ×]                                        GROUP [GENRE ⌄]   SORT [ARTIST ⌄]
+// GROUP and SORT are always folded to the choice in use, the rest in a menu (TITLE [CURRENT ⌄]: too many to stand in a
+// row). Another control that does not fit its row folds too: the widest first, LAYOUT last. "Compact top bar" (the
+// archive's menu) folds all but LAYOUT whatever the width, and puts the two rows on one when that fits.
 function drawArchiveBar(gr) {
     const grid = AR.layout === "grid", xr = arrayW() - dp(32), y1 = dp(22), y2 = dp(54), x0 = dp(32);
     const fw = drawFilterChip(gr, x0, grid ? y2 : y1);
@@ -245,7 +247,8 @@ function barItemW(c, folded) {
 const barWidth = (cs, fold) => cs.reduce((n, c, i) => n + (i ? dp(24) : 0) + barItemW(c, fold.has(c[0])), 0);
 // the keys of the controls of a row that fold so it fits `room` (all: every one but LAYOUT, to begin with)
 function barFold(cs, room, all) {
-    const fold = new Set(all ? cs.filter(c => c[0] !== "layout").map(c => c[0]) : []);
+    // (SORT and GROUP always: too many choices for a row)
+    const fold = new Set(cs.filter(c => c[0] === "sort" || c[0] === "group" || (all && c[0] !== "layout")).map(c => c[0]));
     while (barWidth(cs, fold) > room) {
         const open = cs.filter(c => !fold.has(c[0])).sort((a, b) => (a[0] === "layout") - (b[0] === "layout") || barItemW(b) - barItemW(a));
         if (!open.length) break;
@@ -267,15 +270,34 @@ function segChip(gr, xr, y, c) {
     hits.add("ar-fold", left, y, xr - left, hh, c[0]);
     return left;
 }
-// a folded control's choices, as a menu under it
+// A folded control's choices, as a menu under it. GROUP and SORT say theirs as the archive's right-click menu does
+// (lib/library.js GROUP_MENU, SORT_MENU); GROUP's ONLINE stands apart, below the library's groupings, and while it is
+// the one in use the menu also has what the right-click menu has for it (archive.js archiveMenu, the same ids): which
+// NetEase lists are shelves, and the lists read again now.
 function barMenu(key, x, y) {
     const c = barControls(AR.layout === "grid").flat().find(v => v[0] === key);
     if (!c) return;
     const m = window.CreatePopupMenu(), at = c[2].findIndex(([v]) => v === c[3]);
-    c[2].forEach(([, t], i) => m.AppendMenuItem(0, i + 1, tr(t)));
+    const words = { group: GROUP_MENU, sort: SORT_MENU }[key];
+    c[2].forEach(([v, t], i) => {
+        if (key === "group" && v === "online") m.AppendMenuSeparator();
+        m.AppendMenuItem(0, i + 1, tr(words && words[v] || t));
+        if (key === "group" && v === "online") m.AppendMenuSeparator();
+    });
     if (at >= 0) m.CheckMenuRadioItem(1, c[2].length, at + 1);
+    const onl = key === "group" && LIB.groupBy === "online";
+    let L = null;
+    if (key === "group") {
+        m.AppendMenuSeparator();
+        if (onl) { L = onlaMenu(m, 3000); m.AppendMenuItem(0, 27, tr("Refresh online playlists")); }
+        // (the groupings it is for: archive.js buildShelves)
+        if (["albumartist", "folder", "online"].includes(LIB.groupBy)) m.AppendMenuItem(AR.shelfPerGroup ? 0x8 : 0, 26, tr("One shelf per artist, folder or playlist"));
+    }
     const id = m.TrackPopupMenu(x, y), set = { layout: setLayout, per: setPerPage, unit: setUnit, sort: setSortBy, group: setGroupBy }[key];
-    if (id > 0) set(c[2][id - 1][0]);
+    if (onl && id >= 3000) onlaMenuPick(id, 3000, L);
+    else if (onl && id === 27) { archiveNote(tr("ONLINE · READING PLAYLISTS …")); onlaSync(true); }
+    else if (key === "group" && id === 26) setShelfPerGroup(!AR.shelfPerGroup);
+    else if (id > 0 && id <= c[2].length) set(c[2][id - 1][0]);
 }
 function setBarCompact(on) {
     AR.barCompact = !!on;

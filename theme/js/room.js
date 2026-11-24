@@ -445,7 +445,7 @@ function roomKey(vk) {
         case 0x27: moveAlbum(1); return true;    // →
         case 0x26: moveGroup(1); return true;    // ↑: the shelf behind
         case 0x28: moveGroup(-1); return true;   // ↓
-        case 0x0D: if (curAlbum()) { AR.inspOn = true; inspectImages(); clock.wake(); } return true;   // Enter: the inspection
+        case 0x0D: if (curAlbum()) inspectOpen(); return true;   // Enter: the inspection (archive.js)
     }
     return false;
 }

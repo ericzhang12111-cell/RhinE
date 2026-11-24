@@ -34,10 +34,11 @@ ART.listeners.push(rec => {
 function artOpenUrl(url) { if (url) try { new ActiveXObject("WScript.Shell").Run(url); } catch (e) { /* no browser */ } }
 const artNorm = s => String(s || "").toLowerCase().replace(/[\s.,·・'’"“”!?()（）\[\]【】「」\-_]/g, "");
 
-// the selected item's artist, and their albums in the library
+// the selected item's artist, and their albums in the library (none for a whole online list, SHOW FOLDERS: its artist
+// is the account that made it, a NetEase nickname, not anyone to look up)
 function curArtist() {
     const a = curAlbum();
-    if (!a) return null;
+    if (!a || isOnlineList(a)) return null;
     const al = albumOf(a) || a, name = String(al.artist || a.artist || "").trim();
     artistPrefetch(a);
     let rec = artistGet(name, albumFirst(al)), shown = name;
@@ -54,7 +55,7 @@ function artistPrefetch(a) {
     const g = curGroup(), i = g ? g.albums.indexOf(a) : -1;
     if (i < 0) return;
     for (const d of [1, -1, 2, -2, 3]) {
-        const b = g.albums[i + d], al = b && (albumOf(b) || b);
+        const b = g.albums[i + d], al = b && !isOnlineList(b) && (albumOf(b) || b);
         if (al && al.artist) artistGet(al.artist, albumFirst(al), true);
     }
 }

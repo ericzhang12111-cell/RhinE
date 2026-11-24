@@ -103,23 +103,49 @@ const lyrQuery = o => Object.entries(o).filter(([, v]) => v !== "").map(([k, v])
 // onMiss() when LRCLIB has none (another source may then be asked)
 function lyricsOnline(handle, onFound, onMiss = () => {}) {
     LYR.state = ""; LYR.req = null; LYR.src = "LRCLIB";
-    if (!handle || !lyrLrclib() || !(handle.Length > 0)) return;
+    const len = hLength(handle);   // (lib/bus.js: never .Length on a song that may be online and not opened)
+    if (!handle || !lyrLrclib() || !(len > 0)) return;
     const [artist, title, album] = TF_LYR.EvalWithMetadb(handle).split("\u0001").map(v => v.trim());
     if (!title) return;   // a track with no artist tag is searched for by its title alone (see lyricsDownloaded)
-    const key = fnv(`${artist}|${title}|${album}|${Math.round(handle.Length)}`).toLowerCase(), base = LYR_DIR + key;
+    // (v2: the search results are checked by their title; what was found before is looked up again)
+    const key = fnv(`v2|${artist}|${title}|${album}|${Math.round(len)}`).toLowerCase(), base = LYR_DIR + key;
     if (utils.IsFile(base + ".lrc")) { const r = parseLrc(utils.ReadTextFile(base + ".lrc", 65001)); if (r) { onFound({ lines: r, source: "LRCLIB", langs: r.some(l => l.b) ? 2 : 1 }); return; } }
     if (utils.IsFile(base + ".none")) {
         const t = +utils.ReadTextFile(base + ".none", 65001) || 0;
         if (Date.now() - t < LYR_MISS_DAYS * 864e5) { LYR.state = "NOT FOUND"; onMiss(); return; }
     }
     if (!utils.IsDirectory(LYR_DIR)) utils.CreateFolder(LYR_DIR);
-    LYR.req = { key, base, len: handle.Length, onFound, onMiss, step: "get", q: { artist_name: artist, track_name: title, album_name: album } };
+    LYR.req = { key, base, len, onFound, onMiss, step: "get", q: { artist_name: artist, track_name: title, album_name: album } };
     LYR.state = "SEARCHING";
     if (!artist) { lyricsSearch(LYR.req); return; }   // the exact lookup needs the artist
-    utils.DownloadFileAsync(`https://lrclib.net/api/get?${lyrQuery({ ...LYR.req.q, duration: Math.round(handle.Length) })}`, base + ".get.json");
+    utils.DownloadFileAsync(`https://lrclib.net/api/get?${lyrQuery({ ...LYR.req.q, duration: Math.round(len) })}`, base + ".get.json");
 }
 
 const lyrNorm = s => String(s || "").toLowerCase().replace(/[\s\-–—_'’"“”.,!?()（）\[\]【】「」~·・]/g, "");
+// Whether a found song is the track by its title: a search returns songs of the same artist and length too (a track with
+// no title tag is searched by its file name, and the artist's other songs come back), so the length alone is not
+// enough. The titles are compared folded (full / half width, case), without what is in brackets and a "feat." credit,
+// without spaces and punctuation; one may hold the other ("Song" / "Song (Remastered)" when the bracket is written
+// without one). Each title is also tried in its parts: around " - " ("Song - Remastered 2009", a file name "01 - Song"
+// or "Artist - Song") and "/" (a title in two scripts, "shinen/深淵"), and without a leading track number. A title with
+// nothing left once folded ("(Untitled)", "?") is compared as written. names: the found song's name and its other names
+// (NetEase's aliases and translated names).
+const titleKey = s => String(s || "").normalize("NFKC").toLowerCase().replace(/[(（\[【「『<〈].*?[)）\]】」』>〉]/g, " ")
+    .replace(/\s(feat(uring)?|ft)\b\.?.*$/, "").replace(/[^\p{L}\p{N}]+/gu, "");
+const titleForms = s => {
+    const t = String(s || "").normalize("NFKC").trim(), parts = t.split(/\s+[-–—~]\s+|\s*\/\s*/);
+    const keys = [t, t.replace(/^\d{1,3}[\s._-]+(?=\S)/, ""), ...(parts.length > 1 ? parts : [])].map(titleKey).filter(Boolean);
+    return keys.length ? [...new Set(keys)] : [t.toLowerCase().replace(/\s+/g, "")].filter(Boolean);
+};
+function sameTitle(title, names) {
+    const A = titleForms(title);
+    if (!A.length) return false;
+    return names.some(n => titleForms(n).some(b => A.some(a => {
+        if (a === b) return true;
+        const [s, l] = a.length <= b.length ? [a, b] : [b, a];
+        return s.length >= 2 && l.includes(s) && s.length >= .5 * l.length;
+    })));
+}
 // the search step: by title and artist (by title alone when the track has no artist; lyricsDownloaded then wants the
 // same title as well as the length)
 function lyricsSearch(R) {
@@ -137,9 +163,9 @@ function lyricsDownloaded(path, ok) {
         if (body && body.syncedLyrics) synced = body.syncedLyrics;
         else { lyricsSearch(R); return false; }   // no exact match (or no synced text in it): search
     } else if (Array.isArray(body)) {
-        // without an artist, only a result with the same title counts (a title alone matches many songs)
-        const sameTitle = r => !!R.q.artist_name || lyrNorm(r.trackName) === lyrNorm(R.q.track_name);
-        const hit = body.filter(r => r.syncedLyrics && Math.abs((r.duration || 0) - R.len) <= 3 && sameTitle(r))
+        // only a result with the track's title counts: the artist's other songs of the same length come back too, and a
+        // title alone matches many songs
+        const hit = body.filter(r => r.syncedLyrics && Math.abs((r.duration || 0) - R.len) <= 3 && sameTitle(R.q.track_name, [r.trackName]))
                         .sort((p, q) => Math.abs(p.duration - R.len) - Math.abs(q.duration - R.len))[0];
         if (hit) synced = hit.syncedLyrics;
     } else if (!ok) { LYR.state = "OFFLINE"; LYR.req = null; return true; }

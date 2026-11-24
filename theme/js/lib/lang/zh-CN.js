@@ -366,7 +366,7 @@ I18N["zh-CN"] = {
     "Play playlist": "播放此列表", "THEME": "主题",
     // archive: group by artist or rating, sort by rating, one shelf per artist or folder
     "INITIAL": "首字母", "Group by artist": "按艺人分组", "Group by rating": "按评分分组", "RATING {0}": "评分 {0}",
-    "Rating (highest first)": "评分（最高在前）", "One shelf per artist or folder": "每位艺人、每个文件夹单独一排",
+    "Rating (highest first)": "评分（最高在前）", "One shelf per artist, folder or playlist": "每位艺人、文件夹或歌单单独一排",
     // signal: what shows under the ring and along the bottom (PANELS)
     "PANELS": "面板", "Under the ring": "莫比乌斯环下方", "Along the bottom": "底部", "Spectrum": "频谱", "Lyrics": "歌词", "Level meters": "电平表", "Stereo scope": "立体声相位图",
     "Signal trace": "整首波形", "Level history": "电平历史", "LEVEL HISTORY  ·  60 S": "电平历史  ·  60 秒", "CORR": "相关性", "BALANCE": "声道平衡", "MONO": "单声道", "For the 3D and 2D models": "用于 3D 和 2D 样式",
@@ -377,4 +377,16 @@ I18N["zh-CN"] = {
     "Frosted cream polymer, lit from the floor below": "磨砂奶白树脂，由地面底光照亮", "Jade glass, lit from the floor below": "翡翠玻璃，由地面底光照亮",
     "Matte white cases under lights of their own: pick one under ROOM LIGHT": "哑光白色唱片盒，带专属灯光：在下方“灯光”中选择", "Black cases under lights of their own: pick one under ROOM LIGHT": "黑色唱片盒，带专属灯光：在下方“灯光”中选择",
     "RHINE LAB's own cases, each with its paper label": "RHINE LAB 专属唱片盒，每个都带纸质标签", "There is no light to pick for this case.": "这款唱片盒没有可选的灯光。",
+    // NetEase playlists in the Archive (GROUP › ONLINE, lib/onlarchive.js)
+    "UNKNOWN ALBUM": "未知专辑",
+    "PLAYLIST": "歌单", "Group by online playlist (NetEase)": "按网易云歌单分组",
+    "ONLINE · INSTALL THE BRIDGE IN 05 ONLINE": "在线 · 请先在 05 在线 中安装本地服务",
+    "ONLINE · LOG IN TO NETEASE IN 05 ONLINE": "在线 · 请在 05 在线 中登录网易云",
+    "ONLINE · READING PLAYLISTS …": "在线 · 正在读取歌单 …", "ONLINE · NO PLAYLISTS CHOSEN (RIGHT-CLICK)": "在线 · 未选择歌单（右键选择）",
+    "ONLINE · THE BRIDGE IS NOT ANSWERING": "在线 · 本地服务没有响应", "ONLINE · NETEASE IS BUSY · TRYING AGAIN LATER": "在线 · 网易云请求太频繁 · 稍后重试",
+    "ONLINE · THE PLAYLISTS CHOSEN ARE EMPTY": "在线 · 所选歌单是空的",
+    "SOURCE · NETEASE · {0}": "来源 · 网易云 · {0}", "OFFLINE COPY": "离线副本",
+    "PLAY PLAYLIST": "播放歌单", "Open in playlist": "在播放列表中打开",
+    "Online playlists in the Archive": "曲库中显示的网易云歌单", "Use my created playlists and liked songs": "使用我创建的歌单和喜欢的音乐", "Refresh online playlists": "刷新网易云歌单",
+    "Liked songs": "我喜欢的音乐", "New NetEase playlist…": "新建网易云歌单…", "Add to playlist": "加入歌单", "Remove from “{0}”": "从「{0}」中移除", "Rename playlist…": "重命名歌单…", "Delete playlist": "删除歌单", "Delete “{0}” from NetEase (cannot be undone)": "从网易云删除「{0}」（无法撤销）", "Remove from my playlists": "从我的歌单中移除", "Collect into my playlists": "收藏到我的歌单", "Working…": "处理中…", "Restart foobar2000 to edit NetEase playlists (the bridge running is from before this update).": "请重启 foobar2000 后再编辑网易云歌单（正在运行的本地服务还是更新前的版本）。", "NetEase did not do it: {0}": "网易云没有完成：{0}", "the bridge did not answer": "本地服务没有响应", "Already in “{0}”": "已在「{0}」中", "Added to “{0}”": "已加入「{0}」", "Removed from “{0}”": "已从「{0}」中移除", "NetEase playlist name": "网易云歌单名称", "New NetEase playlist": "新建网易云歌单", "Created “{0}”": "已创建「{0}」", "Rename NetEase playlist": "重命名网易云歌单", "Renamed to “{0}”": "已重命名为「{0}」", "Deleted “{0}”": "已删除「{0}」", "Collected “{0}”": "已收藏「{0}」", "Removed “{0}” from your playlists": "已将「{0}」从我的歌单中移除",
 };

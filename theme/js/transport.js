@@ -134,19 +134,28 @@ function on_paint(gr) {
 const COVER_S = 44, NOW = { key: "", img: null, title: "", artist: "" };
 const TF_NOW = fb.TitleFormat("%title%\u0001[%artist%]");
 const BTN_X = () => dp(24 + COVER_S + 14);
+// A song of 05 ONLINE (the bridge's address): its cover is the picture the bridge saves as the song starts
+// (lib/bus.js albumArtAsync), which may not be there yet, or still half written, when the track begins; it is asked for
+// again a few times while the song plays. (The next ask is set up before this one is made, never from the load's
+// promise: JSplitter 3.9.4 has crashed on a timer set from inside a promise's callback.)
+const NOW_ONLINE = /^http:\/\/127\.0\.0\.1:\d+\/(ne|qq)\/play\/\w+/, NOW_RETRY = [1500, 4000, 10000];
 function nowCover() {
     const h = fb.GetNowPlaying(), key = h ? h.RawPath + "|" + h.SubSong : "";
     if (key === NOW.key) return;
     NOW.key = key; NOW.img = null;
     const v = h ? TF_NOW.EvalWithMetadb(h).split("\u0001") : ["", ""];
     NOW.title = v[0]; NOW.artist = v[1];
-    if (!h) return;
+    if (h) nowArt(h, key, 0);
+}
+function nowArt(h, key, n) {
+    if (n < NOW_RETRY.length && NOW_ONLINE.test(h.RawPath))
+        window.SetTimeout(() => { if (NOW.key === key && !NOW.img) nowArt(h, key, n + 1); }, NOW_RETRY[n]);
     albumArtAsync(h).then(r => {
         if (NOW.key !== key || !r || !r.image) return;
         const s = dp(COVER_S) * 2, src = r.image;
         NOW.img = src.Width > s || src.Height > s ? src.Resize(s, s) : src;
         repaintRuler();
-    }).catch(() => {});
+    }).catch(() => { /* asked again by the timer above */ });
 }
 nowCover();
 function drawCover(gr) {

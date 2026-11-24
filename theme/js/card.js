@@ -12,7 +12,9 @@ let W = 0, H = 0;
 const hits = Hits();
 let hover = null;
 
-function npChanged() { window.Repaint(); clock.wake(); }
+// (a cover come in: only painted, since it comes in the cover's promise callback, where no timer may be set; nothing
+// starts moving with it)
+function npChanged(same, h, what) { window.Repaint(); if (what !== "cover") clock.wake(); }
 
 const clock = Clock(dt => {
     let more = stepSpring(heroClear, dt);

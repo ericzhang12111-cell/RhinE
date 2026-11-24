@@ -13,7 +13,7 @@
 // view repaints ten times a second (and every frame while lines scroll); nothing runs while paused, stopped or hidden.
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
-for (const f of ["emblem", "audio", "ring", "lyrics", "translate", "roman", "waveform", "artist", "album", "playlists", "nowplaying", "library", "online"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
+for (const f of ["emblem", "audio", "ring", "lyrics", "translate", "roman", "waveform", "artist", "album", "playlists", "nowplaying", "library", "online", "onlarchive"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
 include(fb.ProfilePath + "themes\\audio-archive\\js\\archive.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\artist.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\grid.js");
@@ -272,7 +272,11 @@ onMessage("state", () => {
     // the track can be read before frame.js has sent them, so lyrics read with the defaults are read again
     if (T.handle && lyricsWas && lyricsKey() !== lyricsWas) { T.lyrics = null; npChanged(false, T.handle); }
     const on = STATE.view === "archive";
+    const shown = on && !ARCHIVE_ON;
     if (on !== ARCHIVE_ON) { ARCHIVE_ON = on; if (on) requestVisibleThumbs(); else archiveHidden(); }
+    // GROUP › ONLINE: the NetEase lists asked for again when the Archive is shown, and while it stays shown once it is
+    // time (lib/onlarchive.js: every 30 minutes at most; a list not read yet is asked for only when it is shown again)
+    if (on && LIB.groupBy === "online" && (shown || Date.now() >= ONLA.nextAt)) onlaEnsure();
     if (on) inspectPending();
     // a new Array scale: the shelves hold another number of cases, so the selection is placed again
     if (STATE.arrayScale !== arrayScaleWas) { arrayScaleWas = STATE.arrayScale; placeSelection(curAlbum() ? curAlbum().key : AR.selAlbum); requestVisibleThumbs(); }
@@ -741,6 +745,7 @@ function on_mouse_lbtn_down(x, y, mask) {
     if (STATE.view === "archive" && AR.layout === "grid" && a && a.id === "grid-bar") gridBarDown(y, a);
     if (STATE.view === "archive" && AR.layout !== "grid" && a && a.id === "ar-ruler") rulerDown(x);
     if (STATE.view === "archive" && a && a.id === "art-bar") artBarDown(y, a);
+    if (STATE.view === "online" && a && a.id === "onl-bar") onlBarDown(y, a);
 }
 function on_mouse_move(x, y, mask) {
     if (STATE.mini) { miniMouseMove(x, mask, hits.at(x, y), y); return; }
@@ -748,6 +753,7 @@ function on_mouse_move(x, y, mask) {
     if (GRID.drag) { if (mask & 0x0001) gridBarMove(y); else gridBarUp(); return; }
     if (AR.rulerDrag) { if (mask & 0x0001) rulerMove(x); else rulerUp(); return; }
     if (AF.drag) { if (mask & 0x0001) artBarMove(y); else artBarUp(); return; }
+    if (OV.drag) { if (mask & 0x0001) onlBarMove(y); else onlBarUp(); return; }
     if (STATE.view === "style" && styleDrag(x, mask, y)) return;
     if (sideMove(x, mask)) return;
     const a = hits.at(x, y), onCase = STATE.view === "archive" && archiveMouseMove(x, y, a);
@@ -800,6 +806,7 @@ function on_mouse_rbtn_up(x, y, mask) {
     if (STATE.view === "archive") { archiveMenu(x, y); return true; }
     if (STATE.view === "lyrics") { lyricsTransMenu(x, y); return true; }   // the state chip's menu, with Edit lyrics
     if (STATE.view === "signal") { signalPanelsMenu(x, y); return true; }   // what shows under the ring and along the bottom
+    if (STATE.view === "online" && onlineMenu(x, y, hits.at(x, y))) return true;   // a song's: its NetEase playlists
     return false;
 }
 function on_mouse_lbtn_up(x, y) {
@@ -808,6 +815,7 @@ function on_mouse_lbtn_up(x, y) {
     if (GRID.drag) { gridBarUp(); return; }
     if (AR.rulerDrag) { rulerUp(); return; }
     if (AF.drag) { artBarUp(); return; }
+    if (OV.drag) { onlBarUp(); return; }
     const a = hits.at(x, y);
     if (STATE.view === "archive") { archiveClick(x, y, a); return; }
     if (STATE.view === "style") { styleClick(a); return; }

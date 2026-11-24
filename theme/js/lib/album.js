@@ -48,13 +48,38 @@ const albumNo = handle => handle ? 1 + parseInt(fnv(albumKey(handle)), 16) % 999
 
 // covers: { key -> { img, blur } }, a few kept; loading is asynchronous, onLoad() is called when one arrives
 const COVERS = new Map();
+// A song of 05 ONLINE (the bridge's address, lib/bus.js albumArtAsync) has a cover of its own, the one the bridge saved
+// for it: kept by the song, since its address has no folder and untagged songs would all share one album key. The
+// bridge saves that picture as the song starts, so it may not be there yet when first asked for: a miss is not kept
+// for good, and on a later paint (every 2 s at most) the file is looked for, and loaded once it is there (only that
+// look, synchronous and cheap, is repeated; no timer: the panels showing a cover paint often enough, and the transport
+// asks again on its own).
+const ONLINE_SONG = /^http:\/\/127\.0\.0\.1:\d+\/(ne|qq)\/play\/(\w+)/;
+function coverCacheKey(handle) {
+    const m = ONLINE_SONG.exec(handle.RawPath);
+    return m ? `online|${m[1]}|${m[2]}` : albumKey(handle);
+}
+// the picture the bridge saves for an online song (lib/bus.js ONLINE_ART)
+const onlineArtFile = key => { const [, src, id] = key.split("|"); return ONLINE_ART + (src === "qq" ? "qq-" : "") + id + ".jpg"; };
 function cover(handle, onLoad) {
-    const key = albumKey(handle);
     if (!handle) return null;
-    if (COVERS.has(key)) return COVERS.get(key);
-    const entry = { img: null, blur: null, loading: true };
+    const key = coverCacheKey(handle), had = COVERS.get(key);
+    if (had && had.missed) {
+        // (a missed online cover: looked for again at most every 2 s, loaded only once its file is there)
+        if (Date.now() - had.missed < 2000) return had;
+        had.missed = Date.now();
+        if (had.misses >= 3 || !utils.IsFile(onlineArtFile(key))) return had;   // (a file that will not load: given up)
+    } else if (had) return had;
+    const entry = { img: null, blur: null, loading: true, missed: 0, misses: had ? had.misses : 0 };
+    COVERS.delete(key);
     COVERS.set(key, entry);
     if (COVERS.size > 8) COVERS.delete(COVERS.keys().next().value);
+    const online = key.startsWith("online|");
+    const miss = () => {
+        if (!online) return;
+        entry.missed = Date.now();
+        entry.misses++;
+    };
     albumArtAsync(handle).then(r => {
         entry.loading = false;
         if (r && r.image) {
@@ -67,9 +92,9 @@ function cover(handle, onLoad) {
             const b = entry.img.Resize(128, 128);
             b.StackBlur(14);
             entry.blur = b;
-        }
+        } else miss();
         onLoad();
-    }).catch(() => { entry.loading = false; onLoad(); });
+    }).catch(() => { entry.loading = false; miss(); onLoad(); });   // (a picture still being written fails to load: a miss)
     return entry;
 }
 

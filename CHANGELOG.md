@@ -3,6 +3,44 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
+## 2.3.0 — 2026-11-24
+
+**Added · 新增**
+- NetEase streams in Hi-Res (24-bit, up to 192 kHz) for the accounts that have it (SVIP), lossless otherwise. 网易云串流支持 Hi-Res（24 位，最高 192 kHz），需要账号支持（SVIP），否则为无损。
+- NetEase playlists in the Archive: `GROUP` › `ONLINE` puts your liked songs and the playlists you made on shelves of
+  their own, one shelf per playlist, its songs as album cases with their covers (or one case per song under `TRACKS`,
+  one per playlist under `FOLDERS`), in `ARRAY`, `ROOM` and `GRID`. A double-click plays them through the 05 ONLINE
+  bridge, VIP-only songs left out for other accounts; the album file lists the songs, tagged `LOCKED` or `VIP · TRIAL`.
+  Right-click › `Online playlists in the Archive` chooses the playlists shown (collected ones too), and `Refresh online
+  playlists` reads them again. A copy is kept on this computer, so the shelves show at once and stay while offline
+  (`OFFLINE COPY`); NetEase is asked at most every 30 minutes, one playlist at a time, and only for the playlists that
+  changed. Needs the bridge and a NetEase login in 05 ONLINE. 网易云歌单进入曲库：`分组` › `在线` 会把你喜欢的音乐和你创建的歌单放进曲库，每个歌单一排，歌曲按专辑做成带封面的唱片盒（选 `曲目` 时每首歌一个，选 `文件夹` 时每个歌单一个），陈列、展室和网格都能用。双击即可通过 05 在线 的本地服务播放，非 VIP 账号会跳过 VIP 专享的歌曲；专辑资料里列出全部歌曲，并标出 `已锁定` 或 `VIP · 试听`。右键 › `曲库中显示的网易云歌单` 可以选择显示哪些歌单（收藏的歌单也可以），`刷新网易云歌单` 会重新读取。歌单会在这台电脑上保存一份副本，打开时立即显示，离线时也还在（`离线副本`）；最多每 30 分钟向网易云请求一次，一次只读一个歌单，并且只读有变化的歌单。需要先在 05 在线 中安装本地服务并登录网易云。
+- Edit your NetEase playlists in 05 ONLINE: right-click a song › `Add to playlist` (your liked songs, a playlist you
+  made, or a new one), or `Remove from “…”` in one of yours; right-click a playlist to rename or delete one you made,
+  or to collect someone else's. 在 05 在线 中编辑网易云歌单：右键歌曲 › `加入歌单`（我喜欢的音乐、你创建的歌单或新建一个），在你自己的歌单里可以 `从「…」中移除`；右键歌单可以重命名或删除你创建的歌单，或收藏别人的歌单。
+- A slide bar beside 05 ONLINE's long lists (a playlist of thousands of songs, search results, all playlists). 在 05 在线 中，长列表（几千首歌的歌单、搜索结果、全部歌单）右侧加了可拖动的滑动条。
+
+**Fixed · 修复**
+- The Archive's `GROUP` and `SORT` are menus now, rather than rows of every choice; `GROUP` › `ONLINE` stands apart
+  in it, with the playlists shown and `Refresh online playlists` right there while it is chosen. 曲库顶栏的 `分组` 和 `排序` 改成下拉菜单，不再把所有选项排成一行；`分组` 菜单里 `在线` 单独分开，选中时菜单里直接就有显示哪些歌单和 `刷新网易云歌单`。
+- Clicking the cover in the bottom bar (or the profile card) while a NetEase song plays now opens its case under
+  `GROUP` › `ONLINE` when the song is on a playlist shown there. 播放网易云歌曲时点击底栏封面（或信息卡），如果这首歌在曲库显示的歌单里，现在会切到 `分组` › `在线` 并打开它的唱片盒。
+- Without media library folders, the Archive no longer shows the songs of the playlists 05 ONLINE fills (*NetEase · …*,
+  *QQ Music · …*) as nameless cases. 没有设置媒体库文件夹时，曲库不会再把 05 在线 填充的播放列表（*NetEase · …*、*QQ Music · …*）里的歌曲显示成没有名字的唱片盒。
+- NetEase lossless (FLAC) songs now carry their title, artists, album and cover: the track card, the visualization and
+  the bottom bar show the cover, and the playlist shows the artist (before, only MP3 songs had them). Songs not played
+  yet show their artist and title apart instead of "?". 网易云无损（FLAC）歌曲现在也带有标题、艺人、专辑和封面：曲目信息卡、可视化和底栏都能显示封面，播放列表能显示艺人（以前只有 MP3 歌曲有）。还没播放过的歌曲也会分开显示艺人和歌名，不再是「?」。
+- foobar2000 could crash shortly after a NetEase playlist was started with the playlist view open (its total length was
+  read while the songs were still being added). 播放网易云歌单后立即打开播放列表视图时，foobar2000 可能崩溃（歌曲还在加入时读取了总时长），已修复。
+- A NetEase account that became VIP (or SVIP) after logging in is now seen as one: VIP songs play in full instead of
+  being treated as locked (the account is read again when the bridge starts). 登录后才开通 VIP（或 SVIP）的网易云账号现在会被正确识别：VIP 歌曲可以完整播放，不再被当作锁定（本地服务启动时会重新读取账号信息）。
+- Updating the theme now updates the 05 ONLINE bridge too (it stayed as first installed). 更新主题时，05 在线的本地服务也会一起更新（以前一直停留在首次安装的版本）。
+- Online lyrics no longer come from another song of the same artist and length: NetEase and the LRCLIB search now also
+  check the title (its aliases and translated names too), so a track found by its file name, with no title tag, gets
+  no lyrics rather than wrong ones. What was found before is looked up again once. 在线歌词不会再取到同一艺人、时长相近的另一首歌：网易云和 LRCLIB 搜索现在也会核对歌名（包括别名和译名），没有标题标签、只能按文件名查找的曲目宁可不显示歌词，也不会显示错的。之前缓存的结果会重新查找一次。
+- With the theme in Chinese on a Windows in another language, AUTO now asks NetEase when LRCLIB has nothing and the
+  NetEase translation is on, as on a Chinese Windows (settings you already chose are kept). 界面设为中文而 Windows 是其他语言时，歌词来源 `自动` 现在也会在 LRCLIB 找不到时查找网易云，并默认开启网易云翻译，与中文 Windows 一致（已经手动设置过的不受影响）。
+
 ## 2.2.0 — 2026-11-19
 
 **Added · 新增**

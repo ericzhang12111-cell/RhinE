@@ -366,7 +366,7 @@ I18N["ko"] = {
     "Play playlist": "이 재생목록 재생", "THEME": "테마",
     // archive: group by artist or rating, sort by rating, one shelf per artist or folder
     "INITIAL": "첫 글자", "Group by artist": "아티스트별 그룹", "Group by rating": "평점별 그룹", "RATING {0}": "평점 {0}",
-    "Rating (highest first)": "평점 (높은 순)", "One shelf per artist or folder": "아티스트·폴더마다 선반 하나",
+    "Rating (highest first)": "평점 (높은 순)", "One shelf per artist, folder or playlist": "아티스트·폴더·재생목록마다 선반 하나",
     // signal: what shows under the ring and along the bottom (PANELS)
     "PANELS": "패널", "Under the ring": "뫼비우스 링 아래", "Along the bottom": "하단", "Spectrum": "스펙트럼", "Lyrics": "가사", "Level meters": "레벨 미터", "Stereo scope": "스테레오 스코프",
     "Signal trace": "시그널 트레이스", "Level history": "레벨 기록", "LEVEL HISTORY  ·  60 S": "레벨 기록  ·  60초", "CORR": "상관", "BALANCE": "밸런스", "MONO": "모노", "For the 3D and 2D models": "3D·2D 모델용",
@@ -377,4 +377,16 @@ I18N["ko"] = {
     "Frosted cream polymer, lit from the floor below": "반투명 크림색 폴리머, 바닥 아래에서 빛남", "Jade glass, lit from the floor below": "옥빛 유리, 바닥 아래에서 빛남",
     "Matte white cases under lights of their own: pick one under ROOM LIGHT": "전용 조명이 있는 무광 흰색 케이스: '조명'에서 선택", "Black cases under lights of their own: pick one under ROOM LIGHT": "전용 조명이 있는 검은색 케이스: '조명'에서 선택",
     "RHINE LAB's own cases, each with its paper label": "RHINE LAB 전용 케이스, 각각 종이 라벨 부착", "There is no light to pick for this case.": "이 케이스에는 고를 조명이 없습니다.",
+    // NetEase playlists in the Archive (GROUP › ONLINE, lib/onlarchive.js)
+    "UNKNOWN ALBUM": "알 수 없는 앨범",
+    "PLAYLIST": "재생목록", "Group by online playlist (NetEase)": "온라인 재생목록별 그룹 (NetEase)",
+    "ONLINE · INSTALL THE BRIDGE IN 05 ONLINE": "온라인 · 05 온라인에서 브리지를 설치하세요",
+    "ONLINE · LOG IN TO NETEASE IN 05 ONLINE": "온라인 · 05 온라인에서 NetEase에 로그인하세요",
+    "ONLINE · READING PLAYLISTS …": "온라인 · 재생목록을 읽는 중 …", "ONLINE · NO PLAYLISTS CHOSEN (RIGHT-CLICK)": "온라인 · 선택한 재생목록이 없습니다 (오른쪽 클릭)",
+    "ONLINE · THE BRIDGE IS NOT ANSWERING": "온라인 · 브리지가 응답하지 않습니다", "ONLINE · NETEASE IS BUSY · TRYING AGAIN LATER": "온라인 · NetEase가 혼잡합니다 · 나중에 다시 시도합니다",
+    "ONLINE · THE PLAYLISTS CHOSEN ARE EMPTY": "온라인 · 선택한 재생목록이 비어 있습니다",
+    "SOURCE · NETEASE · {0}": "출처 · NETEASE · {0}", "OFFLINE COPY": "오프라인 사본",
+    "PLAY PLAYLIST": "재생목록 재생", "Open in playlist": "재생목록에서 열기",
+    "Online playlists in the Archive": "아카이브에 표시할 온라인 재생목록", "Use my created playlists and liked songs": "내가 만든 재생목록과 좋아요 한 곡 사용", "Refresh online playlists": "온라인 재생목록 새로 고침",
+    "Liked songs": "좋아요 한 곡", "New NetEase playlist…": "새 NetEase 재생목록…", "Add to playlist": "재생목록에 추가", "Remove from “{0}”": "“{0}”에서 삭제", "Rename playlist…": "재생목록 이름 바꾸기…", "Delete playlist": "재생목록 삭제", "Delete “{0}” from NetEase (cannot be undone)": "NetEase에서 “{0}” 삭제(되돌릴 수 없음)", "Remove from my playlists": "내 재생목록에서 빼기", "Collect into my playlists": "내 재생목록에 담기", "Working…": "처리 중…", "Restart foobar2000 to edit NetEase playlists (the bridge running is from before this update).": "NetEase 재생목록을 편집하려면 foobar2000을 다시 시작하세요(실행 중인 브리지는 업데이트 전 버전입니다).", "NetEase did not do it: {0}": "NetEase에서 완료하지 못했습니다: {0}", "the bridge did not answer": "브리지가 응답하지 않았습니다", "Already in “{0}”": "이미 “{0}”에 있습니다", "Added to “{0}”": "“{0}”에 추가했습니다", "Removed from “{0}”": "“{0}”에서 삭제했습니다", "NetEase playlist name": "NetEase 재생목록 이름", "New NetEase playlist": "새 NetEase 재생목록", "Created “{0}”": "“{0}” 만들었습니다", "Rename NetEase playlist": "NetEase 재생목록 이름 바꾸기", "Renamed to “{0}”": "“{0}”(으)로 이름을 바꿨습니다", "Deleted “{0}”": "“{0}” 삭제했습니다", "Collected “{0}”": "“{0}” 담았습니다", "Removed “{0}” from your playlists": "“{0}”을(를) 내 재생목록에서 뺐습니다",
 };

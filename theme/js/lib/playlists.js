@@ -16,13 +16,21 @@ function plItems(pl) {
 // pl undefined: every playlist (playlists were added, removed or reordered, so the indexes moved)
 function plDirty(pl) { if (pl === undefined) PL_CACHE.clear(); else PL_CACHE.delete(pl); }
 
-// total length and size of a playlist, cached with its items
-const PL_STATS = new Map();
+// total length and size of a playlist, cached with its items. The length is added up from title formatting, not
+// CalcTotalDuration: a song of 05 ONLINE not opened yet has no length of its own in the handle (its playlist line has
+// one), and JSplitter hands back whatever is in that memory as a number, which can be garbage (1e+195 h) or a value
+// that brings its script engine down (a NaN its engine takes for a pointer); title formatting gives it as text.
+const PL_STATS = new Map(), TF_PL_LEN = fb.TitleFormat("[%length_seconds_fp%]");
+function plLength(items) {
+    let t = 0;
+    for (const v of TF_PL_LEN.EvalWithMetadbs(items)) { const n = parseFloat(v); if (n > 0 && n < 1e6) t += n; }
+    return t;
+}
 function plStats(pl) {
     const items = plItems(pl);
     let s = PL_STATS.get(items);
     if (!s) {
-        s = { count: items.Count, length: items.CalcTotalDuration(), size: items.CalcTotalSize() };
+        s = { count: items.Count, length: plLength(items), size: items.CalcTotalSize() };
         PL_STATS.clear();
         PL_STATS.set(items, s);
     }

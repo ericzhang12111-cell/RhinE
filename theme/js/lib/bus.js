@@ -48,9 +48,17 @@ const pickLyricsSource = v => LYR_SOURCES.some(s => s[0] === v) ? v : "auto";
 // machine services, or AUTO (community first, machine when it has none).
 const LYR_TRANS = [["off", "Off"], ["netease", "NetEase community"], ["machine", "Machine translation"], ["auto", "Automatic"]];
 const pickLyricsTrans = v => LYR_TRANS.some(s => s[0] === v) ? v : "off";
-// the translation a settings file with no lyricsTrans gets: the community translation on a Chinese Windows (where NetEase
-// is useful), nothing elsewhere (machine translation was off by default)
-const defaultLyricsTrans = () => SYSTEM_LANG.startsWith("zh") ? "netease" : "off";
+// The reader's language, for what the lyrics settings start as: the theme's own language when it is set to one (the
+// interface can be Chinese on an English Windows), else Windows'. A Chinese reader starts with NetEase allowed in AUTO
+// and its community translation on; settings already chosen are kept.
+const readerLang = () => UI_LANG || SYSTEM_LANG;
+const zhReader = () => readerLang().startsWith("zh") || SYSTEM_LANG.startsWith("zh");
+// the language to translate lyrics into, when none was chosen: the reader's Chinese (the theme's, else Windows'), else
+// the theme's language
+const defaultLyricsTarget = () => readerLang().startsWith("zh") ? readerLang() : SYSTEM_LANG.startsWith("zh") ? SYSTEM_LANG : readerLang();
+// the translation a settings file with no lyricsTrans gets: the community translation for a Chinese reader (where
+// NetEase is useful), nothing elsewhere (machine translation was off by default)
+const defaultLyricsTrans = () => zhReader() ? "netease" : "off";
 // which online sources the chosen lyrics source allows: AUTO is LRCLIB first and NetEase when it has nothing, the fixed
 // ones are themselves, LOCAL is neither
 const lyrOnline = () => STATE.lyricsSource !== "local";
@@ -60,8 +68,8 @@ const lyrLrclib = () => STATE.lyricsSource === "auto" || STATE.lyricsSource === 
 const lyrFixed = () => STATE.lyricsSource === "lrclib" || STATE.lyricsSource === "netease";
 // NetEase also needs the reader to have allowed it: the fixed NETEASE source is an explicit choice, but the AUTO
 // fallback is not, and it sends the track's artist, title and length to music.163.com. lyricsNeteaseAuto carries that
-// permission, with the old lyricsNetease default (on for a Chinese Windows, off elsewhere), so AUTO does not start
-// contacting NetEase for everyone.
+// permission, on by default for a Chinese reader (zhReader: the theme or Windows in Chinese), off elsewhere, so AUTO
+// does not start contacting NetEase for everyone.
 const lyrNetease = () => STATE.lyricsSource === "netease" || (STATE.lyricsSource === "auto" && !!STATE.lyricsNeteaseAuto);
 // the header's emblem (06 STYLE, lib/emblem.js): the Möbius ring or nested triangles
 const EMBLEMS = [["ring", "RING"], ["delta", "DELTA"]];
@@ -83,8 +91,16 @@ function albumArtAsync(handle) {
     // (the bridge's art\<id>.jpg; a QQ Music song's: qq-<mid>.jpg)
     const m = handle && /^http:\/\/127\.0\.0\.1:\d+\/(ne|qq)\/play\/(\w+)/.exec(handle.RawPath), file = m ? ONLINE_ART + (m[1] === "qq" ? "qq-" : "") + m[2] + ".jpg" : "";
     if (file && utils.IsFile(file)) return d2d.LoadImageAsyncV2(0, file).then(image => ({ image }));
+    // (not saved yet: none for now. foobar2000's own art lookup is never asked for a stream of the bridge: it would
+    // open the stream again for nothing, and asked again while the song is being opened it has brought JSplitter down)
+    if (m) return Promise.resolve({ image: null });
     return utils.GetAlbumArtAsyncV2(window.ID, handle, 0);
 }
+// A handle's length in seconds (0 when unknown), from title formatting: a song of 05 ONLINE not opened yet has no
+// length of its own in the handle, and FbMetadbHandle.Length then hands back whatever is in that memory, garbage or a
+// value that brings JSplitter's script engine down (lib/playlists.js plStats). Never .Length on a handle that may be one.
+const TF_LEN_FP = fb.TitleFormat("[%length_seconds_fp%]");
+const hLength = h => { const n = h ? parseFloat(TF_LEN_FP.EvalWithMetadb(h)) : 0; return n > 0 && n < 1e6 ? n : 0; };
 // the title tag on the signal profile card and the album file (06 STYLE, lib/tag.js): its finish, or off (plain text),
 // its shape and where its colours come from (TAG_SHAPES, TAG_COLOUR_SOURCES in lib/tag.js); FACTORY: one of the tags
 // rendered in their own materials and colours (TAG_FACTORY in lib/tag.js, the one in use: tagFactory)

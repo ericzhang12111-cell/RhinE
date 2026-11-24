@@ -367,7 +367,7 @@ I18N["ja"] = {
     "Play playlist": "このプレイリストを再生", "THEME": "テーマ",
     // archive: group by artist or rating, sort by rating, one shelf per artist or folder
     "INITIAL": "頭文字", "Group by artist": "アーティストでグループ化", "Group by rating": "評価でグループ化", "RATING {0}": "評価 {0}",
-    "Rating (highest first)": "評価（高い順）", "One shelf per artist or folder": "アーティスト・フォルダごとに 1 段の棚",
+    "Rating (highest first)": "評価（高い順）", "One shelf per artist, folder or playlist": "アーティスト・フォルダ・プレイリストごとに 1 段の棚",
     // signal: what shows under the ring and along the bottom (PANELS)
     "PANELS": "パネル", "Under the ring": "メビウスの輪の下", "Along the bottom": "下部", "Spectrum": "スペクトラム", "Lyrics": "歌詞", "Level meters": "レベルメーター", "Stereo scope": "ステレオスコープ",
     "Signal trace": "シグナル波形", "Level history": "レベル履歴", "LEVEL HISTORY  ·  60 S": "レベル履歴  ·  60 秒", "CORR": "相関", "BALANCE": "バランス", "MONO": "モノラル", "For the 3D and 2D models": "3D・2D モデル用",
@@ -378,4 +378,16 @@ I18N["ja"] = {
     "Frosted cream polymer, lit from the floor below": "すりガラス調のクリーム色樹脂、床下からの光", "Jade glass, lit from the floor below": "翡翠色のガラス、床下からの光",
     "Matte white cases under lights of their own: pick one under ROOM LIGHT": "専用の照明があるマットホワイトのケース：「照明」で選べます", "Black cases under lights of their own: pick one under ROOM LIGHT": "専用の照明がある黒いケース：「照明」で選べます",
     "RHINE LAB's own cases, each with its paper label": "RHINE LAB 専用ケース、それぞれ紙ラベル付き", "There is no light to pick for this case.": "このケースには選べる照明はありません。",
+    // NetEase playlists in the Archive (GROUP › ONLINE, lib/onlarchive.js)
+    "UNKNOWN ALBUM": "不明なアルバム",
+    "PLAYLIST": "プレイリスト", "Group by online playlist (NetEase)": "オンラインのプレイリストでグループ化（NetEase）",
+    "ONLINE · INSTALL THE BRIDGE IN 05 ONLINE": "オンライン · 05 オンラインでブリッジをインストールしてください",
+    "ONLINE · LOG IN TO NETEASE IN 05 ONLINE": "オンライン · 05 オンラインで NetEase にログインしてください",
+    "ONLINE · READING PLAYLISTS …": "オンライン · プレイリストを読み込み中 …", "ONLINE · NO PLAYLISTS CHOSEN (RIGHT-CLICK)": "オンライン · プレイリストが選ばれていません（右クリック）",
+    "ONLINE · THE BRIDGE IS NOT ANSWERING": "オンライン · ブリッジが応答しません", "ONLINE · NETEASE IS BUSY · TRYING AGAIN LATER": "オンライン · NetEase が混み合っています · 後で再試行します",
+    "ONLINE · THE PLAYLISTS CHOSEN ARE EMPTY": "オンライン · 選んだプレイリストは空です",
+    "SOURCE · NETEASE · {0}": "ソース · NETEASE · {0}", "OFFLINE COPY": "オフラインのコピー",
+    "PLAY PLAYLIST": "プレイリストを再生", "Open in playlist": "プレイリストで開く",
+    "Online playlists in the Archive": "アーカイブに表示するオンラインのプレイリスト", "Use my created playlists and liked songs": "作成したプレイリストとお気に入りの曲を使う", "Refresh online playlists": "オンラインのプレイリストを更新",
+    "Liked songs": "お気に入りの曲", "New NetEase playlist…": "NetEase のプレイリストを新規作成…", "Add to playlist": "プレイリストに追加", "Remove from “{0}”": "「{0}」から削除", "Rename playlist…": "プレイリスト名を変更…", "Delete playlist": "プレイリストを削除", "Delete “{0}” from NetEase (cannot be undone)": "NetEase から「{0}」を削除（元に戻せません）", "Remove from my playlists": "マイプレイリストから外す", "Collect into my playlists": "マイプレイリストに保存", "Working…": "処理中…", "Restart foobar2000 to edit NetEase playlists (the bridge running is from before this update).": "NetEase のプレイリストを編集するには foobar2000 を再起動してください（動いているブリッジは更新前のものです）。", "NetEase did not do it: {0}": "NetEase で完了できませんでした：{0}", "the bridge did not answer": "ブリッジが応答しませんでした", "Already in “{0}”": "すでに「{0}」にあります", "Added to “{0}”": "「{0}」に追加しました", "Removed from “{0}”": "「{0}」から削除しました", "NetEase playlist name": "NetEase のプレイリスト名", "New NetEase playlist": "NetEase のプレイリストを新規作成", "Created “{0}”": "「{0}」を作成しました", "Rename NetEase playlist": "NetEase のプレイリスト名を変更", "Renamed to “{0}”": "「{0}」に名前を変更しました", "Deleted “{0}”": "「{0}」を削除しました", "Collected “{0}”": "「{0}」を保存しました", "Removed “{0}” from your playlists": "「{0}」をマイプレイリストから外しました",
 };

@@ -22,6 +22,7 @@ const ONL = {
     covers: new Map(),   // picture address -> image | null (on its way)
     gen: 0,         // bumped on log out: answers to an older one are dropped
     lost: 0,        // when the bridge last went away (it is started again, at most every 10 s)
+    playGen: 0,     // bumped by every onlinePlay: one still waiting for its songs to be added is dropped
 };
 const ONL_DATA = ONL.root + "data\\";
 const onlRepaint = () => window.Repaint();
@@ -62,7 +63,8 @@ function onlKey() {
     return ONL.key;
 }
 
-// GET a bridge route; done(json | null, status); a large list may take a minute (timeout ms)
+// GET a bridge route; done(json | null, status, text: a failure's body says why, e.g. the bridge's 502 { error, code,
+// throttled }); a large list may take a minute (timeout ms)
 function onlGet(route, done, timeout = 20000) {
     const gen = ONL.gen;
     trHttp("GET", `http://127.0.0.1:${ONL.port}${route}${route.includes("?") ? "&" : "?"}k=${onlKey()}`, "", {}, (st, txt) => {
@@ -73,7 +75,7 @@ function onlGet(route, done, timeout = 20000) {
         // still answering): started anew
         // (no answer: 0 for a timeout, 12xxx for a WinINet error, 12029 when nothing listens)
         if ((st === 0 || st >= 12000) && ONL.state === "ready" && Date.now() - ONL.lost > 10000) { ONL.lost = Date.now(); ONL.state = ""; window.SetTimeout(onlineStart, 500); }
-        done(d, st);
+        done(d, st, txt);
     }, timeout);
 }
 
@@ -83,9 +85,15 @@ function onlineStart() {
     if (ONL.state === "starting" || ONL.state === "ready" || ONL.state === "installing") return;
     const inst = onlInstalled();
     if (!inst) { ONL.state = "absent"; onlRepaint(); return; }
+    const fresh = onlRefreshApp();
+    if (fresh === "install") { onlineInstall(inst.node); return; }
     ONL.state = "starting"; ONL.detail = "";
     onlGet("/status", (d) => {
-        if (d) { onlReady(d); return; }
+        if (d) {
+            if (fresh === "copied") console.log("audio-archive online: the bridge's files were updated; the bridge already running keeps the old ones until foobar2000 is restarted");
+            onlReady(d);
+            return;
+        }
         const node = inst.node || ONL.root + "node\\node.exe", data = ONL_DATA.replace(/\\$/, "");   // (a trailing \ would escape the quote)
         try { new ActiveXObject("WScript.Shell").Run(`"${node}" "${ONL.root}app\\bridge.js" --data "${data}" --key ${onlKey()} --port ${ONL.port}`, 0, false); }
         catch (e) { ONL.state = "error"; ONL.detail = "could not start Node.js"; onlRepaint(); return; }
@@ -123,12 +131,39 @@ function onlineSetSource(src) {
     onlRepaint();
 }
 
-// Installing: tools/online.ps1, hidden, its progress read from install.json
-function onlineInstall() {
+// The bridge as this version of the theme has it (theme\online\): online.ps1 copies it into app\ only when it installs,
+// so without this a theme update would never reach a bridge installed before. Looked at once a session, before the
+// bridge is started: scripts that differ are copied over (byte for byte, as online.ps1 does), and a package.json or
+// lockfile that differs means other libraries, so the installer runs again (npm ci). A bridge already running from
+// before keeps its old code until foobar2000 restarts (it ends with foobar2000). Anything going wrong leaves app\ as it
+// is. "" (nothing to do) | "copied" | "install".
+let onlAppChecked = false;
+function onlRefreshApp() {
+    if (onlAppChecked) return "";
+    onlAppChecked = true;
+    const src = fb.ProfilePath + "themes\\audio-archive\\online\\", app = ONL.root + "app\\";
+    try {
+        const text = f => utils.IsFile(f) ? utils.ReadTextFile(f, 65001) : null;
+        // (a file the theme does not have is left alone)
+        const differs = f => { const t = text(src + f); return t !== null && t !== text(app + f); };
+        if (["package.json", "package-lock.json"].some(differs)) return "install";
+        const js = ["bridge.js", "qq.js", "importer.js", "spotify.js"].filter(differs);
+        if (!js.length) return "";
+        const fso = new ActiveXObject("Scripting.FileSystemObject");
+        for (const f of js) fso.CopyFile(src + f, app + f, true);
+        return "copied";
+    } catch (e) { console.log("audio-archive online: could not update the bridge's files: " + e); return ""; }
+}
+
+// Installing: tools/online.ps1, hidden, its progress read from install.json. node: a Node.js installed elsewhere that
+// the bridge was installed with (install.json's), used again rather than downloading one
+function onlineInstall(node) {
     if (ONL.state === "installing") return;
     ONL.state = "installing"; ONL.detail = "";
     const ps1 = fb.ProfilePath + "themes\\audio-archive\\tools\\online.ps1", prof = fb.ProfilePath.replace(/\\$/, "");
-    try { new ActiveXObject("WScript.Shell").Run(`cmd /c set "PSModulePath=" && powershell -NoProfile -ExecutionPolicy Bypass -File "${ps1}" -Profile "${prof}"`, 0, false); }
+    // (the one online.ps1 downloads, under audio-archive-online\node\, is left to it: it keeps it at its pinned version)
+    const own = node && !String(node).toLowerCase().startsWith(ONL.root.toLowerCase()) && utils.IsFile(node) ? ` -Node "${node}"` : "";
+    try { new ActiveXObject("WScript.Shell").Run(`cmd /c set "PSModulePath=" && powershell -NoProfile -ExecutionPolicy Bypass -File "${ps1}" -Profile "${prof}"${own}`, 0, false); }
     catch (e) { ONL.state = "error"; ONL.detail = "could not run the installer"; onlRepaint(); return; }
     const t0 = Date.now(), poll = () => {
         const s = onlReadJson(ONL.root + "install.json");
@@ -170,6 +205,9 @@ function onlineLogout() {
     const P = ONL.src, S = ONL.by[P];
     onlGet(`/${P}/logout`, () => {});
     S.me = null; S.home = null; S.lists.clear(); S.search = null;
+    // (the Archive's NetEase shelves, lib/onlarchive.js: kept, shown as the copy from before; the next account that
+    // logs in gets its own)
+    if (P === "ne" && typeof onlaInvalidate === "function") onlaInvalidate();
     onlineQr();
 }
 
@@ -189,7 +227,10 @@ function onlineList(id, again = false, P = ONL.src) {
     const L = ONL.by[P].lists, have = L.get(id);
     if (have && !(again && have === "failed")) return have === "loading" ? null : have;
     L.set(id, "loading");
+    const eg = onlEditGen(id, P);
     onlGet(`/${P}/playlist/${encodeURIComponent(id)}`, d => {
+        // (the list edited here while it was being read: what came may be from before the edit; read again)
+        if (d && onlEditGen(id, P) !== eg) { L.delete(id); onlineList(id, false, P); return; }
         if (d) { onlKeep(d.tracks, P); L.set(id, d); } else L.set(id, "failed");
         // (a tile's play key, or a list to resume, asked before the list was here)
         const want = ONL.want;
@@ -231,6 +272,124 @@ function onlNotice(text, kind = "fail") {
     if (kind !== "busy") window.SetTimeout(onlRepaint, kind === "ok" ? 3100 : 6100);
 }
 const onlNoticeOn = () => { const n = ONL.notice; return n && Date.now() - n.at < (n.kind === "busy" ? 180000 : n.kind === "ok" ? 3000 : 6000) ? n : null; };
+
+// ---- the account's NetEase playlists edited (online.js onlineMenu) ----
+// Each edit is one request to the bridge (/ne/pl/…), with word of it in the message bar. What is shown follows at once
+// without reading anything again: the songs taken out of (or put at the top of) the list as 05 ONLINE has it, the
+// tiles' counts and names, and the Archive's copy (lib/onlarchive.js onlaEdited); NetEase's own word comes with the
+// next reading of the lists (the bridge has let go of what it kept of them).
+const onlLists = () => (ONL.by.ne.home && ONL.by.ne.home.playlists) || [];
+const onlListOf = id => onlLists().find(p => p.id === String(id)) || {};
+// the account's own lists, its liked songs first: where a song can be put
+const onlOwnLists = () => onlLists().filter(p => p.own).sort((a, b) => !!b.liked - !!a.liked);
+const onlIsOwn = id => !!onlListOf(id).own;
+const onlInMine = id => onlLists().some(p => p.id === String(id));
+const onlListName = p => p.liked ? tr("Liked songs") : p.title || "";
+// how many times a list's songs were edited here: a reading of it that began before an edit (05 ONLINE's, the
+// Archive's) brings the list as it was, and is not taken (onlineList, lib/onlarchive.js onlaNext)
+const ONL_EDITS = new Map();   // "<src>:<list id>" -> n
+const onlEditGen = (id, P = "ne") => ONL_EDITS.get(`${P}:${id}`) || 0;
+function onlEdit(route, ok) {
+    onlNotice(tr("Working…"), "busy");
+    onlGet(route, (d, st, txt) => {
+        if (d && d.ok) { ok(d); return; }
+        let e = null;
+        try { e = JSON.parse(txt); } catch (x) { e = null; }
+        // (a bridge started before this version of the theme: it has none of these routes until foobar2000 restarts)
+        if (st === 404) onlNotice(tr("Restart foobar2000 to edit NetEase playlists (the bridge running is from before this update)."));
+        else onlNotice(tr("NetEase did not do it: {0}", (e && e.error) || (st ? String(st) : tr("the bridge did not answer"))));
+    }, 60000);
+}
+// the account's lists as NetEase has them now (the tiles' counts), a moment after an edit
+function onlListsAgain() {
+    const H0 = ONL.by.ne.home;
+    window.SetTimeout(() => onlGet("/ne/playlists", d => { if (Array.isArray(d) && d.length && H0 === ONL.by.ne.home && H0) { H0.playlists = d; onlRepaint(); } }), 1500);
+}
+// songs put into / taken out of a list, as 05 ONLINE and the Archive show it (added: songs; removed: a Set of ids)
+function onlSongsEdited(pid, added, removed) {
+    ONL_EDITS.set(`ne:${pid}`, onlEditGen(pid) + 1);
+    const L = ONL.by.ne.lists, have = L.get(pid), meta = onlListOf(pid), whole = !!have && typeof have === "object" && Array.isArray(have.tracks);
+    if (whole) {
+        let t = have.tracks;
+        if (removed) t = t.filter(s => !removed.has(String(s.id)));
+        if (added) { const ids = new Set(t.map(s => String(s.id))); t = added.filter(s => !ids.has(String(s.id))).concat(t); }
+        have.tracks = t; have.count = t.length;
+        if (meta.id) meta.count = t.length;
+    } else {
+        // ("failed": read anew when opened; "loading" is let be: its answer, from before the edit, is read again)
+        if (have === "failed") L.delete(pid);
+        if (meta.id) meta.count = Math.max(0, (meta.count || 0) + (added ? added.length : 0) - (removed ? removed.size : 0));
+    }
+    if (typeof onlaEdited === "function") onlaEdited("songs", pid, { added, removed });
+    onlRepaint();
+}
+function onlAddSongs(p, songs) {
+    const ids = songs.filter(Boolean).map(s => String(s.id));
+    if (!p || !ids.length) return;
+    onlEdit(`/ne/pl/add?pid=${encodeURIComponent(p.id)}&ids=${ids.join(",")}`, d => {
+        if (!d.already) onlSongsEdited(p.id, songs.map(s => Object.assign({}, s, { added: Date.now() })), null);
+        onlNotice(tr(d.already ? "Already in “{0}”" : "Added to “{0}”", onlListName(p)), "ok");
+        onlListsAgain();
+    });
+}
+function onlRemoveSongs(p, songs) {
+    const ids = songs.filter(Boolean).map(s => String(s.id));
+    if (!p || !ids.length) return;
+    onlEdit(`/ne/pl/del?pid=${encodeURIComponent(p.id)}&ids=${ids.join(",")}`, () => {
+        OV.hover = null;   // (the rows below move up)
+        onlSongsEdited(p.id, null, new Set(ids));
+        onlNotice(tr("Removed from “{0}”", onlListName(p)), "ok");
+        onlListsAgain();
+    });
+}
+// a name asked for (null: none given)
+function onlAskName(title, now = "") {
+    let name = "";
+    try { name = String(utils.InputBox(window.ID, tr("NetEase playlist name"), title, now, true) || "").trim(); } catch (e) { return null; }
+    return name || null;
+}
+// then(playlist): with the new list (e.g. a song put into it)
+function onlNewPlaylist(then) {
+    const name = onlAskName(tr("New NetEase playlist"));
+    if (!name) return;
+    onlEdit(`/ne/pl/create?name=${encodeURIComponent(name)}`, d => {
+        const p = d.playlist, all = ONL.by.ne.home && ONL.by.ne.home.playlists;
+        // (after the liked songs, as NetEase lists a new one)
+        if (p && Array.isArray(all) && !all.some(q => q.id === p.id)) all.splice(all.some(q => q.liked) ? 1 : 0, 0, p);
+        onlNotice(tr("Created “{0}”", name), "ok");
+        if (p && then) then(p); else onlListsAgain();
+    });
+}
+function onlRenamePlaylist(p) {
+    const name = onlAskName(tr("Rename NetEase playlist"), p.title);
+    if (!name || name === p.title) return;
+    onlEdit(`/ne/pl/rename?id=${encodeURIComponent(p.id)}&name=${encodeURIComponent(name)}`, () => {
+        const meta = onlListOf(p.id);
+        if (meta.id) meta.title = name;
+        if (OV.open && OV.open.id === p.id) OV.open.title = name;
+        const have = ONL.by.ne.lists.get(p.id);
+        if (have && typeof have === "object") have.title = name;
+        if (typeof onlaEdited === "function") onlaEdited("rename", p.id, { title: name });
+        onlNotice(tr("Renamed to “{0}”", name), "ok");
+    });
+}
+function onlDeletePlaylist(p) {
+    onlEdit(`/ne/pl/delete?id=${encodeURIComponent(p.id)}`, () => {
+        const all = ONL.by.ne.home && ONL.by.ne.home.playlists;
+        if (Array.isArray(all)) { const i = all.findIndex(q => q.id === p.id); if (i >= 0) all.splice(i, 1); }
+        ONL.by.ne.lists.delete(p.id);
+        if (OV.open && OV.open.id === p.id) { OV.open = null; OV.scroll = 0; }
+        if (typeof onlaEdited === "function") onlaEdited("delete", p.id, null);
+        onlNotice(tr("Deleted “{0}”", p.title), "ok");
+    });
+}
+// someone else's list collected into the account's playlists, or let go
+function onlCollectPlaylist(p, on) {
+    onlEdit(`/ne/pl/collect?id=${encodeURIComponent(p.id)}&on=${on ? 1 : 0}`, () => {
+        onlNotice(tr(on ? "Collected “{0}”" : "Removed “{0}” from your playlists", p.title), "ok");
+        onlListsAgain();
+    });
+}
 
 // ---- what was played lately and searched for, kept in data\recent.json ----
 // lists: the online (and imported) lists played, newest first { src, id, name, cover, count, pl (the foobar2000
@@ -324,8 +483,10 @@ const ONL_DOWNLOADS = new Map();   // file (lower case) -> its address
 function onlLoadCover(url, file) {
     d2d.LoadImageAsyncV2(0, file).then(img => { ONL.covers.set(url, img); onlRepaint(); }, () => {});
 }
-// foobar2000's on_download_file_done, forwarded by the panel; true when it was one of ours
+// foobar2000's on_download_file_done, forwarded by the panel; true when it was one of ours (the Archive's online covers
+// too, lib/onlarchive.js)
 function onlineDownloaded(path, ok) {
+    if (typeof onlaDownloaded === "function" && onlaDownloaded(path, ok)) return true;
     const url = ONL_DOWNLOADS.get(String(path).toLowerCase());
     if (!url) return false;
     ONL_DOWNLOADS.delete(String(path).toLowerCase());
@@ -335,7 +496,10 @@ function onlineDownloaded(path, ok) {
 
 // ---- playing: the songs as a foobar2000 playlist, "NetEase · <name>" / "QQ Music · <name>", started at song `at` ----
 const onlSongUrl = s => `http://127.0.0.1:${ONL.port}/${s.src || "ne"}/play/${s.id}?k=${onlKey()}`;
-function onlinePlay(name, songs, at = 0, meta = null) {
+// opt.recent false: not kept with the lists played lately (data\recent.json). The Archive's online cases play this way
+// (lib/onlarchive.js onlaPlay): they have no list of the service's to resume, and onlineResume could not start one.
+// opt.noplay: the playlist filled and made the active one, not played (the Archive's OPEN IN PLAYLIST).
+function onlinePlay(name, songs, at = 0, meta = null, opt = {}) {
     const list = songs.filter(onlPlayable);
     if (!list.length) return false;
     const start = Math.max(0, list.indexOf(songs[at])), src = list[0].src || ONL.src, title = `${ONL_SOURCES[src].list} · ${name}`;
@@ -348,12 +512,15 @@ function onlinePlay(name, songs, at = 0, meta = null) {
         lines.push(onlSongUrl(s));
     }
     utils.WriteTextFile(file, lines.join("\r\n") + "\r\n", false);
-    onlRemember({ src, id: meta ? meta.id : null, name, cover: (meta && meta.cover) || list[start].cover || "", count: list.length, pl: title, pos: start + 1, sid: String(list[start].id) });
-    const pl = plman.FindOrCreatePlaylist(title, true);
+    if (opt.recent !== false) onlRemember({ src, id: meta ? meta.id : null, name, cover: (meta && meta.cover) || list[start].cover || "", count: list.length, pl: title, pos: start + 1, sid: String(list[start].id) });
+    const pl = plman.FindOrCreatePlaylist(title, true), gen = ++ONL.playGen;
     plman.ClearPlaylist(pl);
     plman.AddLocations(pl, [file], false);
-    // (added in the background: played once it is there)
+    if (opt.noplay) { plman.ActivePlaylist = pl; return true; }
+    // (added in the background: played once it is there. A list played since, into the same playlist or another, is
+    // the one that plays: the Archive plays album after album into one, faster than they are added.)
     const t0 = Date.now(), go = () => {
+        if (gen !== ONL.playGen) return;
         if (plman.PlaylistItemCount(pl) >= list.length) { plman.ActivePlaylist = pl; plman.ExecutePlaylistDefaultAction(pl, start); return; }
         if (Date.now() - t0 < 30000) window.SetTimeout(go, 100);
     };

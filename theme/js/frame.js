@@ -25,7 +25,7 @@ migrateLyricsSettings();   // a settings file from before the lyrics source / tr
 STATE.lyricsSource = pickLyricsSource(getSetting("lyricsSource", "auto"));
 STATE.lyricsTrans = pickLyricsTrans(getSetting("lyricsTrans", defaultLyricsTrans()));
 // the permission the AUTO fallback needs; migrateLyricsSettings() above carries it over from lyricsNetease
-STATE.lyricsNeteaseAuto = !!getSetting("lyricsNeteaseAuto", SYSTEM_LANG.startsWith("zh"));
+STATE.lyricsNeteaseAuto = !!getSetting("lyricsNeteaseAuto", zhReader());
 STATE.lyricsRoma = getSetting("lyricsRoma", false) === true;   // romanized lyrics (lib/roman.js)
 STATE.textScale = textScaleOf(getSetting("textScale", 1));
 STATE.arrayScale = pickScale(+getSetting("arrayScale", 1), ARRAY_SCALES);
@@ -74,13 +74,13 @@ const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, 
 function migrateLyricsSettings() {
     if (String(getSetting("lyricsSource", "") || "")) return;
     const online = getSetting("lyricsOnline", true) !== false, machine = !!getSetting("lyricsTranslate", false);
-    const community = !!getSetting("lyricsNetease", SYSTEM_LANG.startsWith("zh"));
-    const target = String(getSetting("lyricsTarget", SYSTEM_LANG) || SYSTEM_LANG);
+    const community = !!getSetting("lyricsNetease", zhReader());
+    const target = String(getSetting("lyricsTarget", defaultLyricsTarget()) || defaultLyricsTarget());
     const trans = target === "off" ? "off" : community ? (machine ? "auto" : "netease") : machine ? "machine" : "off";
     setSetting("lyricsSource", online ? "auto" : "local");
     setSetting("lyricsTrans", trans);
     setSetting("lyricsNeteaseAuto", community);   // what the old lyricsNetease allowed, for the AUTO fallback
-    if (target === "off") setSetting("lyricsTarget", SYSTEM_LANG);   // the target language no longer carries the "off"
+    if (target === "off") setSetting("lyricsTarget", defaultLyricsTarget());   // the target language no longer carries the "off"
     console.log(`audio-archive lyrics: migrated to source=${online ? "auto" : "local"}, trans=${trans}, neteaseAuto=${community}`);
 }
 

@@ -21,7 +21,9 @@ const OV_ST = {
     count: { size: 34, weight: 600, track: 0 },
     btn: { size: 9, weight: 600, track: .14 },
 };
-const OV = { section: "home", open: null, hover: null, scroll: 0, scrollMax: 0, tracks: null, nowRect: null, next: null, rail: 0, railMax: 0, mx: 0 };
+const OV = { section: "home", open: null, hover: null, scroll: 0, scrollMax: 0, tracks: null, nowRect: null, next: null, rail: 0, railMax: 0, mx: 0,
+             barTop: 0,    // where the middle column's scrolling part starts (the slide bar runs from there down)
+             drag: null }; // the slide bar's thumb being dragged: { grab, b }
 
 function onlineShown(on) {
     if (on && ONL.state === "") onlineStart();
@@ -54,6 +56,8 @@ function drawOnline(gr) {
     OV.nowRect = rw ? [W - m - rw, top + HAIR, rw, H - top - HAIR] : null;
     if (rw) drawOnlineNow(gr, W - m - rw, top + dp(24), rw);
     gr.PushClip(x0, top + HAIR, x1 - x0, H - top);
+    // (each page that scrolls sets these as it draws; the others have nothing to scroll)
+    OV.scrollMax = 0; OV.barTop = top + HAIR;
     if (ONL.state !== "ready") drawOnlineState(gr, x0, top + dp(24), x1);
     else if (OV.section === "import" && !OV.open) drawOnlineImport(gr, x0, top + dp(24), x1);
     else if (!ONL.me) drawOnlineLogin(gr, x0, top + dp(24), x1);
@@ -62,6 +66,7 @@ function drawOnline(gr) {
     else if (OV.section === "search" && ONL.search) drawOnlineSearch(gr, x0, top + dp(24), x1);
     else drawOnlineHome(gr, x0, top + dp(24), x1);
     gr.PopClip();
+    drawOnlineBar(gr, x1 + dp(16));
     // the message bar: what a click started (reading a list, playing it, nothing playable in it, it did not load)
     const n = onlNoticeOn();
     if (n) {
@@ -72,6 +77,30 @@ function drawOnline(gr) {
         label(gr, fitLabel(n.text, ts, tw), ts, bx + dp(34), by + Math.round((bh - labelHeight(OV_ST.rowB)) / 2));
     }
 }
+
+// The middle column's slide bar, in the gap right of it, while its page is longer than the window (a list of songs runs
+// to thousands): a thin track with a thumb that can be dragged, or a press on the track that jumps there (as the
+// Archive grid's, grid.js); it widens under the mouse and while dragged.
+function drawOnlineBar(gr, x) {
+    const max = OV.scrollMax, top = OV.barTop, th = H - dp(24) - top;
+    if (!(max > 0) || th < dp(60)) return;
+    const bh = Math.max(dp(24), th * th / (th + max)), by = top + (th - bh) * clamp(OV.scroll / max, 0, 1);
+    const hot = OV.drag || (OV.hover && OV.hover.id === "onl-bar"), tw = hot ? dp(6) : dp(3);
+    gr.FillSolidRect(x, top, HAIR, th, C["line-faint"]);
+    gr.FillSolidRect(Math.round(x + HAIR / 2 - tw / 2), Math.round(by), tw, Math.round(bh), OV.drag ? C.accent : C.fg);
+    hits.add("onl-bar", x - dp(10), top, dp(20), th, { top, th, bh, by, max });
+}
+function onlBarDown(y, a) {
+    const b = a.data, grab = y >= b.by && y <= b.by + b.bh ? y - b.by : b.bh / 2;
+    OV.drag = { grab, b };
+    onlBarMove(y);
+}
+function onlBarMove(y) {
+    const { grab, b } = OV.drag;
+    OV.scroll = Math.round(clamp((y - grab - b.top) / Math.max(1, b.th - b.bh), 0, 1) * b.max);
+    window.Repaint();
+}
+function onlBarUp() { OV.drag = null; window.Repaint(); }
 
 // ---- left: the sources and the sections ----
 function drawOnlineRail(gr, x, y, w) {
@@ -295,7 +324,7 @@ function drawOnlineHome(gr, x, y, x1) {
         const tW = label(gr, t, tst, nx, mid);
         if (avail - tW > dp(30)) label(gr, fitLabel(who, ast, avail - tW), ast, nx + tW, mid);
         hline(gr, lx - dp(6), ry + rh - HAIR, lw + dp(6), C.hair);
-        if (can) hits.add("onl-day", lx - dp(6), ry, lw + dp(6), rh, i);
+        hits.add("onl-day", lx - dp(6), ry, lw + dp(6), rh, i);   // (one that cannot be played: for its right-click menu)
     });
     const by = y + dh - dp(46);
     if (playable) {
@@ -405,6 +434,7 @@ function drawOnlineAll(gr, x, y, x1) {
     const rows = Math.ceil(list.length / n);
     OV.scrollMax = Math.max(0, rows * rh - (H - y - dp(24)));
     OV.scroll = clamp(OV.scroll, 0, OV.scrollMax);
+    OV.barTop = y;
     const first = Math.floor(OV.scroll / rh);
     for (let r = first; r < rows && r * rh - OV.scroll < H - y; r++)
         for (let c = 0; c < n && r * n + c < list.length; c++) drawOnlineTile(gr, list[r * n + c], "onl-pl", x + c * (tw + dp(16)), y + r * rh - OV.scroll, tw);
@@ -455,6 +485,7 @@ function drawOnlineTracks(gr, tracks, name, lx, y, x1) {
     const rh = dp(30), top = ty + HAIR;
     OV.scrollMax = Math.max(0, tracks.length * rh - (H - top - dp(24)));
     OV.scroll = clamp(OV.scroll, 0, OV.scrollMax);
+    OV.barTop = top;
     gr.PushClip(lx, top, lw, H - top);
     const playing = onlineSongOf(fb.GetNowPlaying());
     for (let i = Math.floor(OV.scroll / rh); i < tracks.length; i++) {
@@ -472,7 +503,7 @@ function drawOnlineTracks(gr, tracks, name, lx, y, x1) {
         const tag = s.ok === false ? tr("LOCKED") : s.vip && !onlVip(s) ? tr("VIP · TRIAL") : "";
         if (tag) label(gr, tag, st(OV_ST.tiny, C["text-muted"], tb), lx + lw - dp(90), mid + dp(1));
         hline(gr, lx, ry + rh - HAIR, lw, C["line-faint"]);
-        if (can) hits.add("onl-track", lx, Math.max(top, ry), lw, rh, i);
+        hits.add("onl-track", lx, Math.max(top, ry), lw, rh, i);   // (one that cannot be played: for its right-click menu)
     }
     gr.PopClip();
 }
@@ -594,7 +625,7 @@ function drawOnlineNow(gr, x, y, w) {
         const o = onlineSongOf(n);
         if (o && o.cover) drawCover(gr, o.cover, x, y, dp(32)); else gr.FillSolidRect(x, y, dp(32), dp(32), C.case);
         const nt = o && o.title ? o.title : fb.TitleFormat("%title%").EvalWithMetadb(n), na = o && o.artists ? o.artists.join(" / ") : fb.TitleFormat("%artist%").EvalWithMetadb(n);
-        const sec = o && o.ms ? Math.round(o.ms / 1000) : Math.round(n.Length || 0), d = `${Math.floor(sec / 60)}:${pad(sec % 60, 2)}`, dw = labelWidth(d, ts) + dp(8);
+        const sec = o && o.ms ? Math.round(o.ms / 1000) : Math.round(parseFloat(fb.TitleFormat("[%length_seconds_fp%]").EvalWithMetadb(n)) || 0), d = `${Math.floor(sec / 60)}:${pad(sec % 60, 2)}`, dw = labelWidth(d, ts) + dp(8);
         label(gr, fitLabel(nt, st(OV_ST.row, C.fg), w - dp(42) - dw), st(OV_ST.row, C.fg), x + dp(42), y + dp(2));
         label(gr, fitLabel(na, ts, w - dp(42) - dw), ts, x + dp(42), y + dp(19));
         label(gr, d, ts, x + w, y + dp(4), 2);
@@ -620,12 +651,16 @@ function onlNextItems(loc) {
 function onlineMouseMove(a, x) {
     if (x !== undefined) OV.mx = x;
     const h = a && a.id.startsWith("onl-") ? { id: a.id, data: a.data } : null;
-    if ((h && h.id) !== (OV.hover && OV.hover.id) || (h && h.data) !== (OV.hover && OV.hover.data)) { OV.hover = h; window.Repaint(); }
+    // (the slide bar's data is its geometry, made anew with each paint: the same bar all the same)
+    const same = (h && h.id) === (OV.hover && OV.hover.id) && (!h || h.id === "onl-bar" || h.data === OV.hover.data);
+    if (!same) { OV.hover = h; window.Repaint(); }
     return !!h;
 }
 function onlineClick(a) {
     if (!a) return;
-    if (OV.section === "search" && ONL.search && !OV.open && (a.id === "onl-track" || a.id === "onl-pl")) onlRememberSearch(ONL.search.q);
+    // (a search used: a list opened, a song played; a row that cannot be played is not)
+    const used = a.id === "onl-pl" || (a.id === "onl-track" && OV.tracks && onlPlayable(OV.tracks.list[a.data]));
+    if (OV.section === "search" && ONL.search && !OV.open && used) onlRememberSearch(ONL.search.q);
     if (a.id === "onl-install") { onlineInstall(); return; }
     if (a.id === "onl-qr") { onlineQr(); return; }
     if (a.id === "onl-chan") { onlineQr(a.data); window.Repaint(); return; }
@@ -659,13 +694,69 @@ function onlineClick(a) {
         for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
         onlinePlay(tr("Daily"), d, 0, ONL_DAILY()); return;
     }
-    if (a.id === "onl-day") { onlinePlay(tr("Daily"), ONL.home.daily, a.data, ONL_DAILY()); return; }
+    if (a.id === "onl-day") { if (onlPlayable(ONL.home.daily[a.data])) onlinePlay(tr("Daily"), ONL.home.daily, a.data, ONL_DAILY()); return; }
     if (a.id === "onl-daily-all") { OV.open = ONL_DAILY(); OV.scroll = 0; window.Repaint(); return; }
     if (a.id === "onl-recent") { onlineResume(onlRecentShown()[a.data]); return; }
     if (a.id === "onl-q") { send("online-search-set", a.data); onlineSearch(a.data); return; }
     if (a.id === "onl-plplay") { onlinePlayList(onlPlaylistMeta(a.data)); return; }
     if (a.id === "onl-play" && a.data === "open") { const pl = onlineList(OV.open.id); if (pl && pl !== "failed") onlinePlay(OV.open.title, pl.tracks, 0, OV.open); return; }
-    if (a.id === "onl-track" && OV.tracks) { onlinePlay(OV.tracks.name, OV.tracks.list, a.data, OV.open); return; }
+    // (every row is there for the right-click menu; one this account cannot play is not played)
+    if (a.id === "onl-track" && OV.tracks) { if (onlPlayable(OV.tracks.list[a.data])) onlinePlay(OV.tracks.name, OV.tracks.list, a.data, OV.open); return; }
+}
+// The right-click menus (NetEase, logged in: QQ Music's lists are only read here), so the account's lists can be kept
+// in order without NetEase's app:
+//   a song (a list's, a search's, the day's)   Add to playlist › (the liked songs, the account's own lists, a new
+//                                              one) · Remove from “<the list open>” (one of the account's own)
+//   a playlist (a tile, the list open)          Rename… · Delete › (asked twice) for one the account made; Collect /
+//                                              Remove from my playlists for someone else's
+//   anywhere                                    New playlist…
+// Returns false where it has nothing to offer (JSplitter's own menu then).
+function onlineMenu(x, y, a) {
+    if (ONL.src !== "ne" || !ONL.me || ONL.state !== "ready") return false;
+    const song = a && a.id === "onl-track" && OV.tracks ? OV.tracks.list[a.data] : a && a.id === "onl-day" && ONL.home && ONL.home.daily ? ONL.home.daily[a.data] : null;
+    // (a list opened from elsewhere, OPEN ONLINE among the imports, is known only as it was opened)
+    const metaOf = id => { const p = onlPlaylistMeta(id); return p.title || !OV.open || OV.open.id !== id ? p : Object.assign({}, OV.open, p, { title: OV.open.title }); };
+    const list = a && (a.id === "onl-pl" || a.id === "onl-plplay") ? metaOf(a.data) : !song && OV.open && OV.open.id !== "daily" ? metaOf(OV.open.id) : null;
+    const m = window.CreatePopupMenu(), own = onlOwnLists(), esc = t => String(t || "").replace(/&/g, "&&");
+    const open = OV.open && OV.open.id !== "daily" && song && a.id === "onl-track" ? metaOf(OV.open.id) : null;
+    // (whose a list is: the bridge says so of every list it hands out; the account's lists, read with the home, too)
+    const isMine = p => !!p.own || onlIsOwn(p.id), isLiked = p => !!p.liked || !!onlListOf(p.id).liked;
+    let add = null;
+    if (song) {
+        // (the list open greyed: the song is in it)
+        add = window.CreatePopupMenu();
+        own.forEach((p, i) => add.AppendMenuItem(open && open.id === p.id ? 1 : 0, 100 + i, `${esc(p.liked ? tr("Liked songs") : p.title)}\t${p.count}`));
+        if (own.length) add.AppendMenuSeparator();
+        add.AppendMenuItem(0, 99, tr("New NetEase playlist…"));
+        add.AppendTo(m, 0, tr("Add to playlist"));
+        if (open && isMine(open)) m.AppendMenuItem(0, 20, tr("Remove from “{0}”", esc(isLiked(open) ? tr("Liked songs") : open.title)));
+        m.AppendMenuSeparator();
+    }
+    let del = null;
+    if (list && list.id) {
+        // (collected or not is known only once the account's lists are here)
+        const mine = isMine(list), known = onlLists().length > 0, kept = !mine && onlInMine(list.id);
+        if (mine && !isLiked(list)) {
+            m.AppendMenuItem(0, 30, tr("Rename playlist…"));
+            del = window.CreatePopupMenu();
+            del.AppendMenuItem(0, 31, tr("Delete “{0}” from NetEase (cannot be undone)", esc(list.title)));
+            del.AppendTo(m, 0, tr("Delete playlist"));
+            m.AppendMenuSeparator();
+        } else if (!mine && known) {
+            m.AppendMenuItem(0, kept ? 33 : 32, tr(kept ? "Remove from my playlists" : "Collect into my playlists"));
+            m.AppendMenuSeparator();
+        }
+    }
+    m.AppendMenuItem(0, 40, tr("New NetEase playlist…"));
+    const id = m.TrackPopupMenu(x, y);
+    if (id >= 100 && own[id - 100]) onlAddSongs(own[id - 100], [song]);
+    else if (id === 99) onlNewPlaylist(p => onlAddSongs(p, [song]));
+    else if (id === 20) onlRemoveSongs(open, [song]);
+    else if (id === 30) onlRenamePlaylist(list);
+    else if (id === 31) onlDeletePlaylist(list);
+    else if (id === 32 || id === 33) onlCollectPlaylist(list, id === 32);
+    else if (id === 40) onlNewPlaylist();
+    return true;
 }
 function onlineWheel(step) {
     if (OV.railMax > 0 && OV.mx < dp(32) + dp(220) + dp(16)) { OV.rail = clamp(OV.rail - step * dp(60), 0, OV.railMax); window.Repaint(); return; }

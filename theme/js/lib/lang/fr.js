@@ -368,7 +368,7 @@ I18N["fr"] = {
     "Play playlist": "Lire la playlist", "THEME": "THÈME",
     // archive: group by artist or rating, sort by rating, one shelf per artist or folder
     "INITIAL": "INITIALE", "Group by artist": "Grouper par artiste", "Group by rating": "Grouper par note", "RATING {0}": "NOTE {0}",
-    "Rating (highest first)": "Note (la plus haute d'abord)", "One shelf per artist or folder": "Une étagère par artiste ou par dossier",
+    "Rating (highest first)": "Note (la plus haute d'abord)", "One shelf per artist, folder or playlist": "Une étagère par artiste, dossier ou playlist",
     // signal: what shows under the ring and along the bottom (PANELS)
     "PANELS": "PANNEAUX", "Under the ring": "Sous l’anneau", "Along the bottom": "En bas", "Spectrum": "Spectre", "Lyrics": "Paroles", "Level meters": "Vumètres", "Stereo scope": "Goniomètre stéréo",
     "Signal trace": "Tracé du signal", "Level history": "Historique du niveau", "LEVEL HISTORY  ·  60 S": "HISTORIQUE DU NIVEAU  ·  60 S", "CORR": "CORR", "BALANCE": "BALANCE", "MONO": "MONO", "For the 3D and 2D models": "Pour les modèles 3D et 2D",
@@ -379,4 +379,16 @@ I18N["fr"] = {
     "Frosted cream polymer, lit from the floor below": "Polymère crème dépoli, éclairé par le sol", "Jade glass, lit from the floor below": "Verre de jade, éclairé par le sol",
     "Matte white cases under lights of their own: pick one under ROOM LIGHT": "Boîtiers blanc mat avec leurs propres lumières : choisissez-en une sous LUMIÈRE", "Black cases under lights of their own: pick one under ROOM LIGHT": "Boîtiers noirs avec leurs propres lumières : choisissez-en une sous LUMIÈRE",
     "RHINE LAB's own cases, each with its paper label": "Les boîtiers propres à RHINE LAB, chacun avec son étiquette papier", "There is no light to pick for this case.": "Aucune lumière à choisir pour ce boîtier.",
+    // NetEase playlists in the Archive (GROUP › ONLINE, lib/onlarchive.js)
+    "UNKNOWN ALBUM": "ALBUM INCONNU",
+    "PLAYLIST": "PLAYLIST", "Group by online playlist (NetEase)": "Grouper par playlist en ligne (NetEase)",
+    "ONLINE · INSTALL THE BRIDGE IN 05 ONLINE": "EN LIGNE · INSTALLEZ LA PASSERELLE DANS 05 EN LIGNE",
+    "ONLINE · LOG IN TO NETEASE IN 05 ONLINE": "EN LIGNE · CONNECTEZ-VOUS À NETEASE DANS 05 EN LIGNE",
+    "ONLINE · READING PLAYLISTS …": "EN LIGNE · LECTURE DES PLAYLISTS …", "ONLINE · NO PLAYLISTS CHOSEN (RIGHT-CLICK)": "EN LIGNE · AUCUNE PLAYLIST CHOISIE (CLIC DROIT)",
+    "ONLINE · THE BRIDGE IS NOT ANSWERING": "EN LIGNE · LA PASSERELLE NE RÉPOND PAS", "ONLINE · NETEASE IS BUSY · TRYING AGAIN LATER": "EN LIGNE · NETEASE EST SATURÉ · NOUVEL ESSAI PLUS TARD",
+    "ONLINE · THE PLAYLISTS CHOSEN ARE EMPTY": "EN LIGNE · LES PLAYLISTS CHOISIES SONT VIDES",
+    "SOURCE · NETEASE · {0}": "SOURCE · NETEASE · {0}", "OFFLINE COPY": "COPIE HORS LIGNE",
+    "PLAY PLAYLIST": "LIRE LA PLAYLIST", "Open in playlist": "Ouvrir dans une playlist",
+    "Online playlists in the Archive": "Playlists en ligne dans les Archives", "Use my created playlists and liked songs": "Utiliser mes playlists créées et mes titres aimés", "Refresh online playlists": "Actualiser les playlists en ligne",
+    "Liked songs": "Titres aimés", "New NetEase playlist…": "Nouvelle playlist NetEase…", "Add to playlist": "Ajouter à une playlist", "Remove from “{0}”": "Retirer de « {0} »", "Rename playlist…": "Renommer la playlist…", "Delete playlist": "Supprimer la playlist", "Delete “{0}” from NetEase (cannot be undone)": "Supprimer « {0} » de NetEase (irréversible)", "Remove from my playlists": "Retirer de mes playlists", "Collect into my playlists": "Ajouter à mes playlists", "Working…": "En cours…", "Restart foobar2000 to edit NetEase playlists (the bridge running is from before this update).": "Redémarrez foobar2000 pour modifier les playlists NetEase (le pont lancé date d’avant cette mise à jour).", "NetEase did not do it: {0}": "NetEase ne l’a pas fait : {0}", "the bridge did not answer": "le pont n’a pas répondu", "Already in “{0}”": "Déjà dans « {0} »", "Added to “{0}”": "Ajouté à « {0} »", "Removed from “{0}”": "Retiré de « {0} »", "NetEase playlist name": "Nom de la playlist NetEase", "New NetEase playlist": "Nouvelle playlist NetEase", "Created “{0}”": "« {0} » créée", "Rename NetEase playlist": "Renommer la playlist NetEase", "Renamed to “{0}”": "Renommée en « {0} »", "Deleted “{0}”": "« {0} » supprimée", "Collected “{0}”": "« {0} » ajoutée", "Removed “{0}” from your playlists": "« {0} » retirée de vos playlists",
 };

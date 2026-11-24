@@ -13,7 +13,7 @@ function fnv(str) {
     return h.toString(16).padStart(8, "0");
 }
 
-function waveKey(handle) { return fnv(`${handle.Path}|${handle.SubSong}|${handle.FileSize}|${handle.Length.toFixed(2)}`); }
+function waveKey(handle) { return fnv(`${handle.Path}|${handle.SubSong}|${handle.FileSize}|${hLength(handle).toFixed(2)}`); }
 
 // starts loading the waveform of `handle`; onUpdate() is called as values arrive
 function waveLoad(handle, onUpdate) {
@@ -28,7 +28,7 @@ function waveLoad(handle, onUpdate) {
             if (Array.isArray(arr) && arr.length === WAVE_POINTS) { Wave.peaks = Float32Array.from(arr, v => v / 1000); Wave.loaded = WAVE_POINTS; onUpdate(); return; }
         } catch (e) { /* decode again */ }
     }
-    if (!handle.Length || handle.Length <= 0) return;   // streams have no whole-track waveform
+    if (!(hLength(handle) > 0) || /^https?:/i.test(handle.RawPath)) return;   // streams have no whole-track waveform
     Wave.peaks = new Float32Array(WAVE_POINTS);
     utils.GetWaveformAsync(handle, WAVE_POINTS, 0, 0, (values, start) => {
         if (id !== Wave.request) return false;   // another track started: cancel this decode
