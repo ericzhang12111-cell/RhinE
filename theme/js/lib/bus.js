@@ -13,7 +13,8 @@ const STATE = { view: "playlists", preset: "album", reduce: false, boot: true, s
                 textScale: 1, arrayScale: 1, inspectScale: 1.3, wallpaper: null, halftone: "bottom", halftoneLevel: "mid",
                 emblem: "ring", tag: "plastic", tagShape: "tab", tagColours: "scheme", tagCustom: null, tagOpacity: 50, tagBody: "solid", tagFactory: null, font: "geist",
                 sides: null, modeSystem: false, borderless: false, roomMat: "cream", roomLight: {},
-                mini: false, miniCorner: "br", miniShow: "lrc", miniSkin: "dark", miniShape: "wide" };   // the mini player (mini.js): on, its screen corner, LRC | TRK, colours, shape
+                mini: false, miniCorner: "br", miniShow: "lrc", miniSkin: "dark", miniShape: "wide",   // the mini player (mini.js): on, its screen corner, LRC | TRK, colours, shape
+                pack: null };   // the character pack in use (lib/pack.js), null for none
 
 // the mini player's shapes and their size in dp (mini.js draws them, frame.js and tools/window.ps1 size the window to
 // them), and its colours (MENU › Audio Archive › Mini player, and its own right-click menu)
@@ -71,13 +72,19 @@ const lyrFixed = () => STATE.lyricsSource === "lrclib" || STATE.lyricsSource ===
 // permission, on by default for a Chinese reader (zhReader: the theme or Windows in Chinese), off elsewhere, so AUTO
 // does not start contacting NetEase for everyone.
 const lyrNetease = () => STATE.lyricsSource === "netease" || (STATE.lyricsSource === "auto" && !!STATE.lyricsNeteaseAuto);
-// the header's emblem (06 STYLE, lib/emblem.js): the Möbius ring or nested triangles
-const EMBLEMS = [["ring", "RING"], ["delta", "DELTA"]];
+// the header's emblem (06 STYLE, lib/emblem.js): the Möbius ring, nested triangles or a waffle
+const EMBLEMS = [["ring", "RING"], ["delta", "DELTA"], ["waffle", "WAFFLE"]];
 const pickEmblem = v => EMBLEMS.some(f => f[0] === v) ? v : "ring";
 // the Archive room's cases (06 STYLE › ARCHIVE › ROOM; room.js): cream polymer, jade glass, white or blackout, or the
 // RhinE Lab original's own case (with the camera and light of its own room)
 const ROOM_MATS = [["cream", "FROST"], ["glass", "GLASS"], ["white", "WHITE"], ["blackout", "BLACKOUT"], ["rhine", "RHINE LAB"]];
-const pickRoomMat = v => ROOM_MATS.some(f => f[0] === v) ? v : "cream";
+// a character pack's own room case (pack.json "room": { id, name, dir }; its sets in <pack>\<dir>\<id>\<mode>\,
+// lib/pack.js, room.js roomRootOf), listed after the theme's while the pack is on
+const packRoom = () => { const r = typeof packPart === "function" && STATE.pack ? packPart("room") : null; return r && typeof r === "object" && r.id ? r : null; };
+const roomMats = () => { const r = packRoom(); return r ? ROOM_MATS.concat([[String(r.id), String(r.name || r.id).toUpperCase()]]) : ROOM_MATS; };
+// (any installed pack's room is accepted: the setting is read before the pack in use is known; room.js falls back to
+// the cream room when the pack is not on)
+const pickRoomMat = v => ROOM_MATS.some(f => f[0] === v) || (typeof listPacks === "function" && listPacks().some(p => p.room && p.room.id === v)) ? v : "cream";
 // the opaque ones are lit by lights of their own (cream and jade glow from the floor below), one of these each
 // (STATE.roomLight: material -> its light; the first when none was picked); their assets are room/<material>-<light>/
 const ROOM_LIGHTS = { white: [["l2", "TOP LIGHT"], ["l3", "BACKLIGHT"], ["l5", "TWO-TONE"]],

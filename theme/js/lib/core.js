@@ -11,4 +11,4 @@
 //   report  the error log and problem reports (MENU › Audio Archive › Report a problem)
 
 // report first: it wraps the timers before any other file makes one (lib/report.js)
-for (const f of ["report", "settings", "i18n", "custom", "tokens", "motion", "text", "draw", "bus", "rating", "favourite", "skins", "grain", "wallpaper", "tag", "field"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
+for (const f of ["report", "settings", "i18n", "custom", "tokens", "motion", "text", "draw", "bus", "rating", "favourite", "pack", "skins", "grain", "wallpaper", "tag", "field"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);

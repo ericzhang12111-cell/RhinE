@@ -43,8 +43,8 @@ are fetched online when your files have none.
 - **Playlists:** a playlist manager, a track rail, the native playlist in two presets and a profile card with the queue.
 - **Lyrics:** synced lyrics from your files, LRCLIB or NetEase Cloud Music, with an optional translation and romanization.
 - **Signal:** a rendered ∞ ring, a spectrum and the whole-track waveform, or a classic player screen.
-- **Style:** eleven case skins and eight colour schemes in light and dark, your own case and scheme, a wallpaper,
-  title tags, three fonts.
+- **Style:** eleven case skins and nine colour schemes in light and dark, your own case and scheme, a wallpaper,
+  title tags, three fonts, and character packs to download (fan-made looks around one character).
 - English, Simplified and Traditional Chinese, Japanese, Korean, French and German. The theme updates itself.
 
 ## Requirements
@@ -65,7 +65,7 @@ The theme is MIT-licensed ([LICENSE](LICENSE)). [Geist Mono](https://github.com/
 [Oxanium](https://github.com/sevmeyer/oxanium) and [Chakra Petch](https://github.com/m4rc1e/Chakra-Petch) are under the
 SIL Open Font License 1.1. Built on [foobar2000](https://www.foobar2000.org),
 [Columns UI](https://github.com/reupen/columns_ui) and [JSplitter](https://github.com/dima-lur/jsplitter); online
-lyrics from [LRCLIB](https://lrclib.net); artist files from MusicBrainz, Wikipedia and ListenBrainz. The 3D art was rendered in [Blender](https://www.blender.org). Full credits:
+lyrics from [LRCLIB](https://lrclib.net); artist files from MusicBrainz, Wikipedia and ListenBrainz. The 3D art was rendered in [Blender](https://www.blender.org). The character pack SWEETPIE (a separate download) uses material from [*Arknights: Endfield*](https://endfield.gryphline.com/) (明日方舟：终末地) by [Hypergryph](https://www.hypergryph.com/) (鹰角网络), as a free fan work. Full credits:
 [GUIDE.md](GUIDE.md#credits-and-licence).
 
 #### Special Thanks

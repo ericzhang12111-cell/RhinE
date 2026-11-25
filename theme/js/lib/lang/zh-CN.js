@@ -365,7 +365,7 @@ I18N["zh-CN"] = {
     // playlists: play on double-click, the theme's own playlists tagged
     "Play playlist": "播放此列表", "THEME": "主题",
     // archive: group by artist or rating, sort by rating, one shelf per artist or folder
-    "INITIAL": "首字母", "Group by artist": "按艺人分组", "Group by rating": "按评分分组", "RATING {0}": "评分 {0}",
+    "INITIAL": "首字母", "Group by artist": "按艺人分组", "Group by rating": "按评分分组", "RATING {0}": "评分 {0}", "RATING {0} – {1}": "评分 {0} – {1}",
     "Rating (highest first)": "评分（最高在前）", "One shelf per artist, folder or playlist": "每位艺人、文件夹或歌单单独一排",
     // signal: what shows under the ring and along the bottom (PANELS)
     "PANELS": "面板", "Under the ring": "莫比乌斯环下方", "Along the bottom": "底部", "Spectrum": "频谱", "Lyrics": "歌词", "Level meters": "电平表", "Stereo scope": "立体声相位图",
@@ -389,4 +389,8 @@ I18N["zh-CN"] = {
     "PLAY PLAYLIST": "播放歌单", "Open in playlist": "在播放列表中打开",
     "Online playlists in the Archive": "曲库中显示的网易云歌单", "Use my created playlists and liked songs": "使用我创建的歌单和喜欢的音乐", "Refresh online playlists": "刷新网易云歌单",
     "Liked songs": "我喜欢的音乐", "New NetEase playlist…": "新建网易云歌单…", "Add to playlist": "加入歌单", "Remove from “{0}”": "从「{0}」中移除", "Rename playlist…": "重命名歌单…", "Delete playlist": "删除歌单", "Delete “{0}” from NetEase (cannot be undone)": "从网易云删除「{0}」（无法撤销）", "Remove from my playlists": "从我的歌单中移除", "Collect into my playlists": "收藏到我的歌单", "Working…": "处理中…", "Restart foobar2000 to edit NetEase playlists (the bridge running is from before this update).": "请重启 foobar2000 后再编辑网易云歌单（正在运行的本地服务还是更新前的版本）。", "NetEase did not do it: {0}": "网易云没有完成：{0}", "the bridge did not answer": "本地服务没有响应", "Already in “{0}”": "已在「{0}」中", "Added to “{0}”": "已加入「{0}」", "Removed from “{0}”": "已从「{0}」中移除", "NetEase playlist name": "网易云歌单名称", "New NetEase playlist": "新建网易云歌单", "Created “{0}”": "已创建「{0}」", "Rename NetEase playlist": "重命名网易云歌单", "Renamed to “{0}”": "已重命名为「{0}」", "Deleted “{0}”": "已删除「{0}」", "Collected “{0}”": "已收藏「{0}」", "Removed “{0}” from your playlists": "已将「{0}」从我的歌单中移除",
+    // character packs (lib/pack.js) and the SWEETPIE pack
+    "Fan-made looks built around one character: colours, case, icons, ring, wallpapers and more. Downloaded on request, kept apart from the theme.": "围绕一个角色制作的同人外观：配色、唱片盒、图标、可视化、壁纸等。按需下载，与主题本体分开。", "DOWNLOAD · {0}": "下载 · {0}", "FAILED · TRY AGAIN": "失败 · 点击重试", "INSTALLED": "已安装", "INSTALLING…": "正在安装…", "DOWNLOADING {0} %": "正在下载 {0}%", "DOWNLOADING…": "正在下载…",
+    "HONEY ENAMEL": "蜂蜜黄搪瓷", "Honey-yellow enamel on steel, screen-printed in black and cream, a cookie-dog head.": "钢板蜂蜜黄搪瓷，黑色与奶油色丝网印刷，一枚曲奇狗头。",
+    "CHARACTER PACKS": "角色包", "CHARACTER PACK": "角色包", "WAFFLE": "蜜饼", "Warm black and PVC white with honey yellow": "暖黑与 PVC 白，配蜂蜜黄", "WAFFLES": "蜜饼", "OPERATOR CHECK-IN": "干员签到", "BIOMETRIC LINK": "生物识别", "GEAR  ·  CLEAR SHELL": "装备 · 透明外套", "SUPPLY": "补给", "RECEIVED": "已签收", "SUGAR RESERVE": "糖分储备", "SUPPLY DROP": "补给投放", "INBOUND": "投放中", "ON DUTY": "执勤中", "CHECK-IN": "签到", "FIELD OPERATOR": "外勤干员", "ARRIVAL": "抵达", "INTAKE": "进食", "CALIBRATE": "校准",
 };

@@ -3,6 +3,27 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
+## 2.4.0 — 2026-11-25
+
+**Added · 新增**
+- Character packs: `06 STYLE` › `PRESETS` now starts with `CHARACTER PACKS`, fan-made looks built around one
+  character, downloaded on request and kept apart from the theme (a pack can be withdrawn without touching the
+  theme). A card reads `DOWNLOAD · size`; one click downloads that pack from the releases, checks its SHA-256,
+  installs it beside the theme (updates keep it) and applies it. Each pack names the source of its material, with
+  links. 角色包：`06 外观` › `预设` 最上面新增 `角色包`，是围绕一个角色制作的同人外观，按需下载，与主题本体分开（下架某个角色包不影响主题）。卡片上写着 `下载 · 大小`，点一下就从 Releases 下载这个包、用 SHA-256 校验、安装到主题旁边（更新主题不会删除）并直接应用。每个角色包都注明素材来源并附链接。
+- The first pack, SWEETPIE, for `小刻` of Arknights: Endfield: its own colour scheme, a black-and-honey-yellow case
+  with a waffle badge (in ARRAY, GRID and the ROOM), a honey enamel title tag, waffle and three-headed-dog icons
+  across the interface, a waffle emblem, the Signal ring as a turning waffle (in 2D and CLASSIC a dog chasing a
+  waffle), a dog dancing to the beat in place of the Lyrics spectrum, a picture for each view and side column, the
+  mini player in yellow, and an intro film of her arrival. Material from Hypergryph's Arknights: Endfield, used as a
+  free fan work. 第一个角色包 SWEETPIE，主题是《明日方舟：终末地》的小刻：专属配色，黑色和蜂蜜黄的唱片盒配蜜饼徽章（陈列、网格和展室都有），蜂蜜黄搪瓷标签，整套蜜饼和三头犬图标，蜜饼徽标，可视化的环换成旋转的蜜饼（2D 和经典模式里是小狗追蜜饼），歌词页左侧的频谱换成跟着节拍跳舞的小狗，每个视图和右侧栏都有自己的背景图，黄色的迷你播放器，以及她登场的开机动画。素材来自鹰角网络《明日方舟：终末地》，作为免费同人作品使用。
+
+**Fixed · 修复**
+- Sort by rating now follows the average shown in the album file (to one decimal): rounded to whole stars, albums
+  rated 4.2 and 4.4 tied and fell back to the artist order, which read as no order at all. Group by rating now
+  groups by the whole stars reached, named by their range (`RATING 4.0 – 4.9`, `RATING 5.0`), instead of rounding
+  (which put 1.5 – 2.4 under 2). 按评分排序现在按专辑资料中显示的平均分（保留一位小数）排列：以前四舍五入到整星，4.2 和 4.4 被当成同分，再按艺人排序，看起来像乱序。按评分分组现在按达到的整星数分组，并标出范围（`评分 4.0 – 4.9`、`评分 5.0`），不再四舍五入（以前 1.5 – 2.4 会被归为 2 星）。
+
 ## 2.3.0 — 2026-11-24
 
 **Added · 新增**

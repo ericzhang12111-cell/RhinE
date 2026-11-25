@@ -7,6 +7,8 @@
 // MODEL [3D | 2D | CLASSIC]: CLASSIC swaps the monitor for a familiar player screen set as a specimen plate
 // (drawClassic): the cover in a dial of progress and spectrum, title and time under it, the lyric on a caption plate.
 // Everything here is drawn every frame while music plays and not at all while paused, stopped or hidden.
+// A character pack (lib/pack.js) can bring its own ring (lib/ring.js; signalGeom gives it room by its shape) and a
+// honey spectrum strip (drawHoneyStrip); with none in use the view is exactly as above.
 
 const SG_ST = {
     head: { size: 9, weight: 600, track: .16 },
@@ -110,6 +112,18 @@ function signalGeom() {
     const traceW = Math.min(W - 2 * m - dp(80), dp(1100)), traceY = H - dp(64) - traceH;
     const ringW = Math.round(Math.min(dp(860), W - dp(240), (traceY - dp(150)) / .56));
     const ringY = Math.round(dp(40) + (traceY - dp(110)) * .46);
+    // a character pack's ring (lib/ring.js ringShape: { a: height / width }) is no 2:1 ∞: the factors above are the
+    // ∞'s height (.50 of its width) plus air, and its strip sits .36 of its width under its centre. Such a ring gets a
+    // width that fits its own height with more air (a tall shape nears the header), is kept clear of the header, and
+    // has the strip a fixed 72 dp under its foot (the cells and, in light mode, a floor shadow fit between); the strip
+    // keeps the ∞'s width.
+    const sh = ringShape();
+    if (sh) {
+        const a = clamp(sh.a, .2, 5);
+        const w = Math.max(dp(40), Math.round(Math.min(dp(560), W - dp(240), (traceY - dp(150)) / (a + .16))));
+        const y = Math.round(Math.max(ringY, dp(64) + a * w / 2));
+        return { m, cx, ringW: w, ringY: y, shape: { a }, specY: Math.round(y + a * w / 2 + dp(72)), specW: Math.round(ringW * .62), traceW, traceH, traceY };
+    }
     return { m, cx, ringW, ringY, specY: Math.round(ringY + ringW * .36), specW: Math.round(ringW * .62), traceW, traceH, traceY };
 }
 
@@ -120,10 +134,13 @@ function drawSignal(gr) {
     for (const [x, y] of [[dp(16), dp(16)], [W - dp(27), dp(16)], [dp(16), H - dp(27)], [W - dp(27), H - dp(27)]]) regCross(gr, x, y);
     // the ring's drawn box (ring.json bounds around its centre) plus a margin, down to below the strip under it (or the
     // ring, when there is none)
-    const b = RING_META.bounds, c = RING_META.center, s = g.ringW / (b[2] - b[0]);
-    const bx0 = Math.round(g.cx - g.ringW / 2 - dp(48)), bx1 = Math.round(g.cx + g.ringW / 2 + dp(48));
-    const by0 = Math.round(g.ringY - (c[1] - b[1]) * s + dp(8)), L = dp(18);
-    const by1 = Math.round(SIG.strip === "off" ? g.ringY + (b[3] - c[1]) * s + dp(24) : g.specY + dp(24));
+    // (a pack's ring: its box centred on ringY, a * ringW tall, and wide enough for the strip under it)
+    const b = RING_META.bounds, c = RING_META.center, s = g.ringW / (b[2] - b[0]), sh = g.shape, L = dp(18);
+    const half = sh ? Math.max(g.ringW, g.specW) / 2 : g.ringW / 2;
+    const bx0 = Math.round(g.cx - half - dp(48)), bx1 = Math.round(g.cx + half + dp(48));
+    const top = sh ? sh.a * g.ringW / 2 : (c[1] - b[1]) * s, bottom = sh ? sh.a * g.ringW / 2 : (b[3] - c[1]) * s;
+    const by0 = Math.round(g.ringY - top + (sh ? -dp(12) : dp(8)));
+    const by1 = Math.round(SIG.strip === "off" ? g.ringY + bottom + dp(24) : g.specY + dp(24));
     for (const [x, y, sx, sy] of [[bx0, by0, 1, 1], [bx1, by0, -1, 1], [bx0, by1, 1, -1], [bx1, by1, -1, -1]]) {
         gr.FillSolidRect(Math.round(sx > 0 ? x : x - L), Math.round(y), L, HAIR, C["line-dim"]);
         gr.FillSolidRect(Math.round(x), Math.round(sy > 0 ? y : y - L), HAIR, L, C["line-dim"]);
@@ -149,6 +166,7 @@ function drawSignal(gr) {
 
 // spectrum strip: 48 bands mirrored about a hairline, low frequencies in the middle
 function drawSpecStrip(gr, g, playing) {
+    if (STATE.pack && packPart("strip") === "honey") { drawHoneyStrip(gr, g, playing); return; }
     const n = 48, half = g.specW / 2, step = half / (n / 2), bw = Math.max(HAIR, Math.round(step * .55)), hmax = dp(26);
     gr.FillSolidRect(g.cx - half, g.specY, g.specW, HAIR, withAlpha(C["line-dim"], .7));
     if (playing) for (let i = 0; i < n / 2; i++) {
@@ -157,6 +175,44 @@ function drawSpecStrip(gr, g, playing) {
             const x = Math.round(g.cx + sx * (i + .5) * step - bw / 2);
             gr.FillSolidRect(x, g.specY - h, bw, h, col);
             gr.FillSolidRect(x, g.specY + HAIR, bw, Math.round(h * .45), withAlpha(col, .35));
+        }
+    }
+}
+
+// a character pack's honey strip (pack.json strip "honey"): the same 24 + 24 mirrored bands, each a stack of small
+// rounded waffle cells that fill with honey from the bottom (the top one partly, with a glint on the surface); the
+// empty cells stay as a faint grid, also while nothing plays. Under the hairline a loud band drips a little honey.
+function drawHoneyStrip(gr, g, playing) {
+    const n = 48, half = g.specW / 2, step = half / (n / 2), cs = Math.max(dp(3), Math.round(step * .7));
+    const gp = Math.max(HAIR, Math.round(cs * .22)), pitch = cs + gp, rows = clamp(Math.round(dp(32) / pitch), 3, 6);
+    const ch = Math.max(1, cs * .16), empty = withAlpha(C["line-dim"], .35), glint = withAlpha(0xFFF6E0, .55);
+    // a cell's outline (a square with cut corners), its top cut at `cut` (the honey's level)
+    const cell = (x, y, cut, col) => {
+        const P = [x + ch, y, x + cs - ch, y, x + cs, y + ch, x + cs, y + cs - ch, x + cs - ch, y + cs, x + ch, y + cs, x, y + cs - ch, x, y + ch];
+        if (cut > y) for (let k = 1; k < P.length; k += 2) P[k] = Math.max(P[k], cut);
+        gr.FillPolygon(col, 0, P);
+    };
+    gr.FillSolidRect(g.cx - half, g.specY, g.specW, HAIR, withAlpha(C["line-dim"], .7));
+    for (let i = 0; i < n / 2; i++) {
+        const v = playing ? clamp(AUDIO.bands[i * 2] || 0, 0, 1) : 0, lvl = v * rows, honey = withAlpha(C.accent, .5 + .5 * v);
+        for (const sx of [-1, 1]) {
+            const x = Math.round(g.cx + sx * (i + .5) * step - cs / 2);
+            for (let r = 0; r < rows; r++) {
+                const y = g.specY - (r + 1) * pitch, fill = clamp(lvl - r, 0, 1);
+                if (fill < 1) cell(x, y, 0, empty);
+                if (fill > .04) {
+                    const cut = y + cs * (1 - fill);
+                    cell(x, y, fill < 1 ? cut : 0, honey);
+                    if (fill < 1 && fill > .2) gr.FillSolidRect(x + ch, Math.round(cut), cs - 2 * ch, HAIR, glint);
+                }
+            }
+            // the drip under the hairline: a thread with a bead, for the bands above half
+            if (v > .7) {
+                const len = Math.round((v - .7) / .3 * dp(9)), tw = Math.max(HAIR, Math.round(cs * .22)), br = Math.max(1, cs * .22);
+                const dx = x + cs / 2, col = withAlpha(C.accent, .55);
+                gr.FillSolidRect(Math.round(dx - tw / 2), g.specY + HAIR, tw, len, col);
+                gr.FillEllipse(dx - br, g.specY + HAIR + len - br, 2 * br, 2 * br, col);
+            }
         }
     }
 }
@@ -497,8 +553,10 @@ function drawClassic(gr) {
         const a = A0 + f * TAU, tx = cx + Math.cos(a) * R, ty = cy + Math.sin(a) * R;
         tt(len > 0 && playing ? fmtTime(len * f) : "--:--", CL_ST.tiny, muted, tx + (q === 1 ? -dp(10) : q === 3 ? dp(10) : 0), ty - qh / 2, q === 1 ? 0 : q === 3 ? 2 : 1);
     });
-    // the playhead: an orange needle across track and spectrum, a square on the track
-    if (playing) {
+    // the playhead: an orange needle across track and spectrum, a square on the track (a pack's chase instead: its
+    // waffle at the playhead on the track and the dogs running after it, lib/ring.js ringChaseRound)
+    const chased = playing && !!STATE.pack && ringChaseRound(gr, cx, cy, r0, aP, clamp(s * .17, dp(44), dp(96)));
+    if (playing && !chased) {
         const c = Math.cos(aP), sn = Math.sin(aP);
         gr.DrawLine(cx + c * (r0 - dp(10)), cy + sn * (r0 - dp(10)), cx + c * (rs + maxL + dp(2)), cy + sn * (rs + maxL + dp(2)), HAIR, C.accent);
         gr.FillSolidRect(Math.round(cx + c * r0 - dp(3.5)), Math.round(cy + sn * r0 - dp(3.5)), dp(7), dp(7), C.accent);

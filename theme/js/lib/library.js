@@ -232,7 +232,8 @@ function groupName(g) {
     if (LIB.groupBy === "online") return onlaListTitle(g) || tr(g === "NETEASE" ? "NETEASE" : "UNKNOWN");
     if (LIB.groupBy === "folder") return String(g).split(" › ").pop() || tr("UNKNOWN");
     if (LIB.groupBy === "albumartist") return g || tr("UNKNOWN");
-    if (LIB.groupBy === "rating") return g === "NOT RATED" ? tr(g) : tr("RATING {0}", g);
+    // (a track's rating is whole stars; an album's or a folder's a mean, its group a range: 4.0 – 4.9, then 5.0)
+    if (LIB.groupBy === "rating") return g === "NOT RATED" ? tr(g) : g === "5" || itemUnit() === "tracks" ? tr("RATING {0}", g === "5" && itemUnit() !== "tracks" ? "5.0" : g) : tr("RATING {0} – {1}", g + ".0", g + ".9");
     return /^\d{3}0S$/.test(g) ? tr("{0}S", g.slice(0, 4)) : tr(g);
 }
 function setGroupBy(by) {
@@ -285,7 +286,8 @@ function setSortBy(by) {
 // track order, so the tracks of one album stay together and in order wherever the key chosen does not set them apart
 // (a track's own artist or date would pull it away from the rest of its album: a guest artist, a track dated on its
 // own). Albums are their own album, so they sort as before. Artists go by their sort name (sortKey). RATING: the
-// highest first, the ones not rated last (a.rt, set by groupAlbums).
+// highest first, the ones not rated last (a.rt, set by groupAlbums: the mean to one decimal, as the album file shows
+// it; rounded to whole stars, 4.2 and 4.4 tied and fell back to the artist order, which read as no order at all).
 const lcs = s => String(s || "").toLowerCase();
 const strCmp = (x, y) => x < y ? -1 : x > y ? 1 : 0;
 function albumOrder(by) {
@@ -383,7 +385,8 @@ const filteredCount = () => LIB.groups.reduce((n, g) => n + g.albums.length, 0);
 // case first. By artist: one group per album artist (a track goes with its album), named as most of its albums spell
 // it, in sort-name order with Various Artists and the untagged last. By initial: the first letter of the artist's sort
 // name, accents set aside. By rating: 5 to 1, then the ones not rated; an album's rating is the mean of its rated
-// tracks', rounded. By online playlist (lib/onlarchive.js): the online cases instead of the library's, one group per
+// tracks' to one decimal (as its file shows it), its group the whole stars it reaches: 4.0 – 4.9 is RATING 4, only a
+// full 5.0 is RATING 5 (rounding put 1.5 – 2.4 under 2, which read as wrong). By online playlist (lib/onlarchive.js): the online cases instead of the library's, one group per
 // list in the account's order (its liked songs first), SHOW FOLDERS every list on the one NETEASE shelf; they have no
 // ratings or hearts of their own.
 function groupAlbums() {
@@ -394,7 +397,7 @@ function groupAlbums() {
     const inDir = a => dirFav && idx(a).length > 0 && isFavAlbum(folderKeyOf(libHandles[idx(a)[0]].Path));
     const inFav = a => (a.album ? !!fav[idx(a)[0]] || isFavAlbum(a.album) : isFavAlbum(a.key) || idx(a).some(i => fav[i])) || inDir(a);
     const R = !online && ratingsOn() ? libRatings() : null;
-    const rateOf = a => { let s = 0, n = 0; for (const i of idx(a)) if (R[i]) { s += R[i]; n++; } return n ? Math.round(s / n) : 0; };
+    const rateOf = a => { let s = 0, n = 0; for (const i of idx(a)) if (R[i]) { s += R[i]; n++; } return n ? Math.round(s / n * 10) / 10 : 0; };
     const unit = itemUnit();
     for (const a of online ? onlaCases(unit) : unit === "tracks" ? LIB.items : unit === "folders" ? LIB.folders : LIB.albums) {
         if (words) { const t = searchText(a); if (!words.every(w => t.includes(w))) continue; }
@@ -406,7 +409,7 @@ function groupAlbums() {
         else if (by === "artist") { const c = sortKey(a).replace(/^[^a-z0-9\u00c0-\uffff]+/, "").charAt(0).toUpperCase(); g = /[A-Z]/.test(c) ? c : /\d/.test(c) ? "0–9" : "OTHER"; }
         else if (by === "albumartist") { g = artistKeyOf(albumOf(a) || a); if (VARIOUS.has(g)) g = "various artists"; }   // named below
         else if (by === "folder") g = a.shelf || "";
-        else if (by === "rating") g = a.rt ? String(a.rt) : "NOT RATED";
+        else if (by === "rating") g = a.rt ? String(Math.floor(a.rt)) : "NOT RATED";
         else if (fav) g = inFav(a) ? "FAVOURITES" : "OTHERS";
         else g = String(a.genre || "").trim().toUpperCase() || "UNKNOWN";
         a.grp = g;

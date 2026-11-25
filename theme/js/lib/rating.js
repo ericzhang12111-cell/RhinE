@@ -57,10 +57,12 @@ function ratingMenuPick(id, base) {
 // Returns the width. Filled marks are the accent (the preview's are the text colour), empty ones outlined.
 const RATING_GAP = .45;
 function drawRating(gr, x, y, size, value, preview = 0) {
-    const step = size * (1 + RATING_GAP), lw = Math.max(HAIR, size * .1);
+    const step = size * (1 + RATING_GAP), lw = Math.max(HAIR, size * .1), pack = packGlyph("rate");   // a pack's marks (lib/draw.js ICON_SETS)
     for (let i = 0; i < 5; i++) {
         const cx = x + i * step + size / 2, cy = y + size / 2, r = size / 2, pts = [cx, cy - r, cx + r, cy, cx, cy + r, cx - r, cy];
-        if (preview ? i < preview : i < value) gr.FillPolygon(preview ? C.fg : C.accent, 0, pts);
+        const on = preview ? i < preview : i < value;
+        if (pack) pack(gr, cx, cy, size, on, on ? (preview ? C.fg : C.accent) : C["line-dim"], lw);
+        else if (on) gr.FillPolygon(preview ? C.fg : C.accent, 0, pts);
         else gr.DrawPolygon(C["line-dim"], lw, [cx, cy - r + lw / 2, cx + r - lw / 2, cy, cx, cy + r - lw / 2, cx - r + lw / 2, cy]);
     }
     return 5 * step - size * RATING_GAP;
@@ -68,3 +70,13 @@ function drawRating(gr, x, y, size, value, preview = 0) {
 // which mark (1–5) is at x for marks drawn from x0 with drawRating(…, size)
 const ratingAt = (x, x0, size) => clamp(Math.floor((x - x0 + size * RATING_GAP / 2) / (size * (1 + RATING_GAP))) + 1, 1, 5);
 const ratingWidth = size => 5 * size * (1 + RATING_GAP) - size * RATING_GAP;
+
+// WAFFLE (lib/draw.js): each mark a small square waffle of four pockets in the diamond's place, outlined when empty
+if (ICON_SETS.waffle) ICON_SETS.waffle.rate = (gr, cx, cy, size, on, colour, lw) => {
+    const h = size * .42, sq = roundPoly([[cx - h, cy - h], [cx + h, cy - h], [cx + h, cy + h], [cx - h, cy + h]], size * .16, 3);
+    if (on) for (const p of cellCut(sq, [cx], [cy], Math.max(1, size * .12))) gr.FillPolygon(colour, 0, p);
+    else {
+        const k = h - lw / 2;
+        gr.DrawPolygon(colour, lw, roundPoly([[cx - k, cy - k], [cx + k, cy - k], [cx + k, cy + k], [cx - k, cy + k]], size * .14, 3));
+    }
+};

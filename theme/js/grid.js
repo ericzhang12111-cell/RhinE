@@ -141,7 +141,7 @@ function drawGrid(gr) {
         // section header: GENRE 01 · AMBIENT ───── 12 ALBUMS
         if (hy + G.headH > G.top) {
             const ly = hy + dp(14);
-            gr.FillSolidRect(G.padX, ly + dp(3), dp(5), dp(5), s.gi === AR.group ? C.accent : C.fg);
+            bullet(gr, G.padX, ly + dp(3), dp(5), s.gi === AR.group ? C.accent : C.fg);
             const t = LIB.groupBy === "none" ? groupName(g.name) : `${tr(GROUP_LABEL[LIB.groupBy])} ${pad(s.gi + 1, 2)}  ·  ${groupName(g.name)}`.toUpperCase();
             const lw = label(gr, fitLabel(t, st(GRID_ST.head, C.fg), aw - dp(260)), st(GRID_ST.head, C.fg), G.padX + dp(14), ly);
             const c = unitWord(g.albums.length), cw = labelWidth(c, st(GRID_ST.count, C["text-muted"]));
@@ -172,7 +172,7 @@ function drawGrid(gr) {
         if (np && (a.online ? onlaHolds(a, npSong) : a.album ? sameTrack(itemTrack(a), np) : a.key === playingKey)) gr.FillSolidRect(x, y + c - dp(4), dp(18), dp(4), C.accent);
         if (sel) {
             box(gr, x - dp(5), y - dp(5), c + dp(10), c + dp(10), C.fg, Math.max(HAIR, dp(1.5)));
-            for (const [px, py] of [[x, y], [x + c, y], [x, y + c], [x + c, y + c]]) gr.FillSolidRect(Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), dp(6), C.accent);
+            for (const [px, py] of [[x, y], [x + c, y], [x, y + c], [x + c, y + c]]) bullet(gr, Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), C.accent);
         }
         if (G.lab) {
             text(gr, a.title || tr("UNTITLED"), 10, sel ? 700 : 600, C.fg, x, y + c + dp(6), c, dp(18));
@@ -222,7 +222,7 @@ function drawArchiveBar(gr) {
         const room = lx - dp(32) - (x0 + dp(14)), hs = st(GRID_ST.head, C.fg), n = filteredCount();
         const base = `${tr({ albums: "ALBUM GRID", tracks: "TRACK GRID", folders: "FOLDER GRID" }[itemUnit()])}  ·  ${unitWord(n)}`, full = LIB.groupBy === "none" ? base : `${base}  ·  ${tr("BY {0}", tr(GROUP_LABEL[LIB.groupBy]))}`;
         if (room > dp(40)) {
-            gr.FillSolidRect(x0, y1 + dp(10), dp(5), dp(5), C.fg);
+            bullet(gr, x0, y1 + dp(10), dp(5), C.fg);
             const t = [full, base, unitWord(n)].find(v => labelWidth(v, hs) <= room) || unitWord(n);
             label(gr, fitLabel(t, hs, room), hs, x0 + dp(14), y1 + dp(6));
         }
@@ -313,10 +313,12 @@ function drawPickButton(gr, x, y) {
     const w = dp(28) + labelWidth(t, s) + dp(14) + kw + dp(10), ty = y + Math.round((h - labelHeight(GRID_ST.count)) / 2);
     gr.FillSolidRect(x, y, w, h, bg);
     box(gr, x, y, w, h, on ? C.fg : C["line-faint"]);
-    // a die showing three
+    // a die showing three (a character pack's dog fetches the pick instead, lib/draw.js mark)
     const ds = dp(10), dx = x + dp(9), dy = y + Math.round((h - ds) / 2);
-    box(gr, dx, dy, ds, ds, fg);
-    for (const p of [.28, .5, .72]) gr.FillSolidRect(Math.round(dx + p * ds - dp(1)), Math.round(dy + (1 - p) * ds - dp(1)), dp(2), dp(2), C.accent);
+    if (!mark(gr, "dog", dx + ds / 2, y + h / 2, dp(14), C.accent, bg)) {
+        box(gr, dx, dy, ds, ds, fg);
+        for (const p of [.28, .5, .72]) gr.FillSolidRect(Math.round(dx + p * ds - dp(1)), Math.round(dy + (1 - p) * ds - dp(1)), dp(2), dp(2), C.accent);
+    }
     label(gr, t, s, x + dp(28), ty);
     label(gr, "R", ks, x + w - dp(10) - kw, ty);
     hits.add("ar-pick", x, y, w, h);

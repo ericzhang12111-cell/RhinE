@@ -17,6 +17,13 @@
 //   album · Enter: inspect it
 
 const ROOM_ROOT = THEME_ROOT + "assets\\render\\room\\";
+// the folder that holds a set: the theme's, or the pack's for the pack's own room case (lib/bus.js packRoom)
+function roomRootOf(set) {
+    const r = packRoom();
+    if (!r || set !== String(r.id)) return ROOM_ROOT;
+    const d = packFile(r.dir || "room");
+    return d ? d.replace(/\\*$/, "\\") : ROOM_ROOT;
+}
 const ROOM = { mode: "", forMode: "", dir: "", meta: null, img: null, geo: null, hov: new Map(), under: null, want: new Set() };
 const ROOM_BEHIND = 6, ROOM_FRONT = 2;   // shelves kept behind the selected one and in front of it
 const ROOM_FILL = 9;                     // shelves shown behind it (beyond the ones kept: empty cases), the last two fading
@@ -42,11 +49,11 @@ function roomAssets() {
     const set = roomSet(), want = set + "|" + MODE;
     if (ROOM.forMode === want) return ROOM.meta;   // (looked for once per material and mode, not on every paint)
     ROOM.forMode = want;
-    const has = (m, md) => utils.IsFile(`${ROOM_ROOT}${m}\\${md}\\room.json`);
+    const root = roomRootOf(set), rootOf = m => m === set ? root : ROOM_ROOT, has = (m, md) => utils.IsFile(`${rootOf(m)}${m}\\${md}\\room.json`);
     // (a set's other mode when it has none for this one: most were first rendered dark, RHINE LAB light)
     const other = MODE === "dark" ? "light" : "dark", mat = has(set, MODE) || has(set, other) ? set : "cream", k = `${mat}\\${has(mat, MODE) ? MODE : other}`;
     if (ROOM.mode === k) return ROOM.meta;
-    ROOM.mode = k; ROOM.dir = `${ROOM_ROOT}${k}\\`; ROOM.geo = null;
+    ROOM.mode = rootOf(mat) + k; ROOM.dir = `${rootOf(mat)}${k}\\`; ROOM.geo = null;
     ARIMG.faded.clear();   // (the faded copies of the set before: a node set has hundreds)
     try {
         ROOM.meta = JSON.parse(utils.ReadTextFile(ROOM.dir + "room.json", 65001));
@@ -407,7 +414,7 @@ function drawRoomCase(gr, it, RG) {
         if (Sel.info && it.isSel) drawInfoLabel(gr, Sel.info.map(map), albumInfoLabel(it.a), Math.round(a * (1 - f)));
     }
     if (!it.isSel || cl < .6 || !Q) return null;
-    for (const [px, py] of Q) gr.FillSolidRect(Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), dp(6), withAlpha(C.accent, alpha / 255));
+    for (const [px, py] of Q) bullet(gr, Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), withAlpha(C.accent, alpha / 255));
     return { a: it.a, x: Q[1][0], y: Q[1][1] };
 }
 

@@ -42,6 +42,7 @@ const SCHEME_ABOUT = {
     hearth: "Walnut and candlelight, made for REAL STYLE",
     livewire: "Lime signal and steel cyan",
     matcha: "Creamy white and matcha green",
+    sweetpie: "Warm black and PVC white with honey yellow",
     custom: "Your own: pick the page, the text and the accent",
 };
 const STY = { img: new Map(), thumbs: new Map(), hover: null, gen: 0, shown: false,   // img: skin id -> { array, hero }; thumbs: wpThumb
@@ -51,7 +52,7 @@ const STY = { img: new Map(), thumbs: new Map(), hover: null, gen: 0, shown: fal
 // so each page fits most windows without scrolling and its cards can be as large as their names need.
 //   look     ARRAY CASE: the case skins of the array and the grid
 //   scheme   COLOUR SCHEME
-//   room     ROOM CASE: the cases of the Archive room (ROOM_MATS), then the lights of the one in use (ROOM_LIGHTS)
+//   room     ROOM CASE: the cases of the Archive room (roomMats()), then the lights of the one in use (ROOM_LIGHTS)
 //   tag      TITLE TAG: the finishes, then the tag's shape, colours, body and opacity
 //   display  TEXT, ARCHIVE and PAGE
 //   presets  whole looks, one click each: the theme's own and the ones saved here (PRESETS, below)
@@ -143,7 +144,7 @@ function styleGeom(skins, ids, tags) {
     } else if (tab === "room") {
         // the cases on one row, the lights on the next: the render 16:9 over the name
         byH = (avail - dp(80) - 2 * gap - 2 * dp(40)) / (2 * ROOM_CARD_H);
-        need = Math.max(...ROOM_MATS.concat(...Object.values(ROOM_LIGHTS)).map(([, l]) => labelWidth(tr(l), ns) + dp(44)));
+        need = Math.max(...roomMats().concat(...Object.values(ROOM_LIGHTS)).map(([, l]) => labelWidth(tr(l), ns) + dp(44)));
     } else if (tab === "tag") {
         const r = Math.ceil(tags.length / cols);
         // (not under 120 dp wide, so the finishes can be told apart: a low window scrolls to the rows under them)
@@ -269,15 +270,21 @@ const PRESET_MAX = 12;
 // a preset's plain keys: [its key (and STATE's), the message that sets it]
 const PRESET_KEYS = [["skin", "skin"], ["floor", "floor"], ["halftone", "halftone"], ["halftoneLevel", "halftone-level"], ["emblem", "emblem"], ["roomMat", "room-mat"],
                      ["tagShape", "tag-shape"], ["tagColours", "tag-colours"], ["tagBody", "tag-body"], ["tagOpacity", "tag-opacity"], ["font", "font"]];
+// the theme's own value of each plain key (lib/bus.js STATE), put back when a pack that changed it is left
+const PRESET_DEFAULTS = { skin: "white", floor: "plain", halftone: "bottom", halftoneLevel: "mid", emblem: "ring", roomMat: "cream",
+                          tagShape: "tab", tagColours: "scheme", tagBody: "solid", tagOpacity: 50, font: "geist" };
 const presetMode = p => p.mode === "light" || p.mode === "dark" ? p.mode : null;
 const userPresets = () => { const v = readSettings().stylePresets; return Array.isArray(v) ? v.filter(p => p && typeof p === "object") : []; };
 const builtinPresets = () => PRESETS_BUILTIN.filter(p => listSkins().some(s => s.id === p.skin) && TOKENS.schemes[p.scheme] && (p.tag === "off" || tagFinish(p.tag)));
 // "b:2" / "u:0" -> the preset
-const presetOf = key => (key[0] === "b" ? builtinPresets() : key[0] === "s" ? PRESETS_SPECIAL : userPresets())[+key.slice(2)] || null;
+// the character packs' looks (lib/pack.js): the pack's own preset, which also puts the pack on
+const packPresets = () => listPacks().map(k => Object.assign({}, k.preset || {}, { name: k.name, pack: k.id, about: k.about || "", picture: k.preview ? packFile(k.preview, k) : "" }));
+const presetOf = key => (key[0] === "b" ? builtinPresets() : key[0] === "s" ? PRESETS_SPECIAL : key[0] === "k" ? packPresets() : userPresets())[+key.slice(2)] || null;
 const sameColours = (a, b) => !!a && !!b && ["light", "dark"].every(m => ["bg", "fg", "accent"].every(k => (a[m] || {})[k] === (b[m] || {})[k]));
 const sameCase = (a, b) => !!a && !!b && a.base === b.base && a.accent === b.accent && a.pattern === b.pattern;
 const wpOf = () => Object.assign({}, WP_START, STATE.wallpaper || {});
 function presetMatches(p) {
+    if ((p.pack || null) !== (STATE.pack || null)) return false;
     if (p.scheme && p.scheme !== SCHEME) return false;
     if (p.customScheme && !sameColours(p.customScheme, customChoice())) return false;
     if (p.customCase && !(customCaseMade() && sameCase(p.customCase, customCase()))) return false;
@@ -290,7 +297,7 @@ function presetMatches(p) {
 }
 // the look in use, as a preset
 function presetNow(name) {
-    const p = { name, scheme: SCHEME, mode: STATE.modeSystem ? null : MODE, tag: STATE.tag, tagFactory: STATE.tagFactory, tagCustom: STATE.tagCustom, wallpaper: wpOf() };
+    const p = { name, scheme: SCHEME, mode: STATE.modeSystem ? null : MODE, tag: STATE.tag, tagFactory: STATE.tagFactory, tagCustom: STATE.tagCustom, wallpaper: wpOf(), pack: STATE.pack || null };
     for (const [k] of PRESET_KEYS) p[k] = STATE[k];
     return p;
 }
@@ -319,6 +326,16 @@ function presetCase(cc) {
 }
 function applyPreset(p) {
     if (!p) return;
+    // the pack goes first (a preset without one turns it off): its skin is listed only once the pack is known
+    if ((p.pack || null) !== (STATE.pack || null)) {
+        const was = findPack(STATE.pack), set = was && was.preset || {}, wp = STATE.wallpaper;   // (before the state comes back)
+        send("pack", p.pack || null);
+        // (leaving a pack: its pictures go with it, unless the preset brings its own)
+        if (!p.wallpaper && wp && String(wp.path || "").startsWith("pack:")) send("wallpaper", { path: "" });
+        // and what it set that this preset does not: back to the theme's own (the emblem, the font, ...)
+        for (const [k, msg] of PRESET_KEYS) if (p[k] == null && set[k] != null && PRESET_DEFAULTS[k] != null && STATE[k] === set[k]) send(msg, PRESET_DEFAULTS[k]);
+    }
+    if (p.pack) listSkins(true);
     if (p.customScheme && !sameColours(p.customScheme, customChoice())) setCustom(p.customScheme);
     if (p.customCase) presetCase(p.customCase);
     for (const [k, msg] of PRESET_KEYS) {
@@ -369,9 +386,10 @@ function deletePreset(i) {
     STY.hover = null;
     window.Repaint();
 }
-// the page: THE THEME'S (built in), then YOURS with the card that saves the look in use
+// the page: CHARACTER PACKS first, then THE THEME'S (built in), WORLDS 2026, YOURS with the card that saves the look in use
 function drawPresets(gr, g, y) {
     const B = builtinPresets(), U = userPresets(), h = g.schemeH, at = i => [g.m + (i % g.cols) * (g.cw + g.gap), Math.floor(i / g.cols) * (h + g.gap)];
+    y = drawPackSection(gr, g, y, h, at);
     label(gr, `${tr("COMES WITH THE THEME")}  ·  ${pad(B.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
     y += dp(30);
     B.forEach((p, i) => { const [x, dy] = at(i); drawPresetCard(gr, p, "b:" + i, x, y + dy, g.cw, h); });
@@ -404,6 +422,80 @@ function drawPresets(gr, g, y) {
     }
     return y + Math.ceil(n / g.cols) * (h + g.gap);
 }
+// CHARACTER PACKS (lib/pack.js): the packs installed (a card applies one) and those on the theme's list not installed
+// yet (a card downloads one: DOWNLOAD · size, then how far it is). Under the heading, where each pack's material comes
+// from, with its links (fan-made: the material belongs to its owners, credited and linked as they are).
+function drawPackSection(gr, g, y, h, at) {
+    packCatalog(false, ok => { if (ok) window.Repaint(); });
+    const K = packPresets(), offers = packOffers(), get = offers.filter(o => !o.have);
+    const n = K.length + get.length;
+    if (!n) return y;
+    label(gr, `${tr("CHARACTER PACKS")}  ·  ${pad(n, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
+    y += dp(22);
+    label(gr, tr("Fan-made looks built around one character: colours, case, icons, ring, wallpapers and more. Downloaded on request, kept apart from the theme."), st(STY_ST.tiny, C["text-muted"]), g.m, y);
+    y += dp(18);
+    // the credits: one line per pack, its links after it (each opens in the browser)
+    const seen = new Set();
+    for (const c of K.map(p => findPack(p.pack)).concat(get.map(o => o.k))) {
+        if (!c || seen.has(c.id) || !c.credits) continue;
+        seen.add(c.id);
+        const ts = st(STY_ST.tiny, C["fg-soft"]), text = `${c.name}  ·  ${packText(c.credits)}`;
+        label(gr, fitLabel(text, ts, g.lx1 - g.m), ts, g.m, y);
+        let x = g.m + Math.min(labelWidth(text, ts), g.lx1 - g.m) + dp(12);
+        for (const L of Array.isArray(c.credits.links) ? c.credits.links : []) {
+            if (!Array.isArray(L) || !/^https:\/\//.test(String(L[1]))) continue;
+            const t = `${packText(L[0])} ↗`, hov = STY.hover && STY.hover.kind === "packlink" && STY.hover.id === L[1], ls = st(STY_ST.tiny, hov ? C.fg : C.accent), w = labelWidth(t, ls);
+            if (x + w > g.lx1) break;
+            label(gr, t, ls, x, y);
+            hits.add("sty-pack-link", x - dp(2), y - dp(3), w + dp(4), labelHeight(STY_ST.tiny) + dp(6), L[1]);
+            x += w + dp(14);
+        }
+        y += dp(18);
+    }
+    y += dp(8);
+    K.forEach((p, i) => { const [x, dy] = at(i); drawPresetCard(gr, p, "k:" + i, x, y + dy, g.cw, h); });
+    get.forEach((o, i) => { const [x, dy] = at(K.length + i); drawPackGetCard(gr, o.k, x, y + dy, g.cw, h); });
+    return y + Math.ceil(n / g.cols) * (h + g.gap) + dp(10);
+}
+// a pack not installed: its preview picture (once downloaded), its name, and DOWNLOAD · size, or the download's progress
+function drawPackGetCard(gr, k, x, y, w, h) {
+    const mh = h - dp(40), D = PACK_CAT.dl && PACK_CAT.dl.id === k.id ? PACK_CAT.dl : null, busy = D && D.state !== "done" && D.state !== "error";
+    const hov = STY.hover && STY.hover.kind === "packget" && STY.hover.id === k.id;
+    gr.FillSolidRect(x, y, w, mh, C.panel);
+    const f = packPreviewFile(k), pic = f ? picThumb(f) : null;
+    if (pic) {
+        const s2 = Math.max(w / pic.Width, mh / pic.Height), dw = pic.Width * s2, dh = pic.Height * s2;
+        gr.PushClip(x, y, w, mh);
+        gr.DrawImage(pic, x + (w - dw) / 2, y + (mh - dh) / 2, dw, dh, 0, 0, pic.Width, pic.Height, 0, busy ? 150 : 255);
+        gr.PopClip();
+    }
+    // the download's bar along the picture's foot
+    if (D) {
+        const f2 = D.state === "done" ? 1 : D.total > 0 ? clamp(D.done / D.total, 0, 1) : 0;
+        gr.FillSolidRect(x, y + mh - dp(4), w, dp(4), withAlpha(C.bg, .6));
+        gr.FillSolidRect(x, y + mh - dp(4), Math.round(w * f2), dp(4), D.state === "error" ? C["text-muted"] : C.accent);
+    }
+    gr.FillSolidRect(x, y + mh, w, h - mh, C.panel);
+    gr.FillSolidRect(x, y + mh, w, HAIR, C["line-faint"]);
+    const mb = v => `${Math.max(1, Math.round((+v || 0) / 1048576))} MB`;
+    const what = !D ? tr("DOWNLOAD · {0}", mb(k.size)) : D.state === "error" ? tr("FAILED · TRY AGAIN") : D.state === "done" ? tr("INSTALLED")
+        : D.state === "check" || D.state === "unpack" ? tr("INSTALLING…") : D.total > 0 ? tr("DOWNLOADING {0} %", Math.floor(100 * D.done / D.total)) : tr("DOWNLOADING…");
+    const ns = STY_ST.nameS, nm = String(k.name || k.id), tw = labelWidth(what, st(STY_ST.tiny, 0));
+    label(gr, fitLabel(nm, st(ns, C.fg, C.panel), w - tw - dp(30)), st(ns, C.fg, C.panel), x + dp(10), y + mh + Math.round((dp(40) - labelHeight(ns)) / 2));
+    label(gr, what, st(STY_ST.tiny, D && D.state === "error" ? C["text-muted"] : C.accent, C.panel), x + w - dp(10) - tw, y + mh + Math.round((dp(40) - labelHeight(STY_ST.tiny)) / 2));
+    cardFrame(gr, x, y, w, h, false, hov);
+    if (!busy) hits.add("sty-pack-get", x, y, w, h, k.id);
+}
+function packGet(id) {
+    const o = packOffers().find(v => v.k.id === id);
+    if (!o) return;
+    packDownload(o.k, D => {
+        // installed: its card becomes a preset card (the new pack's look applied at once: it was asked for)
+        if (D.state === "done") { const i = packPresets().findIndex(p => p.pack === id); if (i >= 0) applyPreset(presetOf("k:" + i)); }
+        window.Repaint();
+    });
+    window.Repaint();
+}
 // a preset's card: its case on its page colour (in its mode, else the one in use), three of its colours, its name
 function drawPresetCard(gr, p, key, x, y, w, h) {
     const mh = h - dp(40), sc = TOKENS.schemes[p.scheme] || TOKENS.schemes[SCHEME];
@@ -411,8 +503,8 @@ function drawPresetCard(gr, p, key, x, y, w, h) {
     const t = p.customScheme ? Object.assign({ panel: p.customScheme[presetMode(p) || MODE].bg }, p.customScheme[presetMode(p) || MODE]) : sc[presetMode(p) || MODE];
     const inUse = presetMatches(p), hov = STY.hover && STY.hover.kind === "preset" && STY.hover.id === key;
     gr.FillSolidRect(x, y, w, mh, argb(t.bg));
-    const s = p.special ? null : listSkins().find(k => k.id === p.skin), e = s && s.dir ? skinImages(s) : null;
-    const pic = p.special ? wpThumb(p.wallpaper.path.slice(6), false) : null;
+    const s = p.special || p.picture ? null : listSkins().find(k => k.id === p.skin), e = s && s.dir ? skinImages(s) : null;
+    const pic = p.picture ? picThumb(p.picture) : p.special ? wpThumb(p.wallpaper.path.slice(6), false) : null;
     if (pic) {
         const k = Math.max(w / pic.Width, mh / pic.Height), dw = pic.Width * k, dh = pic.Height * k;
         gr.PushClip(x, y, w, mh);
@@ -452,16 +544,23 @@ function drawPresetPreview(gr, p, x0, y, w, y1) {
     const sc = TOKENS.schemes[p.scheme] || TOKENS.schemes[SCHEME], t = sc[presetMode(p) || MODE], rows = [];
     const s = listSkins().find(k => k.id === p.skin), e = s && s.dir ? skinImages(s) : null;
     const nameOf = (list, v) => { const f = list.find(k => k[0] === v); return f ? tr(f[1]) : String(v).toUpperCase(); };
+    if (p.pack) { rows.push(["CHARACTER PACK", p.name]); const c = findPack(p.pack); if (c && c.credits) rows.push(["SOURCE", packText(c.credits)]); }
     if (s) rows.push(["ARRAY CASE", s.name]);
     rows.push(["COLOUR SCHEME", sc.name + (presetMode(p) ? `  ·  ${tr(presetMode(p).toUpperCase())}` : "")]);
     if (p.floor) rows.push(["FLOOR", nameOf(FLOORS, p.floor)]);
     if (p.tag) rows.push(["TITLE TAG", nameOf(TAGS, p.tag)]);
-    if (p.roomMat) rows.push(["ROOM CASE", nameOf(ROOM_MATS, p.roomMat) + (p.roomLight && ROOM_LIGHTS[p.roomMat] ? `  ·  ${nameOf(ROOM_LIGHTS[p.roomMat], p.roomLight)}` : "")]);
+    if (p.roomMat) rows.push(["ROOM CASE", nameOf(roomMats(), p.roomMat) + (p.roomLight && ROOM_LIGHTS[p.roomMat] ? `  ·  ${nameOf(ROOM_LIGHTS[p.roomMat], p.roomLight)}` : "")]);
     if (p.wallpaper) rows.push(["WALLPAPER", p.wallpaper.path ? wpName(p.wallpaper.path) : tr("NONE")]);
     if (p.font) rows.push(["FONT", nameOf(FONTS, p.font)]);
     const th = dp(14) + labelHeight(STY_ST.big) + dp(14) + rows.length * dp(20), ph = Math.max(dp(80), Math.min(Math.round(w * .7), y1 - y - th - dp(16)));
     gr.FillSolidRect(x0, y, w, ph, argb(t.bg));
-    if (e && e.hero) {
+    const pic = p.picture ? picThumb(p.picture) : null;
+    if (pic) {
+        const k = Math.max(w / pic.Width, ph / pic.Height), dw = pic.Width * k, dh = pic.Height * k;
+        gr.PushClip(x0, y, w, ph);
+        gr.DrawImage(pic, x0 + (w - dw) / 2, y + (ph - dh) / 2, dw, dh, 0, 0, pic.Width, pic.Height);
+        gr.PopClip();
+    } else if (e && e.hero) {
         const k = Math.min((w - dp(32)) / e.hero.Width, (ph - dp(24)) / e.hero.Height), dw = e.hero.Width * k, dh = e.hero.Height * k;
         gr.DrawImage(e.hero, x0 + (w - dw) / 2, y + (ph - dh) / 2, dw, dh, 0, 0, e.hero.Width, e.hero.Height);
     }
@@ -550,7 +649,7 @@ function drawSchemeCard(gr, id, i, x, y, w, h) {
 }
 
 // ---------------------------------------------------------------------------------------------------- ROOM CASE
-// The Archive room's cases (ROOM_MATS, lib/bus.js), each card the room as it renders that case (in the light it has, in
+// The Archive room's cases (roomMats(), lib/bus.js), each card the room as it renders that case (in the light it has, in
 // this mode: assets/render/room/<set>/<mode>/preview.jpg, the room's own render with no covers in the cases), then the
 // lights of the case in use (the white and blackout cases are lit by lights of their own; the others glow from the
 // floor below). A click puts a case on (with the light it had), or a light on the case in use.
@@ -567,7 +666,7 @@ function roomPreview(set) {
     const k = `room:${set}-${MODE}`;
     if (STY.thumbs.has(k)) return STY.thumbs.get(k);
     STY.thumbs.set(k, null);
-    const g = STY.gen, file = md => `${ROOM_ROOT}${set}\\${md}\\preview.jpg`, md = utils.IsFile(file(MODE)) ? MODE : MODE === "dark" ? "light" : "dark";
+    const g = STY.gen, file = md => `${roomRootOf(set)}${set}\\${md}\\preview.jpg`, md = utils.IsFile(file(MODE)) ? MODE : MODE === "dark" ? "light" : "dark";
     d2d.LoadImageAsyncV2(0, file(md)).then(img => { if (img && g === STY.gen) { STY.thumbs.set(k, img); window.Repaint(); } }, () => {});
     return null;
 }
@@ -575,11 +674,11 @@ function roomPreview(set) {
 const roomKeySet = key => { const [kind, id] = key.split(":"); return kind === "mat" ? roomSet(id) : `${STATE.roomMat}-${id}`; };
 function drawRoomCases(gr, g, y) {
     const at = i => [g.m + (i % g.cols) * (g.cw + g.gap), Math.floor(i / g.cols) * (g.roomH + g.gap)];
-    label(gr, `${tr("ROOM CASE")}  ·  ${pad(ROOM_MATS.length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
+    label(gr, `${tr("ROOM CASE")}  ·  ${pad(roomMats().length, 2)}`, st(STY_ST.sec, C.fg), g.m, y);
     y += dp(30);
-    ROOM_MATS.forEach(([id, name], i) => { const [x, dy] = at(i); drawRoomCard(gr, "mat:" + id, tr(name), i, x, y + dy, g.cw, g.roomH, id === STATE.roomMat); });
-    y += Math.ceil(ROOM_MATS.length / g.cols) * (g.roomH + g.gap) + dp(10);
-    const L = ROOM_LIGHTS[STATE.roomMat], mat = ROOM_MATS.find(f => f[0] === STATE.roomMat);
+    roomMats().forEach(([id, name], i) => { const [x, dy] = at(i); drawRoomCard(gr, "mat:" + id, tr(name), i, x, y + dy, g.cw, g.roomH, id === STATE.roomMat); });
+    y += Math.ceil(roomMats().length / g.cols) * (g.roomH + g.gap) + dp(10);
+    const L = ROOM_LIGHTS[STATE.roomMat], mat = roomMats().find(f => f[0] === STATE.roomMat);
     label(gr, `${tr("ROOM LIGHT")}  ·  ${mat ? tr(mat[1]) : ""}${L ? "  ·  " + pad(L.length, 2) : ""}`, st(STY_ST.sec, C.fg), g.m, y);
     y += dp(30);
     if (!L) {
@@ -610,7 +709,7 @@ function drawRoomCard(gr, key, name, i, x, y, w, h, inUse) {
 // the room large: the render as wide as the column, then the case's name, its line, and which case and light it is
 function drawRoomPreview(gr, key, x0, y, w, y1) {
     const [kind, id] = key.split(":"), matId = kind === "mat" ? id : STATE.roomMat, set = roomKeySet(key), img = roomPreview(set);
-    const mi = ROOM_MATS.findIndex(f => f[0] === matId), L = ROOM_LIGHTS[matId], light = L ? set.slice(matId.length + 1) : "";
+    const mi = roomMats().findIndex(f => f[0] === matId), L = ROOM_LIGHTS[matId], light = L ? set.slice(matId.length + 1) : "";
     const lf = L ? L.find(f => f[0] === light) : null, ty = y1 - dp(104), ph = Math.max(dp(60), Math.min(Math.round(w * ROOM_CARD_H), ty - y - dp(20)));
     gr.FillSolidRect(x0, y, w, ph, C.panel);
     if (img) {
@@ -621,10 +720,10 @@ function drawRoomPreview(gr, key, x0, y, w, y1) {
     }
     box(gr, x0, y, w, ph, C["line-faint"]);
     gr.FillSolidRect(x0, ty, w, dp(3), C.fg);
-    label(gr, mi >= 0 ? tr(ROOM_MATS[mi][1]) : "—", st(STY_ST.big, C.fg), x0, ty + dp(14));
+    label(gr, mi >= 0 ? tr(roomMats()[mi][1]) : "—", st(STY_ST.big, C.fg), x0, ty + dp(14));
     const ay = ty + dp(14) + labelHeight(STY_ST.big) + dp(6);
     text(gr, tr(ROOM_ABOUT[matId] || ""), 10, 500, C["fg-soft"], x0, ay, w, Math.round(dp(18) * TEXT_SCALE));
-    label(gr, `${tr("ROOM CASE")}  ${pad(mi + 1, 2)} / ${pad(ROOM_MATS.length, 2)}${lf ? `  ·  ${tr("ROOM LIGHT")}  ${tr(lf[1])}` : ""}`,
+    label(gr, `${tr("ROOM CASE")}  ${pad(mi + 1, 2)} / ${pad(roomMats().length, 2)}${lf ? `  ·  ${tr("ROOM LIGHT")}  ${tr(lf[1])}` : ""}`,
           st(STY_ST.tiny, C["text-muted"]), x0, ay + Math.round(dp(26) * TEXT_SCALE));
 }
 
@@ -1013,6 +1112,15 @@ function wpThumb(id, byMode = true) {
     return null;
 }
 
+// any picture by its full path (a pack's preview): null while it loads
+function picThumb(f) {
+    if (STY.thumbs.has(f)) return STY.thumbs.get(f);
+    STY.thumbs.set(f, null);
+    const g = STY.gen;
+    d2d.LoadImageAsyncV2(0, f).then(img => { if (img && g === STY.gen) { STY.thumbs.set(f, img); window.Repaint(); } }, () => {});
+    return null;
+}
+
 // the preview of the card under the mouse, else of the skin and scheme in use
 function drawStylePreview(gr, g, skins) {
     const x0 = g.lx1 + dp(40), x1 = W - g.m, y0 = g.top + dp(24), y1 = H - dp(40), w = x1 - x0;
@@ -1130,7 +1238,7 @@ function drawFactoryPicker(gr, x0, y, w, y1) {
     gr.FillSolidRect(x0, y + Math.round((labelHeight(STY_ST.tiny) - dp(6)) / 2), dp(6), dp(6), C.accent);
     label(gr, fitLabel(tr("SUGGESTED FOR {0}  ·  {1}", TOKENS.schemes[SCHEME].name, skin), ls, w - dp(14)), ls, x0 + dp(14), y);
     y += dp(30);
-    const list = TAG_FACTORY.filter(t => tagFinish("factory:" + t.id));
+    const list = tagFactoryList().filter(t => tagFinish("factory:" + t.id));   // (with the pack's own: lib/tag.js)
     if (!list.length) return;
     const h0 = fb.GetNowPlaying() || fb.GetFocusItem(), title = h0 ? TF_TAG_TITLE.EvalWithMetadb(h0) : tr("Over the Signal");
     const vals = { track: "03", total: "12", arc: "0269" }, gap = dp(18), nameH = labelHeight(STY_ST.tiny) + dp(14);
@@ -1273,6 +1381,7 @@ function styleMouseMove(a) {
     const dl = a && a.id === "sty-preset-del" ? a.data : null;
     if (dl !== (STY.delHover || null)) { STY.delHover = dl; window.Repaint(); }
     const h = a && (a.id === "sty-preset" || a.id === "sty-preset-del") ? { kind: "preset", id: a.data } : a && a.id === "sty-preset-save" ? { kind: "save", id: "" }
+        : a && a.id === "sty-pack-get" ? { kind: "packget", id: a.data } : a && a.id === "sty-pack-link" ? { kind: "packlink", id: a.data }
         : a && (a.id === "sty-skin" || a.id === "sty-scheme" || a.id === "sty-tagcard" && a.data !== "off") ? { kind: { "sty-skin": "skin", "sty-scheme": "scheme", "sty-tagcard": "tag" }[a.id], id: a.data }
         : a && a.id === "sty-roomcard" ? { kind: "room", id: a.data }
         : a && a.id === "sty-intro" ? { kind: "intro", id: "" } : null;
@@ -1289,6 +1398,8 @@ function styleClick(a) {
     if (a.id === "sty-tab") { setStyleTab(a.data); return; }
     if (a.id === "sty-preset") { applyPreset(presetOf(a.data)); return; }
     if (a.id === "sty-preset-save") { savePreset(); return; }
+    if (a.id === "sty-pack-get") { packGet(a.data); return; }
+    if (a.id === "sty-pack-link") { packOpenUrl(a.data); return; }
     if (a.id === "sty-preset-del") { deletePreset(+a.data.slice(2)); return; }
     if (a.id === "sty-glass") { setFrost(a.data === "frost"); return; }
     if (a.id === "sty-skin" && a.data === "custom") {

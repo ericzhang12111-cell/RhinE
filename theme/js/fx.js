@@ -66,16 +66,37 @@ function on_colours_changed() { refreshTokens(); window.Repaint(); }
 //   verdict   SESSION AUTHORIZED over the case window's orange, then the overlay flickers out
 // The film is dark, so its overlays use the dark token set in both modes.
 // one film per case skin (assets/intro/<skin>/, the same camera and timing in each); a skin without its own plays the
-// default skin's
+// default skin's. A character pack with a film of its own (pack.json "intro": its folder, lib/pack.js) plays that one
+// instead, whatever the skin.
+// Each film is read with its own intro.json (rate, length, size, landing frame, tracked points), so a film cut to
+// another length or rate than the default's plays at its own timing. intro.json may also carry:
+//   accent   false: the film is already in its pack's colours, so it is not turned to the scheme's accent
+//   overlay  "operator": the operator check-in overlay (drawCheckIn) instead of the case-tracking one
+//   hud      the check-in's texts and timing: { name, id, supply, eat, chapters: [[frame, name], ...] }
 const INTRO_ROOT = THEME_ROOT + "assets\\intro\\";
 let INTRO_DIR = INTRO_ROOT + SKIN_DEFAULT + "\\";
-const INTRO = utils.IsFile(INTRO_DIR + "intro.json") ? JSON.parse(utils.ReadTextFile(INTRO_DIR + "intro.json", 65001)) : null;
-function filmDir() { const d = INTRO_ROOT + STATE.skin + "\\"; return utils.IsFile(d + "intro.json") ? d : INTRO_ROOT + SKIN_DEFAULT + "\\"; }
+let INTRO = null;
+// a film's intro.json (null when it has none or it does not read)
+function readIntro(dir) {
+    if (!utils.IsFile(dir + "intro.json")) return null;
+    try { const m = JSON.parse(utils.ReadTextFile(dir + "intro.json", 65001)); return m && typeof m === "object" ? m : null; } catch (e) { return null; }
+}
+function filmDir() {
+    // At start-up frame.js asks for the intro before its first state broadcast, so until a state has arrived the pack
+    // in use is read from the settings file (STATE.pack is still the default, none).
+    const p = findPack(STATE_SEEN ? STATE.pack : pickPack(getSetting("pack", null)));
+    if (p && p.intro) {
+        const d = packFile(p.intro, p);
+        if (d && utils.IsFile(d.replace(/\\*$/, "\\") + "intro.json")) return d.replace(/\\*$/, "\\");
+    }
+    const d = INTRO_ROOT + STATE.skin + "\\";
+    return utils.IsFile(d + "intro.json") ? d : INTRO_ROOT + SKIN_DEFAULT + "\\";
+}
 const FILM_M = new Float32Array([1, 0, 0, 1, 0, 0]);
-const FPS = INTRO ? INTRO.fps : 24, NF = INTRO ? INTRO.frames : 144, LAND = INTRO ? INTRO.land : 94;
-const FILM_MS = NF / FPS * 1000;
-// the overlays are timed in frames of the 24 fps cut; a film at another rate (a 60 fps render) keeps their timing
-const F24 = 24 / FPS, LAND24 = LAND * F24;
+// the playing film's timing (useFilm). The overlays are timed in frames of the 24 fps cut; a film at another rate (a
+// 60 fps render) keeps their timing (F24).
+let FPS = 24, NF = 144, LAND = 94, FILM_MS = NF / FPS * 1000, F24 = 1, LAND24 = 94, FILM_RES = [1600, 900];
+let OVERLAY = "", FILM_ACCENT = true;
 const BK = {};   // the active scheme's dark set (refreshed with the tokens)
 const refreshBK = () => { for (const [k, v] of Object.entries(TOKENS.schemes[SCHEME].dark)) BK[k] = argb(v); };
 refreshBK();
@@ -83,6 +104,24 @@ TOKEN_LISTENERS.push(refreshBK);
 
 const boot = { t0: 0, req: 0, started: false, end: FILM_MS + 600, ended: false, steps: [], files: 0 };
 const film = { frames: [], pending: 0, gen: 0, last: null };
+// read the film in `dir` and take its timing (numbers out of range fall back to the default film's, so a broken
+// intro.json cannot give a NaN or endless length)
+function useFilm(dir) {
+    INTRO_DIR = dir;
+    INTRO = readIntro(dir);
+    const num = (v, def, lo, hi) => Number.isFinite(+v) && +v >= lo && +v <= hi ? +v : def;
+    FPS = INTRO ? num(INTRO.fps, 24, 1, 240) : 24;
+    NF = INTRO ? Math.round(num(INTRO.frames, 144, 1, 9999)) : 144;
+    LAND = INTRO ? Math.round(num(INTRO.land, Math.min(94, NF - 1), 0, NF - 1)) : 94;
+    const r = INTRO && INTRO.res;
+    FILM_RES = Array.isArray(r) && num(r[0], 0, 1, 16384) && num(r[1], 0, 1, 16384) ? [+r[0], +r[1]] : [1600, 900];
+    FILM_MS = NF / FPS * 1000;
+    F24 = 24 / FPS; LAND24 = LAND * F24;
+    OVERLAY = INTRO && INTRO.overlay === "operator" ? "operator" : "";
+    FILM_ACCENT = !(INTRO && INTRO.accent === false);
+    boot.end = FILM_MS + 600;
+}
+useFilm(INTRO_DIR);
 const bootClock = Clock(() => {
     if (kind !== "boot" || boot.ended) return false;
     const now = performance.now();
@@ -131,10 +170,10 @@ function bootSteps() {
 }
 
 function startBoot() {
-    boot.steps = bootSteps();
+    useFilm(filmDir());   // first: the steps are timed by the film's length
+    boot.steps = OVERLAY === "operator" ? checkInSteps() : bootSteps();
     boot.req = performance.now(); boot.started = false; boot.ended = false;
     film.gen++; film.frames = []; film.pending = 0; film.last = null;
-    INTRO_DIR = filmDir();
     if (INTRO) filmWant(0);
     bootClock.wake();
 }
@@ -166,14 +205,14 @@ function drawBoot(gr, ms) {
     if (!boot.started) return;
     const k = (a, b) => clamp((ms - a) / (b - a), 0, 1), f = filmIndex(ms), g = f * F24;
     // the film, cover-fitted
-    const res = INTRO ? INTRO.res : [1600, 900], sc = Math.max(W / res[0], H / res[1]), fw = res[0] * sc, fh = res[1] * sc;
+    const res = FILM_RES, sc = Math.max(W / res[0], H / res[1]), fw = res[0] * sc, fh = res[1] * sc;
     const fx0 = (W - fw) / 2, fy0 = (H - fh) / 2;
     if (INTRO) {
         let img = film.frames[f];
         if (img) film.last = img; else img = film.last;
         if (img) {
             // under another colour scheme the film's orange is turned to its accent on the way to the screen
-            const e = accentEffect(img);
+            const e = FILM_ACCENT ? accentEffect(img) : null;
             if (e) {
                 FILM_M[0] = fw / img.Width; FILM_M[3] = fh / img.Height; FILM_M[4] = fx0; FILM_M[5] = fy0;
                 gr.SetTransform(FILM_M);
@@ -184,28 +223,33 @@ function drawBoot(gr, ms) {
     }
     gr.FillSolidRect(0, 0, W, H, withAlpha(BK.bg, 1 - easeOut(k(0, 500))));   // up from black
     const bh = dp(52), m = dp(40);
-    // machine vision and callouts on tracked points
-    if (INTRO) {
-        const trk = INTRO.track[f], at = p => [fx0 + p[0] * fw, fy0 + p[1] * fh, p[2]];
-        if (g < 124) drawVision(gr, trk, g, ms, fx0, fy0, fw, fh, bh, m);
-        const lit = clamp(Math.round((g - 8) / 36 * 13), 0, 13);
-        callout(gr, at(trk.front), tr("IGNITION"), `RAIL 02  ·  ${pad(lit, 2)} / 13`, clamp((g - 8) / 4, 0, 1) * clamp((44 - g) / 4, 0, 1), 1, bh);
-        callout(gr, at(trk.nose), "ROW 02", tr("RAIL ONLINE"), clamp((g - 58) / 4, 0, 1) * clamp((100 - g) / 4, 0, 1), -1, bh);
-        const locked = g >= LAND24, flash = locked && g < LAND24 + 6;
-        callout(gr, at(trk.case), locked ? tr("LOCKED") : "ARC-0001", tr(locked ? "SPECIMEN  ·  SLOT 01" : "SPECIMEN  ·  LOWERING"),
-                clamp((g - 72) / 4, 0, 1) * clamp((124 - g) / 4, 0, 1), 1, bh, flash);
+    const trk = INTRO && Array.isArray(INTRO.track) ? INTRO.track[f] : null;   // (a film may track fewer frames than it has)
+    if (OVERLAY === "operator") drawCheckIn(gr, ms, k, f, fx0, fy0, fw, fh, bh, m);
+    else {
+        // machine vision and callouts on tracked points
+        if (trk) {
+            const at = p => Array.isArray(p) ? [fx0 + p[0] * fw, fy0 + p[1] * fh, p[2]] : [0, 0, 0];
+            if (g < 124) drawVision(gr, trk, g, ms, fx0, fy0, fw, fh, bh, m);
+            const lit = clamp(Math.round((g - 8) / 36 * 13), 0, 13);
+            callout(gr, at(trk.front), tr("IGNITION"), `RAIL 02  ·  ${pad(lit, 2)} / 13`, clamp((g - 8) / 4, 0, 1) * clamp((44 - g) / 4, 0, 1), 1, bh);
+            callout(gr, at(trk.nose), "ROW 02", tr("RAIL ONLINE"), clamp((g - 58) / 4, 0, 1) * clamp((100 - g) / 4, 0, 1), -1, bh);
+            const locked = g >= LAND24, flash = locked && g < LAND24 + 6;
+            callout(gr, at(trk.case), locked ? tr("LOCKED") : "ARC-0001", tr(locked ? "SPECIMEN  ·  SLOT 01" : "SPECIMEN  ·  LOWERING"),
+                    clamp((g - 72) / 4, 0, 1) * clamp((124 - g) / 4, 0, 1), 1, bh, flash);
+        }
+        // the window's glow taken to the theme's orange as the camera enters it
+        if (g >= 122) gr.FillSolidRect(0, 0, W, H, withAlpha(BK.accent, .82 * easeOut(clamp((g - 122) / 14, 0, 1))));
+        drawManifest(gr, ms, k, bh);
+        drawVerdict(gr, ms, k);
     }
-    // the window's glow taken to the theme's orange as the camera enters it
-    if (g >= 122) gr.FillSolidRect(0, 0, W, H, withAlpha(BK.accent, .82 * easeOut(clamp((g - 122) / 14, 0, 1))));
-    drawManifest(gr, ms, k, bh);
-    drawVerdict(gr, ms, k);
     // letterbox bars
     gr.FillSolidRect(0, 0, W, bh, BK.bg);
     gr.FillSolidRect(0, H - bh, W, bh, BK.bg);
     const ty = Math.round((bh - labelHeight(BT.bar)) / 2);
     gr.FillSolidRect(m, ty + dp(4), dp(5), dp(5), BK.accent);
     const lw = bl("AUDIO ARCHIVE", BT.bar, BK.fg, BK.bg, m + dp(15), ty);
-    bl(`·  LISTENING TERMINAL  ·  ${tr("DEPLOYMENT SEQUENCE")}`, BT.barSoft, BK["text-muted"], BK.bg, m + dp(15) + lw + dp(10), ty);
+    const what = OVERLAY === "operator" ? `${tr("OPERATOR CHECK-IN")}  ·  ${hud().name}` : tr("DEPLOYMENT SEQUENCE");
+    bl(`·  LISTENING TERMINAL  ·  ${what}`, BT.barSoft, BK["text-muted"], BK.bg, m + dp(15) + lw + dp(10), ty);
     const secs = (ms / 1000).toFixed(2).padStart(5, "0");
     bl(`T+${secs}   ·   FRAME ${pad(f + 1, 3)} / ${NF}`, BT.barSoft, BK["fg-soft"], BK.bg, W - m, ty, 2);
     if (Math.floor(ms / 500) % 2 === 0) gr.FillSolidRect(W - m - dp(14) - labelWidth(`T+${secs}   ·   FRAME ${pad(f + 1, 3)} / ${NF}`, Object.assign({ colour: BK["fg-soft"], bg: BK.bg }, BT.barSoft)), ty + dp(4), dp(5), dp(5), BK.accent);
@@ -390,10 +434,17 @@ function hazardStrip(gr, x, y, w, h, ms) {
 
 // the bottom bar: the film's chapters along a line, the current one bright, an orange playhead
 const CHAPTERS = [[0, "IGNITION"], [40, "TRANSFER"], [70, "DEPLOY"], [94, "LOCK"], [118, "LINK"]].map(([f, n]) => [f, tr(n)]);   // frames of the 24 fps cut
+// the check-in film's own chapters (intro.json hud.chapters), else the default film's
+function chapters() {
+    const c = OVERLAY === "operator" ? hud().chapters : null;
+    if (!Array.isArray(c) || !c.length) return CHAPTERS;
+    return c.filter(e => Array.isArray(e) && Number.isFinite(+e[0])).map(([fr, n]) => [clamp(+fr, 0, NF * F24), tr(String(n))]);
+}
 function drawChapters(gr, f, m, y0, bh) {
     const x0 = m, x1 = W - m, ly = y0 + Math.round(bh / 2), w = x1 - x0, at = fr => x0 + w * fr / NF;
     gr.FillSolidRect(x0, ly, w, HAIR, withAlpha(BK.fg, .25));
     gr.FillSolidRect(x0, ly - HAIR, Math.round(w * (f + 1) / NF), HAIR * 2, BK.fg);
+    const CHAPTERS = chapters();
     CHAPTERS.forEach(([s0, name], i) => {
         const c0 = s0 / F24, c1 = i + 1 < CHAPTERS.length ? CHAPTERS[i + 1][0] / F24 : NF, cur = f >= c0 && f < c1, past = f >= c1;
         const cx = Math.round(at(c0));
@@ -406,12 +457,13 @@ function drawChapters(gr, f, m, y0, bh) {
 }
 
 // SESSION AUTHORIZED: an inverse plate sweeps across the centre while the case window glows
-function drawVerdict(gr, ms, k) {
+// (cx, cy: its centre, the window's unless given; sub, subColour: the line under it, the case film's unless given)
+function drawVerdict(gr, ms, k, cx = W / 2, cy = H / 2, sub = null, subColour = null) {
     const t1 = FILM_MS - 1000;
     if (ms < t1) return;
     const pk = easeOut(k(t1, t1 + 360)), big = { size: 22, weight: 700, track: .04 };
     const s = Object.assign({ colour: BK.fg, bg: BK.bg }, big), lw = labelWidth(tr("SESSION AUTHORIZED"), s);
-    const pw = lw + dp(48), ph = dp(52), px = Math.round((W - pw) / 2), py = Math.round(H / 2 - ph / 2);
+    const pw = lw + dp(48), ph = dp(52), px = Math.round(cx - pw / 2), py = Math.round(cy - ph / 2);
     gr.FillSolidRect(px, py, Math.round(pw * pk), ph, BK.bg);
     gr.FillSolidRect(px + Math.round(pw * pk), py, dp(4), ph, BK.accent);
     if (pk > .3) {
@@ -420,7 +472,166 @@ function drawVerdict(gr, ms, k) {
         gr.PopClip();
     }
     if (pk >= 1) {
-        const sub = `${tr("ACCESS GRANTED")}  ·  ARC-0001  ·  ROW 02 / SLOT 01`, ss = Object.assign({ colour: BK["on-accent"] }, BT.tag);
-        trackedText(gr, sub, ss, W / 2, py + ph + dp(14), 1);
+        const line = sub || `${tr("ACCESS GRANTED")}  ·  ARC-0001  ·  ROW 02 / SLOT 01`, ss = Object.assign({ colour: subColour == null ? BK["on-accent"] : subColour }, BT.tag);
+        trackedText(gr, line, ss, cx, py + ph + dp(14), 1);
     }
 }
+
+// ------------------------------------------------------------------------------------------- operator check-in
+// The overlay of a character pack's film (intro.json "overlay": "operator"). That film shows an operator arriving, not a
+// case being stored, so nothing is tracked on cases. Instead:
+//   lock     honey brackets on her supply while it is tossed through the air (intro.json track[f].waffle), with a plate
+//   dossier  a plate on the right: name (resolving out of scrambled glyphs), role and id, her supply as a 4 × 4 grid of
+//            waffle pockets that fill with honey after she eats, and the check-in steps (checkInSteps)
+//   verdict  SESSION AUTHORIZED under the plate on her last pose
+// Everything is timed in frames of the 24 fps cut, like the default overlay (F24), and reads intro.json "hud":
+//   name, id, role, supply   the texts          eat, full   the frame she eats it, the frame the reserve is full
+//   chapters                 the bottom bar's chapters, [[frame, name], ...]
+const HUD_DEFAULT = { name: "OPERATOR", id: "OP-0001", role: "FIELD OPERATOR", supply: "SUPPLY", eat: 40, full: 140, chapters: null };
+let HUD = null, HUD_OF = null;   // hud() of the film in INTRO (rebuilt when another film is read)
+function hud() {
+    if (HUD && HUD_OF === INTRO) return HUD;
+    const h = INTRO && INTRO.hud && typeof INTRO.hud === "object" ? INTRO.hud : {}, o = Object.assign({}, HUD_DEFAULT);
+    for (const key of ["name", "id", "role", "supply"]) if (typeof h[key] === "string" && h[key].trim()) o[key] = h[key].trim().toUpperCase();
+    for (const key of ["eat", "full"]) if (Number.isFinite(+h[key])) o[key] = clamp(+h[key], 0, NF * F24);
+    if (!(o.full > o.eat)) o.full = o.eat + 1;
+    if (Array.isArray(h.chapters)) o.chapters = h.chapters;
+    HUD = o; HUD_OF = INTRO;
+    return o;
+}
+
+// the check-in's steps, as bootSteps (ms from the film's start); `ok` replaces OK on the finished plate, `honey` fills
+// the row's cells with the accent
+function checkInSteps() {
+    let files = 0;
+    try { files = fb.GetLibraryItems().Count; } catch (e) { /* no library */ }
+    const h = hud(), at = fr => fr / 24 * 1000, eat = at(h.eat), full = at(h.full), end = Math.max(1200, FILM_MS - 1000);
+    const steps = [
+        ["OP-01", tr("BIOMETRIC LINK"), 300, 1000],
+        ["OP-02", tr("GEAR  ·  CLEAR SHELL"), 600, 1500],
+        ["OP-03", `${tr("SUPPLY")}  ·  ${h.supply}  x1`, Math.max(200, eat - 900), eat, { ok: tr("RECEIVED") }],
+        ["OP-04", tr("SUGAR RESERVE"), eat, full, { honey: true }],
+        ["OP-05", `${tr("LIBRARY INDEX")}  ·  ${files ? fmtCount(files) : tr("EMPTY")}`, 1900, 2900],
+        ["OP-06", tr("SIGNAL PATH  ·  48 BANDS"), 2600, 3700],
+        ["OP-07", tr("SESSION LINK"), Math.min(full, end - 900), end],
+    ];
+    // a short film squeezes the steps into its length (each still at least 100 ms long)
+    return steps.map(([code, name, t0, t1, x]) => {
+        t1 = Math.min(t1, end); t0 = Math.min(t0, t1 - 100);
+        return Object.assign({ code, name, t0, t1 }, x || {});
+    });
+}
+
+const CK = {
+    name: { size: 30, weight: 700, track: .1 },
+    lock: { size: 11, weight: 700, track: .12 },
+};
+function drawCheckIn(gr, ms, k, f, fx0, fy0, fw, fh, bh, m) {
+    const h = hud(), g = f * F24, top = bh, bot = H - bh;
+    // faint viewfinder corners round the picture
+    brackets(gr, m - dp(16), top + dp(16), W - m + dp(16), bot - dp(16), dp(34), withAlpha(BK.fg, .4));
+    drawSupplyLock(gr, f, h, fx0, fy0, fw, fh, top, bot, m);
+    const d = drawDossier(gr, ms, k, g, h, top, bot, m);
+    drawVerdict(gr, ms, k, d.cx, d.vy, `${h.name}  ·  ${tr("ON DUTY")}`, BK.accent);
+}
+
+// honey brackets on the tossed supply: acquired with a blink and a shrinking box, held a few frames after the last
+// tracked one, fading
+function drawSupplyLock(gr, f, h, fx0, fy0, fw, fh, top, bot, m) {
+    const tk = INTRO && Array.isArray(INTRO.track) ? INTRO.track : null, has = i => !!(tk[i] && Array.isArray(tk[i].waffle));
+    if (!tk) return;
+    let j = -1;
+    for (let i = Math.min(f, tk.length - 1); i >= 0 && i >= f - 8; i--) if (has(i)) { j = i; break; }
+    if (j < 0) return;
+    let j0 = j;
+    while (j0 > 0 && has(j0 - 1)) j0--;
+    const p = tk[j].waffle, x = fx0 + p[0] * fw, y = fy0 + p[1] * fh;
+    if (!Number.isFinite(x) || !Number.isFinite(y) || y < top || y > bot) return;
+    const age = f - j0, a = clamp(1 - (f - j) / 8, 0, 1);
+    if (a <= 0 || (age < 4 && age % 2)) return;
+    const s = dp(24) + (1 - easeOut(clamp(age / 5, 0, 1))) * dp(26), col = withAlpha(BK.accent, a);
+    brackets(gr, x - s, y - s, x + s, y + s, dp(9), col, Math.max(HAIR, dp(2)));
+    gr.FillSolidRect(Math.round(x - dp(2)), Math.round(y - dp(2)), dp(4), dp(4), col);
+    if (a < .5) return;
+    // the plate: a leader down and out from the lower corner, the title on honey over the supply line
+    const title = tr("SUPPLY DROP"), sub = `${h.supply}  x1  ·  ${tr("INBOUND")}`;
+    const ts = Object.assign({ colour: BK["on-accent"], bg: BK.accent }, CK.lock), tw = labelWidth(title, ts) + dp(20), th = dp(24);
+    const sw = textW(sub, BT.tiny) + dp(16), pw = Math.max(tw, sw);
+    const side = x + s + dp(22) + pw < W - m ? 1 : -1, lx = x + side * s, ly = y + s, ex = lx + side * dp(22), ey = ly + dp(22);
+    gr.DrawLine(lx, ly, ex, ey, HAIR, col);
+    const px = Math.round(side > 0 ? ex : ex - tw), py = Math.round(Math.min(ey, bot - th - dp(24)));
+    gr.FillSolidRect(px, py, tw, th, BK.accent);
+    label(gr, title, ts, px + dp(10), py + Math.round((th - labelHeight(CK.lock)) / 2));
+    const sx = side > 0 ? px : px + tw - sw;
+    gr.FillSolidRect(Math.round(sx), py + th, Math.round(sw), dp(20), withAlpha(BK.bg, .82));
+    tx(sub, BT.tiny, BK["fg-soft"], sx + dp(8), py + th + dp(5));
+}
+
+// the dossier on the right of the picture (the film keeps her on its left). Returns where the verdict goes: { cx, vy }.
+function drawDossier(gr, ms, k, g, h, top, bot, m) {
+    const steps = boot.steps, rh = dp(32), head = dp(132);
+    const pw = Math.round(clamp(W * .34, dp(300), dp(400))), ph = head + steps.length * rh + dp(8);
+    const vh = dp(100);   // room kept under the plate for the verdict
+    const x0 = W - m - pw, py = Math.round(Math.max(top + dp(30), (top + bot - ph - vh) / 2));
+    const out = { cx: x0 + pw / 2, vy: Math.min(bot - dp(60), py + ph + dp(56)) };
+    const a = easeOut(k(200, 700));
+    if (a <= 0) return out;
+    const px = Math.round(x0 + (1 - a) * dp(60));
+    gr.FillSolidRect(px, py, pw, ph, withAlpha(BK.bg, .78 * a));
+    box(gr, px, py, pw, ph, withAlpha(BK.fg, .3 * a));
+    gr.FillSolidRect(px, py, pw, dp(3), BK.accent);
+    // the heading line, the id at its right
+    if (Math.floor(ms / 500) % 2 === 0) gr.FillSolidRect(px + dp(16), py + dp(22), dp(5), dp(5), BK.accent);
+    tx(tr("OPERATOR CHECK-IN"), BT.tag, BK.fg, px + dp(28), py + dp(18));
+    tx(h.id, BT.tiny, BK["text-muted"], px + pw - dp(16), py + dp(19), 2);
+    // the name resolves left to right out of terminal glyphs
+    if (ms > 300) {
+        const chars = [...h.name], n = Math.floor(easeOut(k(350, 1150)) * chars.length);
+        let r = Math.floor(ms / 50) * 7 + 3;
+        const shown = chars.map((ch, i) => {
+            if (i < n || ch === " ") return ch;
+            r = (r * 1103515245 + 12345) & 0x7fffffff;
+            return SCRAMBLE_GLYPHS[r % SCRAMBLE_GLYPHS.length];
+        }).join("");
+        trackedText(gr, shown, Object.assign({ colour: BK.fg }, CK.name), px + dp(16), py + dp(36));
+    }
+    tx(`${tr(h.role)}  ·  ${tr("CHECK-IN")}`, BT.tiny, BK["fg-soft"], px + dp(16), py + dp(80));
+    // the supply: 4 × 4 pockets inside a round outline, filled with honey (in a diagonal order) as the reserve rises
+    const sugar = clamp((g - h.eat) / (h.full - h.eat), 0, 1), lit = Math.floor(easeOut(sugar) * 16 + 1e-6);
+    const cs = dp(8), gap = dp(3), gw = cs * 4 + gap * 3, gx = px + pw - dp(26) - gw, gy = py + dp(48);
+    const ccx = gx + gw / 2, ccy = gy + gw / 2, rr = gw * .5 * Math.SQRT2 + dp(4);
+    gr.DrawEllipse(ccx - rr, ccy - rr, rr * 2, rr * 2, HAIR, withAlpha(BK.accent, g >= h.eat ? .8 : .35));
+    for (let i = 0; i < 16; i++) {
+        const c = POCKETS[i], cx = gx + (c % 4) * (cs + gap), cy = gy + Math.floor(c / 4) * (cs + gap);
+        if (i < lit) gr.FillSolidRect(cx, cy, cs, cs, BK.accent);
+        else box(gr, cx, cy, cs, cs, withAlpha(BK.fg, .22));
+    }
+    tx(`${pad(Math.round(sugar * 100), 3)}%`, BT.tiny, g >= h.eat ? BK.accent : BK["text-muted"], ccx, gy + gw + dp(14), 1);
+    // the steps
+    let y = py + head;
+    gr.FillSolidRect(px + dp(16), y - dp(14), pw - dp(32), HAIR, withAlpha(BK.fg, .35));
+    for (const s of steps) {
+        const p = clamp((ms - s.t0) / (s.t1 - s.t0), 0, 1), run = ms >= s.t0 && ms < s.t1, ok = ms >= s.t1;
+        const ink = ok ? BK.fg : run ? BK["fg-soft"] : withAlpha(BK["text-muted"], .7);
+        tx(s.code, BT.tiny, run || ok ? BK.accent : BK["text-muted"], px + dp(16), y + dp(3));
+        gr.DrawText(s.name, font(9.5, 500), ink, px + dp(72), y - dp(2), pw - dp(72) - dp(96), dp(18), DT_SINGLE | DT_ELLIPSIS);
+        const cw = Math.floor((pw - dp(72) - dp(100)) / 10), fill = s.honey ? BK.accent : ok ? BK.fg : BK["fg-soft"];
+        for (let c = 0; c < 10; c++) {
+            const on = c < Math.floor(p * 10), hd = run && c === Math.floor(p * 10);
+            gr.FillSolidRect(px + dp(72) + c * cw, y + dp(17), cw - dp(2), dp(3), on ? fill : hd && Math.floor(ms / 90) % 2 ? BK.accent : withAlpha(BK.fg, .14));
+        }
+        const sx = px + pw - dp(16), sy = y - dp(1);
+        if (ok) {
+            const word = s.ok || "OK", okS = Object.assign({ colour: s.ok ? BK["on-accent"] : BK.bg, bg: s.ok ? BK.accent : BK.fg }, BT.tag), w = labelWidth(word, okS) + dp(16);
+            gr.FillSolidRect(sx - w, sy, w, dp(18), okS.bg);
+            label(gr, word, okS, sx - w + dp(8), sy + Math.round((dp(18) - labelHeight(BT.tag)) / 2));
+        } else if (run) {
+            box(gr, sx - dp(54), sy, dp(54), dp(18), BK.accent);
+            tx(`RUN ${"|/-\\"[Math.floor(ms / 80) % 4]}`, BT.tiny, BK.accent, sx - dp(27), sy + dp(4), 1);
+        } else tx(tr("QUEUED"), BT.tiny, withAlpha(BK["text-muted"], .7), sx, sy + dp(4), 2);
+        y += rh;
+    }
+    return out;
+}
+// the order the 16 pockets fill in: along the diagonals from the top left, like honey running across a waffle
+const POCKETS = [...Array(16).keys()].sort((a, b) => ((a % 4) + Math.floor(a / 4)) - ((b % 4) + Math.floor(b / 4)) || a - b);

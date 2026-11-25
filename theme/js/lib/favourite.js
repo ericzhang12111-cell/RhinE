@@ -100,8 +100,31 @@ function drawHeart(gr, x, y, size, on, colour = on ? C.accent : C["line-dim"]) {
         const t = k / 32 * 2 * Math.PI, s = Math.sin(t);
         pts.push(cx + 16 * s * s * s * r, cy - (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * r);
     }
+    const pack = packGlyph("heart");   // a character pack's icon set may have its own (lib/draw.js ICON_SETS)
+    if (pack) { pack(gr, pts, cx, cy, r, size, on, colour); return; }
     if (on) { gr.FillPolygon(colour, 0, pts); return; }
-    // outlined segment by segment: a polygon's mitred joins would spike at the dip and the point
+    heartOutline(gr, pts, size, colour);
+}
+// outlined segment by segment: a polygon's mitred joins would spike at the dip and the point
+function heartOutline(gr, pts, size, colour) {
     const lw = Math.max(HAIR, size * .09);
     for (let k = 0; k < pts.length; k += 2) { const j = (k + 2) % pts.length; gr.DrawLine(pts[k], pts[k + 1], pts[j], pts[j + 1], lw, colour); }
 }
+// WAFFLE (lib/draw.js): a heart-shaped waffle, the same heart cut into four pockets by a ridge down its middle (from
+// the dip to the point) and one across; outlined, the two ridges are drawn inside the outline.
+if (ICON_SETS.waffle) ICON_SETS.waffle.heart = (gr, pts, cx, cy, r, size, on, colour) => {
+    const yc = cy + 2 * r;   // a little under the lobes' centres: the pockets above and below look alike
+    if (on) { for (const p of cellCut(pts, [cx], [yc], Math.max(1.1, size * .1))) gr.FillPolygon(colour, 0, p); return; }
+    heartOutline(gr, pts, size, colour);
+    // where the ridge across meets the outline: the outermost crossings of y = yc
+    let x0 = cx, x1 = cx;
+    for (let k = 0; k < pts.length; k += 2) {
+        const j = (k + 2) % pts.length, ay = pts[k + 1], by = pts[j + 1];
+        if ((ay - yc) * (by - yc) > 0 || ay === by) continue;
+        const xx = pts[k] + (pts[j] - pts[k]) * (yc - ay) / (by - ay);
+        x0 = Math.min(x0, xx); x1 = Math.max(x1, xx);
+    }
+    const lw = Math.max(HAIR, size * .07);
+    gr.DrawLine(x0, yc, x1, yc, lw, colour);
+    gr.DrawLine(cx, cy - 5 * r, cx, cy + 17 * r, lw, colour);   // from the dip to the point
+};

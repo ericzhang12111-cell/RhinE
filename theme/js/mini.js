@@ -37,10 +37,26 @@ const MC_SETS = {
         pit: 0xffdddbd3, groove: 0xffd0cec6, rim: 0xffa9a79f, lip: 0xffffffff, shade: 0x22000000, drop: 0xffc4c2ba,
         down: 0xffe2e0d8, downShade: 0x26000000, scan: 0x0f000000, mark: 0xff6b6861, glow: .3,
     },
+    // SWEETPIE (a character pack's, pack.json "mini": "sweetpie"; it stands in for the Colour picked while the pack is
+    // in use): her honey-yellow panel, black keys and a black window lit in cream. Three things only a pack's set has:
+    //   engrave   the plate's two engravings for each shape, in place of the Rhine Lab's
+    //   plateAcc  the accent for what sits on the plate itself (lamps, the meters' top, a hovered key's edge, MUTE): the
+    //             scheme's honey would vanish on the yellow, so a deeper amber; in the black parts the accent stays
+    //   pitInk    the LRC | TRK switch's unlit label, in its black pit (lbl is for the plate)
+    sweetpie: {
+        plate: 0xffffc21a, edge: 0xffa87a00, hi: 0xffffda6b,
+        ink: 0xfff4eee2, dim: 0xff3d2e06, lbl: 0xff4d3a08, win: 0xff0d0b08, amber: 0xfff4eee2, amberSub: 0xffb8ae9c,
+        amberLo: 0xffffc21a, green: 0xff151310, yellow: 0xff6b4200, off: 0xffdea712, key: 0xff151310, keyEdge: 0xff5a4306,
+        keyHi: 0xff34302a, track: 0xff131110, cover: 0xff1b1815,
+        pit: 0xff131110, groove: 0xff131110, rim: 0xff6e5208, lip: 0xffffd75e, shade: 0x66000000, drop: 0xffa27900,
+        down: 0xff0a0908, downShade: 0x80000000, scan: 0x47000000, mark: 0xfff4eee2, glow: .3,
+        plateAcc: 0xff8a3200, pitInk: 0xffb8ae9c,
+        engrave: { wide: ["SWEETPIE · HONEY TERMINAL", "WF-03 · S/N 0303"], square: ["SWEETPIE", "WF-03 SQ"] },
+    },
 };
 const miniSkin = () => STATE.miniSkin === "auto" ? (MODE === "light" ? "white" : "dark") : STATE.miniSkin === "white" ? "white" : "dark";
 let MC = MC_SETS.dark;
-const MINI = { hover: null, level: [0, 0], drag: false, press: null };   // drag: the volume fader held; press: the plate held (x, y)
+const MINI = { hover: null, level: [0, 0], drag: false, press: null, plateAcc: 0 };   // drag: the volume fader held; press: the plate held (x, y); plateAcc: this paint's accent on the plate (0: the scheme's)
 
 // design dp → px in this window (the window is made the shape's size; a rounding of its size scales the drawing with
 // it, and until a new shape's window is there the board is drawn in the old one, as large as fits)
@@ -53,13 +69,15 @@ function drawMini(gr) {
     const [mw, mh] = miniDims(), sq = STATE.miniShape === "square", L = MINI_LAYOUTS[sq ? "square" : "wide"];
     const k = miniK(), w = mu(mw), h = mu(mh), ox = Math.round((W - w) / 2), oy = Math.round((H - h) / 2);
     const X = v => ox + mu(v), Y = v => oy + mu(v);
-    MC = MC_SETS[miniSkin()];
+    MC = MC_SETS[packLook("mini", ["sweetpie"]) || miniSkin()];   // a character pack may bring its own colours
+    const PA = MC.plateAcc || C.accent, mark = MC.engrave && MC.engrave[sq ? "square" : "wide"] || L.mark;
+    MINI.plateAcc = PA;
     gr.FillSolidRect(0, 0, W, H, MC.plate);
     box(gr, ox, oy, w, h, MC.edge, HAIR);
     gr.FillSolidRect(ox + HAIR, oy + HAIR, w - 2 * HAIR, HAIR, MC.hi);
     // the plate's engraving
-    label(gr, L.mark[0], mst(7.5, MC.dim, MC.plate, 600, .22), X(24), Y(5));
-    label(gr, L.mark[1], mst(7.5, MC.dim, MC.plate, 600, .22), X(mw - 24), Y(5), 2);
+    label(gr, mark[0], mst(7.5, MC.dim, MC.plate, 600, .22), X(24), Y(5));
+    label(gr, mark[1], mst(7.5, MC.dim, MC.plate, 600, .22), X(mw - 24), Y(5), 2);
 
     const h0 = T.handle;
     // the cover, in an inset frame (the placeholder is drawn for the wide unit's 56 dp, and scaled)
@@ -88,7 +106,7 @@ function drawMini(gr) {
 
     // the lamps over the meters
     const RC = L.col, playing = fb.IsPlaying && !fb.IsPaused, lrc = STATE.miniShow !== "trk";
-    const lamps = [["PWR", MC.green, true], ["PLAY", C.accent, playing], ["LRC", C.accent, lrc], ["TRK", C.accent, !lrc]];
+    const lamps = [["PWR", MC.green, true], ["PLAY", PA, playing], ["LRC", PA, lrc], ["TRK", PA, !lrc]];
     lamps.forEach(([name, col, on], i) => {
         const lx = X(RC + 12 + i * 24) - mu(3.5);
         if (on) gr.FillEllipse(lx - mu(2), Y(25) - mu(2), mu(11), mu(11), withAlpha(col, MC.glow));
@@ -100,7 +118,7 @@ function drawMini(gr) {
         const ry = Y(56 + r * 11), lit = Math.round(clamp(MINI.level[r], 0, 1) * 12);
         label(gr, ch, mst(6.5, MC.lbl, MC.plate), X(RC), ry - mu(1));
         for (let s = 0; s < 12; s++) {
-            const col = s >= lit ? MC.off : s < 7 ? MC.green : s < 9 ? MC.yellow : C.accent;
+            const col = s >= lit ? MC.off : s < 7 ? MC.green : s < 9 ? MC.yellow : PA;
             gr.FillSolidRect(X(RC + 11 + s * 7), ry, mu(5), mu(7), col);
         }
     });
@@ -116,26 +134,30 @@ function drawMini(gr) {
     const px = X(22), pw = mu(mw - 46), py = Y(L.prog), len = fb.PlaybackLength, pf = fb.IsPlaying && len > 0 ? clamp(fb.PlaybackTime / len, 0, 1) : 0;
     gr.FillSolidRect(px, py, pw, mu(2), MC.track);
     gr.FillSolidRect(px, py, Math.round(pw * pf), mu(2), C.accent);
-    if (fb.IsPlaying) gr.FillSolidRect(px + Math.round(pw * pf) - mu(1), py - mu(3), mu(2), mu(8), MC.ink);
+    // the playhead (a character pack's dog runs there instead, lib/draw.js markAt)
+    if (fb.IsPlaying && !markAt(gr, "dog", px + pw * pf - mu(4), py + mu(1), mu(11), MC.ink)) gr.FillSolidRect(px + Math.round(pw * pf) - mu(1), py - mu(3), mu(2), mu(8), MC.ink);
     hits.add("mini-seek", px, py - mu(5), pw, mu(12));
 
     // the keys: previous / play-pause / next in the middle (the square: on the left), the volume fader left of them on
     // the wide unit, LRC | TRK and back on the right
     const ky = Y(mh - 31), kh = mu(22), kx = X(L.keys);
     if (!sq) drawMiniVolume(gr, X(24), ky, kh);
-    miniKey(gr, "mini-prev", kx, ky, mu(34), kh, false, (x, y, s) => { gr.FillSolidRect(x - s * .55, y - s / 2, Math.max(HAIR, s * .16), s, MC.ink); tri(gr, x + s * .5, y, -s * .85, s, MC.ink); });
-    miniKey(gr, "mini-play", kx + mu(40), ky, mu(42), kh, playing, (x, y, s) => {
+    // (a character pack's icon set, lib/draw.js ICON_SETS, draws the glyphs: its 12-unit square is 10 units high, as
+    // tall as the keys' own glyphs)
+    const own = iconSetName() !== "archive", glyphKey = (n, c) => (x, y, s) => iconPx(gr, n, x, y, s * 1.2, c);
+    miniKey(gr, "mini-prev", kx, ky, mu(34), kh, false, own ? glyphKey("prev", MC.ink) : (x, y, s) => { gr.FillSolidRect(x - s * .55, y - s / 2, Math.max(HAIR, s * .16), s, MC.ink); tri(gr, x + s * .5, y, -s * .85, s, MC.ink); });
+    miniKey(gr, "mini-play", kx + mu(40), ky, mu(42), kh, playing, own ? glyphKey(playing ? "pause" : "play", playing ? C.accent : MC.ink) : (x, y, s) => {
         if (playing) { gr.FillSolidRect(x - s * .42, y - s / 2, s * .26, s, C.accent); gr.FillSolidRect(x + s * .16, y - s / 2, s * .26, s, C.accent); }
         else tri(gr, x - s * .4, y, s * .9, s, MC.ink);
     });
-    miniKey(gr, "mini-next", kx + mu(88), ky, mu(34), kh, false, (x, y, s) => { tri(gr, x - s * .5, y, s * .85, s, MC.ink); gr.FillSolidRect(x + s * .4, y - s / 2, Math.max(HAIR, s * .16), s, MC.ink); });
+    miniKey(gr, "mini-next", kx + mu(88), ky, mu(34), kh, false, own ? glyphKey("next", MC.ink) : (x, y, s) => { tri(gr, x - s * .5, y, s * .85, s, MC.ink); gr.FillSolidRect(x + s * .4, y - s / 2, Math.max(HAIR, s * .16), s, MC.ink); });
     // LRC | TRK
     const tw = mu(27), tx = X(mw - 24 - 26 - 6) - 2 * tw, hov = MINI.hover === "mini-show";
     gr.FillSolidRect(tx, ky, 2 * tw, kh, MC.pit);
-    box(gr, tx, ky, 2 * tw, kh, hov ? C.accent : MC.keyEdge, HAIR);
+    box(gr, tx, ky, 2 * tw, kh, hov ? PA : MC.keyEdge, HAIR);
     gr.FillSolidRect(tx + (lrc ? HAIR : tw), ky + HAIR, tw - HAIR, kh - 2 * HAIR, C.accent);
-    label(gr, "LRC", mst(7.5, lrc ? 0xff111111 : MC.lbl, lrc ? C.accent : MC.pit), tx + tw / 2, ky + Math.round((kh - labelHeight(mst(7.5, 0, 0))) / 2), 1);
-    label(gr, "TRK", mst(7.5, !lrc ? 0xff111111 : MC.lbl, !lrc ? C.accent : MC.pit), tx + tw * 1.5, ky + Math.round((kh - labelHeight(mst(7.5, 0, 0))) / 2), 1);
+    label(gr, "LRC", mst(7.5, lrc ? 0xff111111 : MC.pitInk || MC.lbl, lrc ? C.accent : MC.pit), tx + tw / 2, ky + Math.round((kh - labelHeight(mst(7.5, 0, 0))) / 2), 1);
+    label(gr, "TRK", mst(7.5, !lrc ? 0xff111111 : MC.pitInk || MC.lbl, !lrc ? C.accent : MC.pit), tx + tw * 1.5, ky + Math.round((kh - labelHeight(mst(7.5, 0, 0))) / 2), 1);
     hits.add("mini-show", tx, ky, 2 * tw, kh);
     miniKey(gr, "mini-back", X(mw - 24 - 26), ky, mu(26), kh, false, (x, y, s) => {
         const a = s * .5, t = Math.max(HAIR, mu(1.2));
@@ -180,11 +202,11 @@ function drawMiniVolume(gr, x, y, h, cw = 0) {
     const capW = mu(8), capH = mu(14), capX = Math.round(gx + gw * p - capW / 2);
     gr.FillSolidRect(capX, cy - capH / 2 + mu(2), capW, capH, MC.drop);
     gr.FillSolidRect(capX, cy - capH / 2, capW, capH, MC.key);
-    box(gr, capX, cy - capH / 2, capW, capH, hov ? C.accent : MC.keyEdge, HAIR);
+    box(gr, capX, cy - capH / 2, capW, capH, hov ? MINI.plateAcc || C.accent : MC.keyEdge, HAIR);
     gr.FillSolidRect(capX + HAIR, Math.round(cy - HAIR / 2), capW - 2 * HAIR, HAIR, hov ? C.accent : MC.ink);
     // the level
     const db = fb.Volume, txt = muted ? "MUTE" : db > -0.05 ? "0 dB" : `${db.toFixed(db > -10 ? 1 : 0)} dB`;
-    const lst = mst(7, muted ? C.accent : MC.lbl, MC.plate, 500, .06);
+    const lst = mst(7, muted ? MINI.plateAcc || C.accent : MC.lbl, MC.plate, 500, .06);
     if (cw) label(gr, txt, lst, x + cw, y, 2); else label(gr, txt, lst, gx + gw + mu(8), cy - lh);
     hits.add("mini-vol", gx - mu(4), y, gw + mu(8), h, { x0: gx, w: gw });
 }
@@ -242,12 +264,12 @@ function miniKey(gr, id, x, y, w, h, down, icon) {
     const hov = MINI.hover === id;
     if (down) {
         gr.FillSolidRect(x, y + HAIR, w, h, MC.down);
-        box(gr, x, y + HAIR, w, h, C.accent, HAIR);
+        box(gr, x, y + HAIR, w, h, MINI.plateAcc || C.accent, HAIR);
         gr.FillSolidRect(x + HAIR, y + 2 * HAIR, w - 2 * HAIR, mu(2), MC.downShade);
     } else {
         gr.FillSolidRect(x, y + h, w, mu(2), MC.drop);
         gr.FillSolidRect(x, y, w, h, MC.key);
-        box(gr, x, y, w, h, hov ? C.accent : MC.keyEdge, HAIR);
+        box(gr, x, y, w, h, hov ? MINI.plateAcc || C.accent : MC.keyEdge, HAIR);
         gr.FillSolidRect(x + HAIR, y + HAIR, w - 2 * HAIR, HAIR, MC.keyHi);
     }
     icon(Math.round(x + w / 2), Math.round(y + h / 2 + (down ? HAIR : 0)), mu(9));

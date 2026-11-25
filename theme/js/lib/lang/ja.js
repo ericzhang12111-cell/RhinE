@@ -366,7 +366,7 @@ I18N["ja"] = {
     // playlists: play on double-click, the theme's own playlists tagged
     "Play playlist": "このプレイリストを再生", "THEME": "テーマ",
     // archive: group by artist or rating, sort by rating, one shelf per artist or folder
-    "INITIAL": "頭文字", "Group by artist": "アーティストでグループ化", "Group by rating": "評価でグループ化", "RATING {0}": "評価 {0}",
+    "INITIAL": "頭文字", "Group by artist": "アーティストでグループ化", "Group by rating": "評価でグループ化", "RATING {0}": "評価 {0}", "RATING {0} – {1}": "評価 {0} – {1}",
     "Rating (highest first)": "評価（高い順）", "One shelf per artist, folder or playlist": "アーティスト・フォルダ・プレイリストごとに 1 段の棚",
     // signal: what shows under the ring and along the bottom (PANELS)
     "PANELS": "パネル", "Under the ring": "メビウスの輪の下", "Along the bottom": "下部", "Spectrum": "スペクトラム", "Lyrics": "歌詞", "Level meters": "レベルメーター", "Stereo scope": "ステレオスコープ",
@@ -390,4 +390,8 @@ I18N["ja"] = {
     "PLAY PLAYLIST": "プレイリストを再生", "Open in playlist": "プレイリストで開く",
     "Online playlists in the Archive": "アーカイブに表示するオンラインのプレイリスト", "Use my created playlists and liked songs": "作成したプレイリストとお気に入りの曲を使う", "Refresh online playlists": "オンラインのプレイリストを更新",
     "Liked songs": "お気に入りの曲", "New NetEase playlist…": "NetEase のプレイリストを新規作成…", "Add to playlist": "プレイリストに追加", "Remove from “{0}”": "「{0}」から削除", "Rename playlist…": "プレイリスト名を変更…", "Delete playlist": "プレイリストを削除", "Delete “{0}” from NetEase (cannot be undone)": "NetEase から「{0}」を削除（元に戻せません）", "Remove from my playlists": "マイプレイリストから外す", "Collect into my playlists": "マイプレイリストに保存", "Working…": "処理中…", "Restart foobar2000 to edit NetEase playlists (the bridge running is from before this update).": "NetEase のプレイリストを編集するには foobar2000 を再起動してください（動いているブリッジは更新前のものです）。", "NetEase did not do it: {0}": "NetEase で完了できませんでした：{0}", "the bridge did not answer": "ブリッジが応答しませんでした", "Already in “{0}”": "すでに「{0}」にあります", "Added to “{0}”": "「{0}」に追加しました", "Removed from “{0}”": "「{0}」から削除しました", "NetEase playlist name": "NetEase のプレイリスト名", "New NetEase playlist": "NetEase のプレイリストを新規作成", "Created “{0}”": "「{0}」を作成しました", "Rename NetEase playlist": "NetEase のプレイリスト名を変更", "Renamed to “{0}”": "「{0}」に名前を変更しました", "Deleted “{0}”": "「{0}」を削除しました", "Collected “{0}”": "「{0}」を保存しました", "Removed “{0}” from your playlists": "「{0}」をマイプレイリストから外しました",
+    // character packs (lib/pack.js) and the SWEETPIE pack
+    "Fan-made looks built around one character: colours, case, icons, ring, wallpapers and more. Downloaded on request, kept apart from the theme.": "一人のキャラクターをテーマにしたファンメイドの外観：配色、ケース、アイコン、リング、壁紙など。必要なときにダウンロードし、テーマ本体とは別に保存されます。", "DOWNLOAD · {0}": "ダウンロード · {0}", "FAILED · TRY AGAIN": "失敗 · 再試行", "INSTALLED": "インストール済み", "INSTALLING…": "インストール中…", "DOWNLOADING {0} %": "ダウンロード中 {0}%", "DOWNLOADING…": "ダウンロード中…",
+    "HONEY ENAMEL": "ハニーほうろう", "Honey-yellow enamel on steel, screen-printed in black and cream, a cookie-dog head.": "鋼板にハニーイエローのほうろう、黒とクリームのシルク印刷、クッキーの犬の顔。",
+    "CHARACTER PACKS": "キャラクターパック", "CHARACTER PACK": "キャラクターパック", "WAFFLE": "ワッフル", "Warm black and PVC white with honey yellow": "温かい黒と PVC の白、はちみつ色のイエロー", "WAFFLES": "ワッフル", "OPERATOR CHECK-IN": "オペレーター着任", "BIOMETRIC LINK": "生体認証", "GEAR  ·  CLEAR SHELL": "装備 · クリアシェル", "SUPPLY": "補給", "RECEIVED": "受領", "SUGAR RESERVE": "糖分残量", "SUPPLY DROP": "補給投下", "INBOUND": "投下中", "ON DUTY": "任務中", "CHECK-IN": "着任", "FIELD OPERATOR": "フィールドオペレーター", "ARRIVAL": "到着", "INTAKE": "摂取", "CALIBRATE": "調整",
 };

@@ -826,7 +826,7 @@ TOKEN_LISTENERS.push(() => { ARIMG.faded.clear(); AR.dirtyInfo = true; });
 // the same room as the set in use (its material, its light, its mode: assets/render/room/<set>/<mode>/inspect-00.png +
 // inspect.json, .dev/pvlayout/render_room_front.sh), so that it opens as the case it stood as; a set without one
 // borrows the skin its material was made from. Its json is read once.
-const ROOM_INSPECT_SKIN = { cream: "frost", glass: "glass", white: "white", blackout: "blackout", rhine: "frost" };
+const ROOM_INSPECT_SKIN = { cream: "frost", glass: "glass", white: "white", blackout: "blackout", rhine: "frost", sweetpie: "sweetpie" };
 const INSP_SKINS = new Map();
 function inspSkin() {
     if (!roomOn()) return { id: CASE_SKIN, dir: CASE_DIR, meta: CASE_META };
@@ -1075,8 +1075,8 @@ function drawArchive(gr) {
 }
 // the album file, cached as a layer (with the wallpaper under it, when there is one)
 function drawInfoLayer(gr) {
-    const wp = LABEL_LIVE ? WP.comp : null;
-    if (AR.dirtyInfo || !AR.info || AR.info.wp !== wp) { AR.info = renderLayer(W - infoX() + dp(20), H, drawInfo, AR.info); AR.info.wp = wp; AR.dirtyInfo = false; }
+    const wp = LABEL_LIVE ? WP.comp : null;   // (pv: a pack's picture under the file came in, lib/wallpaper.js)
+    if (AR.dirtyInfo || !AR.info || AR.info.wp !== wp || AR.info.pv !== panelPicVer()) { AR.info = renderLayer(W - infoX() + dp(20), H, drawInfo, AR.info); AR.info.wp = wp; AR.info.pv = panelPicVer(); AR.dirtyInfo = false; }
     gr.DrawImage(AR.info.img, infoX() - dp(20), 0, AR.info.w, AR.info.h, 0, 0, AR.info.w, AR.info.h);
     infoHits(infoX() - dp(20));
 }
@@ -1118,7 +1118,7 @@ function drawArrayCase(gr, it, sx, sy, k, aw, I) {
     // the selected case's corner marks, on its cover (a see-through shelf in front covers them, as it covers the case),
     // and its plate, a label beside it: drawn after every shelf (drawArchive), over the see-through ones in front
     if (it.isSel && it.c.clear.x > .6 && AR.insp === 0) {
-        for (const [px, py] of meta.cover) gr.FillSolidRect(Math.round(ox + px * k - dp(3)), Math.round(oy + py * k - dp(3)), dp(6), dp(6), C.accent);
+        for (const [px, py] of meta.cover) bullet(gr, Math.round(ox + px * k - dp(3)), Math.round(oy + py * k - dp(3)), dp(6), C.accent);
         AR.selPlate = { a: it.a, ox, oy, k };
     }
     return selItem;
@@ -1324,8 +1324,9 @@ function drawGroupSwitch(gr) {
     }
     const can =d => AR.group + d >= 0 && AR.group + d < arRows().length;
     // ← the next shelf (behind, to the left on screen) · → the one before (towards the front)
-    gr.DrawText("←", font(16, 400), can(1) ? C.fg : C["line-dim"], cx - dp(110), y + dp(2), dp(24), dp(24), DT_CENTER_SINGLE);
-    gr.DrawText("→", font(16, 400), can(-1) ? C.fg : C["line-dim"], cx + dp(86), y + dp(2), dp(24), dp(24), DT_CENTER_SINGLE);
+    // (a character pack's dog runs that way instead of the arrow, lib/draw.js mark)
+    if (!mark(gr, "dogL", cx - dp(98), y + dp(14), dp(15), can(1) ? C.fg : C["line-dim"], C.bg)) gr.DrawText("←", font(16, 400), can(1) ? C.fg : C["line-dim"], cx - dp(110), y + dp(2), dp(24), dp(24), DT_CENTER_SINGLE);
+    if (!mark(gr, "dog", cx + dp(98), y + dp(14), dp(15), can(-1) ? C.fg : C["line-dim"], C.bg)) gr.DrawText("→", font(16, 400), can(-1) ? C.fg : C["line-dim"], cx + dp(86), y + dp(2), dp(24), dp(24), DT_CENTER_SINGLE);
     hits.add("ar-gnext", cx - dp(116), y - dp(4), dp(36), dp(36));
     hits.add("ar-gprev", cx + dp(80), y - dp(4), dp(36), dp(36));
 }
@@ -1375,7 +1376,7 @@ function drawInspection(gr, e, fade = 1) {
     if (M1.info) drawInfoLabel(gr, M1.info.map(([px, py]) => [ox + px * k, oy + py * k]), albumInfoLabel(a), sa);
     if (e > .85 && !SWAP.phase) {   // (its marks, title and button wait until a swap is over)
         const q = coverQ.map(([px, py]) => [ox + px * k, oy + py * k]), al = (e - .85) / .15;
-        for (const [px, py] of q) gr.FillSolidRect(Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), dp(6), withAlpha(C.accent, al * fade));
+        for (const [px, py] of q) bullet(gr, Math.round(px - dp(3)), Math.round(py - dp(3)), dp(6), withAlpha(C.accent, al * fade));
         if (al > .5 && fade > .5) {
             // the text above and the button below keep clear of the case's edges (the frame's crop is the case's box)
             const c = M1.crop, left = Math.round(c ? ox + c[0] * k : q[0][0]);
@@ -1398,15 +1399,22 @@ function drawInspection(gr, e, fade = 1) {
 const INFO_HITS = [];
 function infoHits(ox) { for (const [id, x, y, w, h, data] of INFO_HITS) hits.add(id, ox + x, y, w, h, data); }
 
+// (a character pack's picture under the file, lib/wallpaper.js drawPanelPic, in the wallpaper's and the halftone's
+// place, its left edge marked; the labels then drawn live over it)
 function drawInfo(gr, w, h) {
     gr.FillSolidRect(0, 0, w, h, C.bg);
-    if (LABEL_LIVE) drawWallpaper(gr, "stage", infoX() - dp(20), 0, w, h, 0, 0);
+    const pic = drawPanelPic(gr, "archive", 0, 0, w, h, C.bg), was = LABEL_LIVE;
+    if (pic) { LABEL_LIVE = true; gr.FillSolidRect(0, 0, HAIR, h, withAlpha(C["line-dim"], .6)); }
+    try { drawInfoBody(gr, w, h, pic); } finally { LABEL_LIVE = was; }
+}
+function drawInfoBody(gr, w, h, pic) {
+    if (LABEL_LIVE && !pic) drawWallpaper(gr, "stage", infoX() - dp(20), 0, w, h, 0, 0);
     INFO_HITS.length = 0;
     const a = curAlbum();
     if (!a) return;
     const x = dp(20), iw = fileW(), gname = groupName(a.grp || "");
     // the halftone (06 STYLE), under the ghost group name (both pages)
-    halftoneDecor(gr, w, h, dp(210));
+    if (!pic) halftoneDecor(gr, w, h, dp(210));
     // ghost group name, low behind the actions
     const gf = font(132, 700), gw = gr.CalcTextWidth(gname, gf);
     gr.DrawStrokedText(gname, gf, withAlpha(C["line-faint"], .45), HAIR, 0, 0, h - dp(150), gw + dp(20), dp(170));
@@ -1451,7 +1459,7 @@ function drawInfoButtons(gr, x, y, isTrack) {
     const ks = st(AR_ST.key, mix(C.bg, C.fg, .45), C.fg), kt = tr("SPACE"), kw = labelWidth(kt, ks);
     const pw = dp(14) + dp(10) + dp(10) + labelWidth(playTxt, bs) + dp(14) + kw + dp(14);
     gr.FillSolidRect(x, y, pw, bh, C.fg);
-    icon(gr, "play", x + dp(19), y + bh / 2, 9, C.bg);
+    icon(gr, "play", x + dp(19), y + bh / 2, packMarks() ? 13 : 9, C.bg, C.fg);   // (a pack's dog is drawn larger: its jaws need the room)
     label(gr, playTxt, bs, x + dp(34), y + Math.round((bh - labelHeight(AR_ST.btn)) / 2));
     label(gr, kt, ks, x + pw - dp(14) - kw, y + Math.round((bh - labelHeight(AR_ST.key)) / 2));
     INFO_HITS.push(["ar-play", x, y, pw, bh]);
@@ -1461,9 +1469,11 @@ function drawInfoButtons(gr, x, y, isTrack) {
     box(gr, ox2 - dp(4), y - dp(4), ow + dp(8), bh + dp(8), C.accent);
     label(gr, openTxt, os, ox2 + dp(14), y + Math.round((bh - labelHeight(AR_ST.btn)) / 2));
     const ax0 = ox2 + ow - dp(24), ay0 = y + bh / 2 + dp(5), aL = dp(9), sw = Math.max(HAIR, dp(1.5));
-    gr.DrawLine(ax0, ay0, ax0 + aL, ay0 - aL, sw, C.accent);
-    gr.DrawLine(ax0 + dp(2.5), ay0 - aL, ax0 + aL, ay0 - aL, sw, C.accent);
-    gr.DrawLine(ax0 + aL, ay0 - aL, ax0 + aL, ay0 - dp(2.5), sw, C.accent);
+    if (!mark(gr, "dogUp", ax0 + aL / 2, ay0 - aL / 2, dp(16), C.accent, LABEL_LIVE ? null : C.bg)) {   // (a pack's dog leaps that way, lib/draw.js)
+        gr.DrawLine(ax0, ay0, ax0 + aL, ay0 - aL, sw, C.accent);
+        gr.DrawLine(ax0 + dp(2.5), ay0 - aL, ax0 + aL, ay0 - aL, sw, C.accent);
+        gr.DrawLine(ax0 + aL, ay0 - aL, ax0 + aL, ay0 - dp(2.5), sw, C.accent);
+    }
     INFO_HITS.push(["ar-open", ox2, y, ow, bh]);
     if (onl) return bh;
     // ♥: the album's heart (a track item's own, while SHOW TRACKS is on; lib/favourite.js)
@@ -1480,7 +1490,7 @@ function drawInfoFile(gr, a, x, y, iw, w, h) {
     // bracketed ALBUM NO. 0269 (FOLDER NO. for a folder, PLAYLIST NO. for an online list) + format chip
     const noTxt = tr(a.folder ? "FOLDER NO." : isOnlineList(a) ? "PLAYLIST NO." : "ALBUM NO.") + " ", hh = dp(34), hs = st(AR_ST.head, C.fg), lw = labelWidth(noTxt, hs);
     const f = font(13, 600), cell = Math.round(gr.CalcTextWidth("0", f, true) + .12 * dp(13)), bw = dp(20) + lw + cell * 4 + dp(16);
-    for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) gr.FillSolidRect(x + cx * (bw - dp(5)), y + cy * (hh - dp(5)), dp(5), dp(5), C.fg);
+    for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) bullet(gr, x + cx * (bw - dp(5)), y + cy * (hh - dp(5)), dp(5), C.fg);
     const ty = y + Math.round((hh - labelHeight(AR_ST.head)) / 2);
     label(gr, noTxt, hs, x + dp(20), ty);
     drawRoll(gr, AR.noRoll, f, C.fg, x + dp(20) + lw, ty, cell, labelHeight(AR_ST.head));
@@ -1542,7 +1552,7 @@ function drawInfoFile(gr, a, x, y, iw, w, h) {
         const ry = y + k * rowH, hov = AR.infoHover === t.i;
         if (t.own || hov) gr.FillSolidRect(x - dp(8), ry, iw + dp(16), rowH, t.own ? C.panel : withAlpha(C.fg, .06));
         if (t.own) gr.FillSolidRect(x - dp(8), ry, dp(3), rowH, C.accent);
-        gr.DrawText(t.playing ? "▶" : t.no, font(12, 400), t.playing ? C.accent : C["text-muted"], x, ry, dp(34), rowH, DT_SINGLE);
+        if (!(t.playing && mark(gr, "dog", x + dp(6), ry + rowH / 2, dp(12), C.accent))) gr.DrawText(t.playing ? "▶" : t.no, font(12, 400), t.playing ? C.accent : C["text-muted"], x, ry, dp(34), rowH, DT_SINGLE);
         const tgw = t.tag ? labelWidth(t.tag, tgs) + dp(12) : 0;
         text(gr, t.title, 12, t.own ? 600 : 400, (AR.skipInst && t.inst && !t.own) || t.locked ? C["text-muted"] : C.fg, x + dp(34), ry, iw - dp(34) - dp(70) - tgw, rowH);
         if (t.tag) label(gr, t.tag, tgs, x + iw - dp(70) - tgw + dp(6), ry + tgy);
@@ -1616,7 +1626,7 @@ function drawInfoTracks(gr, a, x, y, iw, w, h) {
             const hov = AR.infoHover === r.i, rh = AR.rateHover && AR.rateHover.i === r.i ? AR.rateHover.n : 0;
             if (r.own || hov) gr.FillSolidRect(x - dp(8), ry, iw + dp(16), rowH, r.own ? C.panel : withAlpha(C.fg, .06));
             if (r.own) gr.FillSolidRect(x - dp(8), ry, dp(3), rowH, C.accent);
-            gr.DrawText(r.playing ? "▶" : r.no, font(12, 400), r.playing ? C.accent : C["text-muted"], x, ry, dp(34), rowH, DT_SINGLE);
+            if (!(r.playing && mark(gr, "dog", x + dp(6), ry + rowH / 2, dp(12), C.accent))) gr.DrawText(r.playing ? "▶" : r.no, font(12, 400), r.playing ? C.accent : C["text-muted"], x, ry, dp(34), rowH, DT_SINGLE);
             if (onl) {   // (the whole row plays from it)
                 text(gr, r.title, 12, r.own ? 600 : 400, (AR.skipInst && r.inst && !r.own) || r.locked ? C["text-muted"] : C.fg, tx, ry, rx - dp(10) - tx, rowH);
                 if (r.tag) label(gr, r.tag, ks, rx, ry + Math.round((rowH - labelHeight(AR_ST.key)) / 2));

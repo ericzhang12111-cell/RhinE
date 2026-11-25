@@ -102,7 +102,7 @@ function drawManager(gr) {
         // rail line: log(count)
         const L = Math.round(dp(6 + 18 * Math.log10(counts[i] + 1) / maxLog));
         gr.FillSolidRect(dp(14), Math.round(cy - dp(1)), L, dp(2), on ? C.bg : C["line-dim"]);
-        if (on) gr.FillSolidRect(dp(14) + L, Math.round(cy - dp(3)), dp(6), dp(6), C.accent);
+        if (on) bullet(gr, dp(14) + L, Math.round(cy - dp(3)), dp(6), C.accent);
         if (i === playingPl) gr.FillSolidRect(0, y, dp(4), ROW(), C.accent);   // the playing playlist: an orange tab
         gr.DrawText(pad(i + 1, 2), font(11, 500), on ? C.bg : C["text-muted"], dp(50), y, dp(24), ROW(), DT_SINGLE);
         const cnt = fmtCount(counts[i]), cf = font(10.5, 400), cw = Math.ceil(gr.CalcTextWidth(cnt, cf));

@@ -91,10 +91,19 @@ function hitsCard(ox, oy) {
     for (const [q, x, y, w, h] of CARD_HITS.queue) hits.add("queue", ox + x, oy + y, w, h, q);
 }
 
+// A character pack's picture under the card (lib/wallpaper.js drawPanelPic, for the view shown), in place of the
+// plain panel and its halftone; the card's labels are then drawn live over it.
 function drawCard(gr, w, h, kind = "pager", ghost = "INFO") {
-    gr.FillSolidRect(0, 0, w, h, C.panel);
-    // the halftone (06 STYLE), under the ghost number
-    halftoneDecor(gr, w, h, dp(220));
+    const pic = drawPanelPic(gr, STATE.view, 0, 0, w, h, C.panel), was = LABEL_LIVE;
+    if (pic) LABEL_LIVE = true;
+    try { drawCardBody(gr, w, h, kind, ghost, pic); } finally { LABEL_LIVE = was; }
+}
+function drawCardBody(gr, w, h, kind, ghost, pic) {
+    if (!pic) {
+        gr.FillSolidRect(0, 0, w, h, C.panel);
+        // the halftone (06 STYLE), under the ghost number
+        halftoneDecor(gr, w, h, dp(220));
+    }
     box(gr, 0, 0, w, h, C.hair);
     const I = T.info, px = dp(16), iw = w - 2 * px;
     // ghost type behind the content, low on the right

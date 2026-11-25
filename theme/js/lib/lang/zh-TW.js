@@ -375,7 +375,7 @@ I18N["zh-TW"] = {
     // playlists: play on double-click, the theme's own playlists tagged
     "Play playlist": "播放此清單", "THEME": "主題",
     // archive: group by artist or rating, sort by rating, one shelf per artist or folder
-    "INITIAL": "首字母", "Group by artist": "依藝人分組", "Group by rating": "依評分分組", "RATING {0}": "評分 {0}",
+    "INITIAL": "首字母", "Group by artist": "依藝人分組", "Group by rating": "依評分分組", "RATING {0}": "評分 {0}", "RATING {0} – {1}": "評分 {0} – {1}",
     "Rating (highest first)": "評分（最高在前）", "One shelf per artist, folder or playlist": "每位藝人、資料夾或歌單單獨一排",
     // signal: what shows under the ring and along the bottom (PANELS)
     "PANELS": "面板", "Under the ring": "莫比烏斯環下方", "Along the bottom": "底部", "Spectrum": "頻譜", "Lyrics": "歌詞", "Level meters": "音量表", "Stereo scope": "立體聲相位圖",
@@ -399,4 +399,8 @@ I18N["zh-TW"] = {
     "PLAY PLAYLIST": "播放歌單", "Open in playlist": "在播放清單中開啟",
     "Online playlists in the Archive": "曲庫中顯示的網易雲歌單", "Use my created playlists and liked songs": "使用我建立的歌單和喜歡的音樂", "Refresh online playlists": "重新整理網易雲歌單",
     "Liked songs": "我喜歡的音樂", "New NetEase playlist…": "新增網易雲歌單…", "Add to playlist": "加入歌單", "Remove from “{0}”": "從「{0}」中移除", "Rename playlist…": "重新命名歌單…", "Delete playlist": "刪除歌單", "Delete “{0}” from NetEase (cannot be undone)": "從網易雲刪除「{0}」（無法復原）", "Remove from my playlists": "從我的歌單中移除", "Collect into my playlists": "收藏到我的歌單", "Working…": "處理中…", "Restart foobar2000 to edit NetEase playlists (the bridge running is from before this update).": "請重新啟動 foobar2000 後再編輯網易雲歌單（正在執行的本機服務還是更新前的版本）。", "NetEase did not do it: {0}": "網易雲沒有完成：{0}", "the bridge did not answer": "本機服務沒有回應", "Already in “{0}”": "已在「{0}」中", "Added to “{0}”": "已加入「{0}」", "Removed from “{0}”": "已從「{0}」中移除", "NetEase playlist name": "網易雲歌單名稱", "New NetEase playlist": "新增網易雲歌單", "Created “{0}”": "已建立「{0}」", "Rename NetEase playlist": "重新命名網易雲歌單", "Renamed to “{0}”": "已重新命名為「{0}」", "Deleted “{0}”": "已刪除「{0}」", "Collected “{0}”": "已收藏「{0}」", "Removed “{0}” from your playlists": "已將「{0}」從我的歌單中移除",
+    // character packs (lib/pack.js) and the SWEETPIE pack
+    "Fan-made looks built around one character: colours, case, icons, ring, wallpapers and more. Downloaded on request, kept apart from the theme.": "圍繞一個角色製作的同人外觀：配色、唱片盒、圖示、視覺化、桌布等。按需下載，與主題本體分開。", "DOWNLOAD · {0}": "下載 · {0}", "FAILED · TRY AGAIN": "失敗 · 點擊重試", "INSTALLED": "已安裝", "INSTALLING…": "正在安裝…", "DOWNLOADING {0} %": "正在下載 {0}%", "DOWNLOADING…": "正在下載…",
+    "HONEY ENAMEL": "蜂蜜黃琺瑯", "Honey-yellow enamel on steel, screen-printed in black and cream, a cookie-dog head.": "鋼板蜂蜜黃琺瑯，黑色與奶油色網版印刷，一枚餅乾狗頭。",
+    "CHARACTER PACKS": "角色包", "CHARACTER PACK": "角色包", "WAFFLE": "蜜餅", "Warm black and PVC white with honey yellow": "暖黑與 PVC 白，配蜂蜜黃", "WAFFLES": "蜜餅", "OPERATOR CHECK-IN": "幹員簽到", "BIOMETRIC LINK": "生物識別", "GEAR  ·  CLEAR SHELL": "裝備 · 透明外套", "SUPPLY": "補給", "RECEIVED": "已簽收", "SUGAR RESERVE": "糖分儲備", "SUPPLY DROP": "補給投放", "INBOUND": "投放中", "ON DUTY": "執勤中", "CHECK-IN": "簽到", "FIELD OPERATOR": "外勤幹員", "ARRIVAL": "抵達", "INTAKE": "進食", "CALIBRATE": "校準",
 };

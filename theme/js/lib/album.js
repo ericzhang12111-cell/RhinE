@@ -173,6 +173,10 @@ function drawHeroRoom(gr, R, x, y, w, h, cov, clearK, no, info) {
     if (L && no) { const lx = ox + L[0][0] * s, ly = oy + L[0][1] * s, lw = (L[1][0] - L[0][0]) * s, lh = (L[2][1] - L[0][1]) * s; gr.DrawText(`ARC\n${pad(no, 4)}`, font(Math.max(5, lh / SCALE * .28), 600), 0xFF2B2B29, lx, ly, lw, lh, 0x00000800 | 0x00000001 | 0x00000004 | 0x00000010); }
     if (clearK > .02 && clearK < .98) gr.FillSolidRect(cx, cy + ch * clearK - dp(.75), cw, Math.max(HAIR, dp(1.5)), C.accent);
 }
+// The ink of the hero's label: the skin's "labelInk" (case.json "skin", as js/archive.js's skinInk reads it for the
+// array's labels; this file is also in panels without archive.js, so it reads it itself), else the usual near-black.
+// (The room case keeps its own: its label is the room's paper, not the skin's.)
+const heroLabelInk = () => CASE_META && CASE_META.skin && CASE_META.skin.labelInk ? argb(CASE_META.skin.labelInk) : 0xFF2B2B29;
 // the hero case fitted into (x, y, w, h); clearK 0 = frosted, 1 = clear; no = album number printed on the label
 function drawHeroCase(gr, x, y, w, h, cov, clearK, no, info = null) {
     const R = heroRoom();
@@ -186,9 +190,10 @@ function drawHeroCase(gr, x, y, w, h, cov, clearK, no, info = null) {
     } else gr.FillSolidRect(cx, cy, cw, ch, C.well);
     if (clearK < 1) gr.DrawImage(I.frost, ox, oy, iw * s, ih * s, 0, 0, I.frost.Width, I.frost.Height, 0, Math.round(255 * (1 - clearK)));
     if (clearK > 0) gr.DrawImage(I.clear, ox, oy, iw * s, ih * s, 0, 0, I.clear.Width, I.clear.Height, 0, Math.round(255 * clearK));
-    // album number on the spine label
+    // album number on the spine label, in the skin's own label ink when its case.json names one (a black or yellow
+    // label needs a light or dark print), else the usual near-black
     const L = m.label, lx = ox + L[0][0] * s, ly = oy + L[0][1] * s, lw = (L[1][0] - L[0][0]) * s, lh = (L[2][1] - L[0][1]) * s;
-    if (no) gr.DrawText(`ARC\n${pad(no, 4)}`, font(Math.max(5, lh / SCALE * .28), 600), 0xFF2B2B29, lx, ly, lw, lh, 0x00000800 | 0x00000001 | 0x00000004 | 0x00000010);
+    if (no) gr.DrawText(`ARC\n${pad(no, 4)}`, font(Math.max(5, lh / SCALE * .28), 600), heroLabelInk(), lx, ly, lw, lh, 0x00000800 | 0x00000001 | 0x00000004 | 0x00000010);
     // decrypt scan line across the cover while clearing
     if (clearK > .02 && clearK < .98) gr.FillSolidRect(cx, cy + ch * clearK - dp(.75), cw, Math.max(HAIR, dp(1.5)), C.accent);
 }

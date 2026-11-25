@@ -195,7 +195,7 @@ function drawArtistPic(gr, rec, x, y, s, frame = true, album = null) {
     if (!frame) return;
     // the frame a little outside, and the corner squares of the file cards
     box(gr, x - dp(6), y - dp(6), s + dp(12), s + dp(12), withAlpha(C.fg, .3));
-    for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) gr.FillSolidRect(x - dp(9) + cx * (s + dp(13)), y - dp(9) + cy * (s + dp(13)), dp(5), dp(5), C.fg);
+    for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) bullet(gr, x - dp(9) + cx * (s + dp(13)), y - dp(9) + cy * (s + dp(13)), dp(5), C.fg);
 }
 
 // where the picture comes from: IMG · DEEZER, IMG · <author> · CC BY-SA 4.0 (Commons), ARTIST.JPG, or ALBUM COVER
@@ -273,7 +273,7 @@ function drawInfoArtist(gr, a, x, y, iw, w, h) {
     const A = curArtist(), rec = A && A.rec, lib = A && A.lib, name = A ? A.name : "";
     // bracketed ARTIST NO. 0412 + the source chip
     const hh = dp(34), hs = st(ART_ST.head, C.fg), t = `${tr("ARTIST NO.")} ${pad(artistNo(name || "?"), 4)}`, bw = dp(20) + labelWidth(t, hs) + dp(16);
-    for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) gr.FillSolidRect(x + cx * (bw - dp(5)), y + cy * (hh - dp(5)), dp(5), dp(5), C.fg);
+    for (const [cx, cy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) bullet(gr, x + cx * (bw - dp(5)), y + cy * (hh - dp(5)), dp(5), C.fg);
     label(gr, t, hs, x + dp(20), y + Math.round((hh - labelHeight(ART_ST.head)) / 2));
     const bio = artistBio(rec);
     const ct = !rec ? "" : rec.state === "loading" || (bio && !bio.source) ? tr("LOADING") : bio ? `${{ WIKIPEDIA: "WIKI", NETEASE: "NETEASE" }[bio.source] || "TXT"}${bio.lang ? " · " + bio.lang.toUpperCase() : ""}` : rec.state === "none" ? tr("NO FILE") : "MB";
@@ -410,7 +410,7 @@ function drawLibStrip(gr, lib, x, y, iw) {
 function drawArtistButtons(gr, x, y, lib, file) {
     const bh = dp(40), bs = st(ART_ST.btn, C.bg, C.fg), pt = tr("PLAY ARTIST"), pw = dp(34) + labelWidth(pt, bs) + dp(16);
     gr.FillSolidRect(x, y, pw, bh, lib ? C.fg : C["line-dim"]);
-    icon(gr, "play", x + dp(19), y + bh / 2, 9, C.bg);
+    icon(gr, "play", x + dp(19), y + bh / 2, packMarks() ? 13 : 9, C.bg, lib ? C.fg : C["line-dim"]);
     label(gr, pt, bs, x + dp(34), y + Math.round((bh - labelHeight(ART_ST.btn)) / 2));
     if (lib) INFO_HITS.push(["art-play", x, y, pw, bh]);
     if (!file) return;
@@ -532,7 +532,7 @@ function drawArtistLayer(gr, w, h) {
     // FILE NUMBER: ART-0412, the long rule, and the biography beside the card
     const fs = st(ART_ST.fileno, C.fg, withAlpha(C.bg, .01)), ft = `${tr("FILE NUMBER:")} ART-${no}`, fw = labelWidth(ft, fs);
     const fy = dp(36);
-    for (const [qx, qy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) gr.FillSolidRect(rx + dp(2) + qx * (fw + dp(22)), fy - dp(14) + qy * dp(44), dp(5), dp(5), C.fg);
+    for (const [qx, qy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) bullet(gr, rx + dp(2) + qx * (fw + dp(22)), fy - dp(14) + qy * dp(44), dp(5), C.fg);
     trackedText(gr, ft, fs, rx + dp(14), fy);
     gr.FillSolidRect(rx - dp(12), fy + dp(40), w - rx + dp(12), HAIR, C.fg);
     const px = rx, py = cy0 + dp(14), pw = w - rx - dp(28), ph = ch - dp(14);
@@ -571,8 +571,8 @@ function drawArtistCard(gr, rec, lib, name, no, x0, y0, cw, ch, album) {
     drawArtistPic(gr, rec, px, py, ps, true, album);
     // the access line across the picture, corner to corner, with its end squares
     gr.DrawLine(px - dp(10), py + ps + dp(10), px + ps + dp(10), py - dp(10), HAIR * 1.2, C.fg);
-    gr.FillSolidRect(px - dp(13), py + ps + dp(7), dp(6), dp(6), C.fg);
-    gr.FillSolidRect(px + ps + dp(7), py - dp(13), dp(6), dp(6), C.fg);
+    bullet(gr, px - dp(13), py + ps + dp(7), dp(6), C.fg);
+    bullet(gr, px + ps + dp(7), py - dp(13), dp(6), C.fg);
     const cs = st(ART_ST.key, C["text-muted"], C["panel-hi"]);
     label(gr, fitLabel(picCredit(rec), cs, ps), cs, px, py + ps + dp(18));
     label(gr, `${tr("ACCESS:")}  ${tr("PUBLIC")}  ·  ${tr(rec && rec.state === "loading" ? "OPENING" : "FILE OPENED")}`, st(ART_ST.key, C.fg, C["panel-hi"]), px, py + ps + dp(40));
@@ -678,7 +678,7 @@ function drawArtistLibrary(gr, lib, name, x0, y0, cw, ch) {
     // ▶ PLAY ARTIST
     const bs = st(ART_ST.btn, C.bg, C.fg), pt = tr("PLAY ARTIST"), pw = dp(34) + labelWidth(pt, bs) + dp(16), py = y0 + ch - dp(52), bh = dp(36);
     gr.FillSolidRect(x, py, pw, bh, C.fg);
-    icon(gr, "play", x + dp(19), py + bh / 2, 9, C.bg);
+    icon(gr, "play", x + dp(19), py + bh / 2, packMarks() ? 13 : 9, C.bg, C.fg);
     label(gr, pt, bs, x + dp(34), py + Math.round((bh - labelHeight(ART_ST.btn)) / 2));
     AF_HITS.push(["art-play", x, py, pw, bh]);
 }

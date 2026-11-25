@@ -13,7 +13,7 @@
 // view repaints ten times a second (and every frame while lines scroll); nothing runs while paused, stopped or hidden.
 
 include(fb.ProfilePath + "themes\\audio-archive\\js\\lib\\core.js");
-for (const f of ["emblem", "audio", "ring", "lyrics", "translate", "roman", "waveform", "artist", "album", "playlists", "nowplaying", "library", "online", "onlarchive"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
+for (const f of ["emblem", "audio", "ring", "lyrics", "translate", "roman", "waveform", "artist", "album", "playlists", "nowplaying", "library", "online", "onlarchive", "operator"]) include(fb.ProfilePath + `themes\\audio-archive\\js\\lib\\${f}.js`);
 include(fb.ProfilePath + "themes\\audio-archive\\js\\archive.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\artist.js");
 include(fb.ProfilePath + "themes\\audio-archive\\js\\grid.js");
@@ -189,7 +189,7 @@ function npChanged(same, h, what) {
 
 // the archive's file panel marks the playing track
 const playingChanged = () => { AR.tracks.key = ""; AR.listVer++; AR.dirtyInfo = true; AF.dirty = true; inspectFollow(); if (STATE.view === "archive") window.Repaint(); };
-function on_playback_new_track() { loadTrack(); playingChanged(); onlineTrack(); signalNewTrack(); if (STATE.view === "online") window.Repaint(); }
+function on_playback_new_track() { loadTrack(); playingChanged(); onlineTrack(); signalNewTrack(); if (typeof opNewTrack === "function") opNewTrack(); if (STATE.view === "online") window.Repaint(); }
 function on_playback_starting() { clock.wake(); }
 function on_playback_pause(paused) { signalPaused(paused); dirty.card = true; clock.wake(); window.Repaint(); }
 function on_playback_stop(reason) { if (reason !== 2) { loadTrack(); playingChanged(); } }
@@ -403,8 +403,9 @@ function drawLyricsView(gr) {
     drawSpectrumBox(gr);
     // card, as tall as the view
     const ch = Math.max(cardHeight(), H - 2 * dp(24));
-    if (dirty.card || !layers.card || layers.card.h !== ch) {
+    if (dirty.card || !layers.card || layers.card.h !== ch || layers.card.pv !== panelPicVer()) {   // (pv: a pack's picture under it came in, lib/wallpaper.js)
         layers.card = renderLayer(lyricsSides().card, ch, (g, w, h) => drawCard(g, w, h, "queue", tr("INFO")), layers.card);
+        layers.card.pv = panelPicVer();
         dirty.card = false;
     }
     gr.DrawImage(layers.card.img, cardX(), dp(24), layers.card.w, layers.card.h, 0, 0, layers.card.w, layers.card.h);
@@ -412,6 +413,8 @@ function drawLyricsView(gr) {
     if (hover && (hover.id === "profile" || hover.id === "folder")) box(gr, hover.x, hover.y, hover.w, hover.h, C.accent);
     // centre
     const g = lyricsGeom();
+    // a character pack's operator (lib/operator.js), under the lyrics: right of their centre, below the sung line
+    drawOperator(gr, "lyrics", { x0: g.cx, x1: g.x1 + dp(8), y0: g.cy + dp(90), y1: H });
     drawLyricsFrame(gr, g);
     alertShown = false;
     if (T.missing) drawAlert(gr, g, { head: [tr("SYSTEM WARNING"), tr("PLAYBACK · 03")], title: tr("WARNING"), wait: tr("ADVANCING"),
@@ -535,8 +538,131 @@ function drawLeft(gr, w, h) {
     LEFT_SPEC = { x, y: sy, w: bw, h: h - dp(24) - sy };
 }
 
+// A character pack's spectrum dog (pack.json "specDog": { img: "dogs/dog1-%d.png", sizes: [...] }): in place of the
+// bars, the pack's dog dancing to the music, one new pose on every beat: a lean either way by a random angle, now and
+// then a turn to face the other way (its width passes through nothing, so it turns round rather than snapping), and a
+// new spot in the box; the loudness bounces it. Springs carry it from pose to pose.
+// The beat: onsets from the spectral flux (how much the 48 bands rose since the last frame) over an adaptive threshold
+// (its running mean + 1.4 deviations, so quiet passages still have onsets), the beat's period from the gaps between
+// onsets (folded into .33 - .9 s, eased), and a beat grid kept by it: an onset near the next expected beat lands it (and
+// pulls the grid onto it), and when none comes the grid beats on its own, so the dog keeps time through sustained
+// passages instead of dancing in bursts and then freezing. While nothing plays (or with Reduce motion) it settles.
+const SDOG = { img: null, key: "", last: 0, t: 0, lvl: 0, prev: new Float32Array(48),
+               fm: 0, fv: .0004, lastOn: 0, period: .5, next: 0, posed: 0,
+               spin: null, spinAt: 0,   // a spin in progress { t0, dur, turns, dir }, and when the last one ended
+               r: 0, rv: 0, rt: 0, f: 1, fv2: 0, ft: 1, x: 0, xv: 0, xt: 0, y: 0, yv: 0, yt: 0 };
+const SDOG_M = new Float32Array(6);
+function specDogImg(px) {
+    const part = packPart("specDog");
+    if (!part || typeof part !== "object" || typeof part.img !== "string") return null;
+    const sizes = (Array.isArray(part.sizes) ? part.sizes : [256]).map(Number).filter(v => v > 0 && v <= 4096).sort((a, b) => a - b);
+    if (!sizes.length) return null;
+    const size = sizes.find(v => v >= px) || sizes[sizes.length - 1], key = STATE.pack + "|" + size;
+    if (SDOG.key !== key) {
+        SDOG.key = key; SDOG.img = null;
+        const f = packFile(part.img.replace("%d", size));
+        if (f) try { SDOG.img = d2d.Image(f); } catch (e) { SDOG.img = null; }
+    }
+    return SDOG.img;
+}
+// a new pose, `k` (0 - 1) how strong the beat was
+// Now and then a beat sets off a SPIN instead: round and round (1 - 3 whole turns, either way) while it keeps hopping
+// on the beat, about two beats a turn, easing in and out; it ends where it started, so the lean carries on unbroken.
+// Never twice within 6 s; a strong beat makes it likelier.
+function specDogPose(k) {
+    const now = performance.now() / 1000;
+    SDOG.posed = now;
+    if (!SDOG.spin && now - SDOG.spinAt > 6 && Math.random() < .05 + .07 * k) {
+        const turns = 1 + Math.floor(Math.random() * 3);
+        SDOG.spin = { t0: now, dur: turns * 2 * SDOG.period, turns, dir: Math.random() < .5 ? -1 : 1 };
+    }
+    const r = Math.random;
+    SDOG.rt = SDOG.spin ? 0 : (r() < .5 ? -1 : 1) * (.08 + (.18 + .3 * r()) * k);   // (spinning: upright under the spin)
+    if (r() < .22) SDOG.ft = -SDOG.ft;
+    SDOG.xt = clamp(SDOG.xt * .3 + (r() * 2 - 1) * .2 * (.5 + .5 * k), -.2, .2);
+    SDOG.yt = clamp((r() * 2 - 1) * .12 * (.5 + .5 * k), -.12, .12);
+}
+// one step: the beat tracker, then the springs (w: stiffness, z: damping; settled within about a beat, no rattle)
+function specDogStep(live) {
+    const now = performance.now() / 1000, dt = clamp(now - (SDOG.last || now), 0, .1);
+    SDOG.last = now;
+    const go = live && !REDUCE_MOTION;
+    let level = 0, flux = 0;
+    for (let i = 0; i < 48; i++) {
+        const v = go ? clamp(AUDIO.bands[i] || 0, 0, 1) : 0;
+        level += v; flux += Math.max(0, v - SDOG.prev[i]); SDOG.prev[i] = v;
+    }
+    level /= 48; flux /= 48;
+    SDOG.lvl += (level - SDOG.lvl) * (1 - Math.exp(-dt * 12));
+    if (go && dt > 0) {
+        SDOG.t += dt;
+        // the flux's running mean and spread (about 1.5 s): an onset stands out of them
+        const a = 1 - Math.exp(-dt / 1.5), d = flux - SDOG.fm;
+        SDOG.fm += a * d; SDOG.fv += a * (d * d - SDOG.fv);
+        const sd = Math.sqrt(Math.max(SDOG.fv, 1e-8)), onset = flux > SDOG.fm + 1.4 * sd && flux > .004 && now - SDOG.lastOn > .2;
+        if (onset) {
+            // the period from the gap since the last onset, folded into one beat
+            let gap = now - SDOG.lastOn;
+            if (SDOG.lastOn && gap < 2.5) {
+                while (gap < .33) gap *= 2;
+                while (gap > .9) gap /= 2;
+                SDOG.period += (gap - SDOG.period) * .2;
+            }
+            SDOG.lastOn = now;
+        }
+        const strength = clamp((flux - SDOG.fm) / (4 * sd + 1e-6), 0, 1);
+        if (!SDOG.next || SDOG.next < now - SDOG.period) SDOG.next = now;   // (started, or long lost: beat now)
+        if (onset && Math.abs(now - SDOG.next) < SDOG.period * .3) {
+            // the expected beat, landed by an onset: it pulls the grid onto it
+            specDogPose(.45 + .55 * strength);
+            SDOG.next = now + SDOG.period;
+        } else if (onset && now < SDOG.next - SDOG.period * .3 && strength > .7 && now - SDOG.posed > SDOG.period * .5) {
+            // a strong off-beat accent: a pose as well, the grid kept
+            specDogPose(strength);
+        } else if (now >= SDOG.next + SDOG.period * .12) {
+            // no onset at the beat: the grid beats on its own, a little smaller
+            specDogPose(.35);
+            SDOG.next += SDOG.period;
+        }
+    } else { SDOG.rt = 0; SDOG.xt = 0; SDOG.yt = 0; SDOG.next = 0; }
+    if (SDOG.spin && (!go || now - SDOG.spin.t0 >= SDOG.spin.dur)) { SDOG.spin = null; SDOG.spinAt = now; }
+    const spring = (p, v, t, w, z) => { v += ((t - p) * w * w - 2 * z * w * v) * dt; return [p + v * dt, v]; };
+    [SDOG.r, SDOG.rv] = spring(SDOG.r, SDOG.rv, SDOG.rt, 10, .62);
+    [SDOG.f, SDOG.fv2] = spring(SDOG.f, SDOG.fv2, SDOG.ft, 12, .85);
+    [SDOG.x, SDOG.xv] = spring(SDOG.x, SDOG.xv, SDOG.xt, 8, .7);
+    [SDOG.y, SDOG.yv] = spring(SDOG.y, SDOG.yv, SDOG.yt, 9, .65);
+    for (const k of ["r", "rv", "f", "fv2", "x", "xv", "y", "yv", "lvl", "t", "fm", "fv", "period"]) if (!isFinite(SDOG[k])) SDOG[k] = k === "f" ? 1 : k === "period" ? .5 : k === "fv" ? .0004 : 0;
+    SDOG.period = clamp(SDOG.period, .33, .9);
+}
+// the dog in the box (x, y, w, h); false when the pack has none
+function drawSpecDog(gr, x, y, w, h, live) {
+    if (!STATE.pack) return false;
+    const size = Math.min(w, h) * .62, img = specDogImg(size * 1.2);
+    if (!img) return false;
+    specDogStep(live);
+    const sway = live && !REDUCE_MOTION ? Math.sin(SDOG.t * 2.3) * .05 : 0;
+    // a hop per beat: up as the beat lands, down by the next one
+    const ph = live && SDOG.next ? clamp(1 - (SDOG.next - performance.now() / 1000) / SDOG.period, 0, 1) : 1;
+    const bounce = SDOG.lvl * .16, hop = Math.sin(Math.PI * Math.min(1, ph * 1.6)) * (.25 + SDOG.lvl) * size * .1;
+    const cx = x + w / 2 + SDOG.x * w, cy = y + h / 2 + SDOG.y * h - hop;
+    let spin = 0;
+    if (SDOG.spin) {
+        const u = clamp((performance.now() / 1000 - SDOG.spin.t0) / SDOG.spin.dur, 0, 1), e = u < .5 ? 2 * u * u : 1 - 2 * (1 - u) * (1 - u);
+        spin = SDOG.spin.dir * SDOG.spin.turns * TAU * e;
+    }
+    const a = SDOG.r + sway + spin, c = Math.cos(a), sn = Math.sin(a), fx = SDOG.f * (1 + bounce * .5), sy = 1 + bounce;
+    const dh = size * img.Height / Math.max(1, img.Width);
+    SDOG_M[0] = c * fx; SDOG_M[1] = sn * fx; SDOG_M[2] = -sn * sy; SDOG_M[3] = c * sy; SDOG_M[4] = cx; SDOG_M[5] = cy;
+    gr.PushClip(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+    gr.SetTransform(SDOG_M);
+    gr.DrawImage(img, -size / 2, -dh / 2, size, dh, 0, 0, img.Width, img.Height);
+    gr.ResetTransform();
+    gr.PopClip();
+    return true;
+}
+
 // SPECTRUM: the 48 live bands as bars, the loudest in orange; a flat line while nothing plays. Hidden when the
-// column has no room for it.
+// column has no room for it. (A character pack with a spectrum dog: the dog dancing instead, drawSpecDog.)
 function drawSpectrumBox(gr) {
     const R = LEFT_SPEC;
     specRect = null;
@@ -548,6 +674,7 @@ function drawSpectrumBox(gr) {
     box(gr, R.x, by, R.w, bh, C["line-faint"]);
     if (!LABEL_LIVE) gr.FillSolidRect(R.x + 1, by + 1, R.w - 2, bh - 2, C.bg);
     const n = 48, gw = (R.w - 2 * padX) / n, top = by + dp(16), base = by + bh - dp(30), live = fb.IsPlaying;
+    if (drawSpecDog(gr, R.x + 1, by + 1, R.w - 2, bh - 2, live && !fb.IsPaused)) { specRect = [R.x, by, R.w, bh]; return; }
     for (let i = 0; i < n; i++) {
         const v = live ? clamp(AUDIO.bands[i] || 0, 0, 1) : 0, hb = Math.max(HAIR, Math.round((base - top) * v));
         gr.FillSolidRect(Math.round(R.x + padX + i * gw), base - hb, Math.max(1, Math.round(gw * .55)), hb, v > .78 ? C.accent : withAlpha(C.fg, .3 + .6 * v));

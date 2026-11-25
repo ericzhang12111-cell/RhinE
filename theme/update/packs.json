@@ -1,0 +1,44 @@
+{
+ "packs": [
+  {
+   "id": "sweetpie",
+   "name": "SWEETPIE",
+   "version": "1.0.0",
+   "size": 74111335,
+   "sha256": "a977af4febfb61dc6385f4f437179e564ff7bf416f7e296669f882c7f39c85ce",
+   "url": "https://github.com/ericzhang12111-cell/RhinE/releases/download/pack-sweetpie-1.0.0/rhine-pack-sweetpie-1.0.0.zip",
+   "preview": "https://github.com/ericzhang12111-cell/RhinE/releases/download/pack-sweetpie-1.0.0/rhine-pack-sweetpie-1.0.0-preview.jpg",
+   "about": {
+    "en": "Arknights: Endfield fan look for 小刻: yellow-and-black techwear, honey waffles and her three-headed dog",
+    "zh": "《明日方舟：终末地》小刻同人外观：黄黑工装、蜜饼和三头犬"
+   },
+   "credits": {
+    "en": "Material from Hypergryph · Arknights: Endfield · 小刻 (fan-made, non-commercial)",
+    "zh": "素材来源：鹰角网络 ·《明日方舟：终末地》· 小刻（非商业同人作品）",
+    "links": [
+     [
+      {
+       "en": "Arknights: Endfield",
+       "zh": "明日方舟：终末地 官网"
+      },
+      "https://endfield.hypergryph.com/"
+     ],
+     [
+      {
+       "en": "Global site",
+       "zh": "国际服官网"
+      },
+      "https://endfield.gryphline.com/"
+     ],
+     [
+      {
+       "en": "Hypergryph",
+       "zh": "鹰角网络"
+      },
+      "https://www.hypergryph.com/"
+     ]
+    ]
+   }
+  }
+ ]
+}

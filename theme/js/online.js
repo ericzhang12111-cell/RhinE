@@ -33,7 +33,7 @@ function drawOnline(gr) {
     const m = dp(32), lw = dp(220), rw = W > dp(1400) ? dp(300) : 0, x0 = m + lw + dp(32), x1 = W - m - (rw ? rw + dp(32) : 0);
     for (const [x, y] of [[dp(16), dp(16)], [W - dp(27), dp(16)], [dp(16), H - dp(27)], [W - dp(27), H - dp(27)]]) regCross(gr, x, y);
     // ■ ONLINE · 05   [NETEASE · <name>] (the shown service)
-    gr.FillSolidRect(m, dp(32), dp(5), dp(5), C.fg);
+    bullet(gr, m, dp(32), dp(5), C.fg);
     const hw = label(gr, tr("ONLINE  ·  05"), st(OV_ST.head, C.fg), m + dp(15), dp(28));
     if (ONL.me) chip(gr, `${onlSrcName()}  ·  ${ONL.me.name}`, m + dp(15) + hw + dp(14), dp(24), dp(18), "acc", 8.5, C.bg);
     const synced = ONL.by[ONL.src].synced;
@@ -54,7 +54,12 @@ function drawOnline(gr) {
     if (OV.rail > 0) gr.FillGradRect(m - dp(2), top + HAIR, lw + dp(4), dp(14), 90, C.bg, withAlpha(C.bg, 0));
     if (OV.rail < OV.railMax) gr.FillGradRect(m - dp(2), H - dp(18), lw + dp(4), dp(18), 90, withAlpha(C.bg, 0), C.bg);
     OV.nowRect = rw ? [W - m - rw, top + HAIR, rw, H - top - HAIR] : null;
-    if (rw) drawOnlineNow(gr, W - m - rw, top + dp(24), rw);
+    if (rw) {
+        // a character pack's picture under the column (lib/wallpaper.js drawPanelPic), its labels then drawn live
+        const px = W - m - rw - dp(12), pic = drawPanelPic(gr, "online", px, top + HAIR, W - dp(16) - px, H - top - HAIR - dp(16), C.bg), was = LABEL_LIVE;
+        if (pic) LABEL_LIVE = true;
+        try { drawOnlineNow(gr, W - m - rw, top + dp(24), rw); } finally { LABEL_LIVE = was; }
+    }
     gr.PushClip(x0, top + HAIR, x1 - x0, H - top);
     // (each page that scrolls sets these as it draws; the others have nothing to scroll)
     OV.scrollMax = 0; OV.barTop = top + HAIR;
@@ -311,7 +316,7 @@ function drawOnlineHome(gr, x, y, x1) {
         const hov = can && OV.hover && OV.hover.id === "onl-day" && OV.hover.data === i, bg = hov ? C["panel-hi"] : P;
         if (hov) gr.FillSolidRect(lx - dp(6), ry, lw + dp(6), rh - HAIR, bg);
         const mid = ry + Math.round((rh - labelHeight(OV_ST.row)) / 2);
-        label(gr, isNow ? "▶" : pad(i + 1, 2), st(OV_ST.tiny, isNow ? C.accent : C["text-muted"], bg), lx, mid + dp(1));
+        if (!(isNow && mark(gr, "dog", lx + dp(5), ry + rh / 2, dp(11), C.accent))) label(gr, isNow ? "▶" : pad(i + 1, 2), st(OV_ST.tiny, isNow ? C.accent : C["text-muted"], bg), lx, mid + dp(1));
         const sec = Math.round((s.ms || 0) / 1000), time = `${Math.floor(sec / 60)}:${pad(sec % 60, 2)}`;
         const tag = s.ok === false ? tr("LOCKED") : s.vip && !onlVip(s) ? tr("VIP · TRIAL") : "";
         const tw = labelWidth(time, st(OV_ST.row, 0)), gw = tag ? labelWidth(tag, st(OV_ST.tiny, 0)) + dp(14) : 0;
@@ -388,7 +393,7 @@ function drawOnlineTile(gr, p, id, x, y, w) {
         const B = C["panel-hi"], cst = st(OV_ST.count, C.fg, B);
         gr.FillSolidRect(x, y, w, w, B);
         box(gr, x, y, w, w, C["line-faint"]);
-        gr.FillSolidRect(x - dp(1), y - dp(1), dp(6), dp(6), C.accent);
+        bullet(gr, x - dp(1), y - dp(1), dp(6), C.accent);
         onlHeart(gr, x + w - dp(20), y + dp(20), dp(18), C.accent);
         const big = labelWidth(String(p.count), cst) > w - dp(20) ? st(Object.assign({}, OV_ST.count, { size: OV_ST.count.size * (w - dp(20)) / labelWidth(String(p.count), cst) }), C.fg, B) : cst;
         label(gr, String(p.count), big, x + dp(10), y + w - dp(28) - labelHeight(big));
@@ -401,7 +406,7 @@ function drawOnlineTile(gr, p, id, x, y, w) {
         const k = dp(30), kx = x + w - k - dp(8), ky = y + w - k - dp(8), on = hov && OV.hover.id === "onl-plplay";
         gr.FillSolidRect(kx, ky, k, k, busy || on ? C.fg : C.accent);
         if (busy) for (let i = 0; i < 3; i++) gr.FillSolidRect(kx + dp(8) + i * dp(6), Math.round(ky + k / 2 - dp(1)), dp(3), dp(3), C.bg);
-        else icon(gr, "play", kx + k / 2 + dp(1), ky + k / 2, 10, on ? C.bg : C["on-accent"]);
+        else icon(gr, "play", kx + k / 2 + dp(1), ky + k / 2, packMarks() ? 14 : 10, on ? C.bg : C["on-accent"], busy || on ? C.fg : C.accent);
     }
     const name = p.liked ? tr("LIKED SONGS") : p.title;
     label(gr, fitLabel(name, st(OV_ST.name, C.fg), w), st(OV_ST.name, C.fg), x, y + w + dp(12));

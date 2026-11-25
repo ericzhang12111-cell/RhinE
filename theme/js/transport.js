@@ -79,7 +79,7 @@ function stopPlayTimer() { window.ClearInterval(playTimer); playTimer = 0; }
 function repaintRuler() { window.RepaintRect(0, 0, W, TP()); }
 
 function on_playback_starting() { startPlayTimer(); repaintRuler(); }
-function on_playback_new_track() { nowCover(); playAnchor(); repaintRuler(); }
+function on_playback_new_track() { nowCover(); playAnchor(); countTrack(); repaintRuler(); }
 function on_playback_pause(paused) { paused ? stopPlayTimer() : startPlayTimer(); repaintRuler(); }
 function on_playback_stop(reason) { if (reason !== 2) { stopPlayTimer(); nowCover(); } repaintRuler(); }   // 2 = starting another track
 function on_playback_seek() { playAnchor(); repaintRuler(); }
@@ -92,6 +92,33 @@ if (fb.IsPlaying && !fb.IsPaused) startPlayTimer();
 // counted by the stage panel's library worker (lib/library.js), off the UI thread
 onMessage("library", d => { counts.files = d.files; counts.albums = d.albums; window.Repaint(); });
 send("library?");
+
+// ------------------------------------------------------------------------------------------- the pack's counter
+// A character pack may ask for a little count in the status line (pack.json "counter": { "label": "WAFFLES" }): how
+// many songs have started playing today, as "WAFFLES ×12". Kept in the settings file only (not the layout), with the
+// day it counts, so it starts again from 0 the next day; nothing is counted or written while no pack asks for it.
+const COUNTER_KEY = "packCounter";
+const counterPart = () => { const c = packPart("counter"); return c && typeof c === "object" ? c : null; };
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1, 2)}-${pad(d.getDate(), 2)}`; };
+const COUNTER = { day: "", n: 0, read: false };
+function counterNow() {
+    if (!COUNTER.read) {
+        COUNTER.read = true;
+        const v = readSettings()[COUNTER_KEY];   // the file only: it is never a panel property (lib/settings.js)
+        if (v && typeof v === "object" && typeof v.day === "string") { COUNTER.day = v.day; COUNTER.n = Number.isFinite(+v.n) ? Math.max(0, Math.floor(+v.n)) : 0; }
+    }
+    // a new day (also past midnight while the player is open): the count starts again
+    const d = today();
+    if (COUNTER.day !== d) { COUNTER.day = d; COUNTER.n = 0; }
+    return COUNTER.n;
+}
+function countTrack() {
+    if (!counterPart()) return;
+    counterNow();
+    COUNTER.n++;
+    setSetting(COUNTER_KEY, { day: COUNTER.day, n: COUNTER.n }, true);
+    window.Repaint();
+}
 
 // ------------------------------------------------------------------------------------------------- section label
 function sectionText() {
@@ -163,7 +190,7 @@ function drawCover(gr) {
     if (NOW.img) gr.DrawImage(NOW.img, x, y, s, s, 0, 0, NOW.img.Width, NOW.img.Height);
     else {
         gr.FillSolidRect(x, y, s, s, C.well);
-        if (fb.IsPlaying) square(gr, x + s / 2, y + s / 2, 5, C["line-dim"]);
+        if (fb.IsPlaying && !mark(gr, "waffle", x + s / 2, y + s / 2, dp(9), C["line-dim"])) square(gr, x + s / 2, y + s / 2, 5, C["line-dim"]);
     }
     box(gr, x, y, s, s, hov ? C.accent : C["line-faint"]);
     if (fb.IsPlaying) gr.FillSolidRect(x, y + s - dp(3), dp(10), dp(3), C.accent);   // the playing tab
@@ -188,7 +215,7 @@ function drawButtons(gr) {
         const fill = main !== hov;        // the main button is inverse; hovering inverts any button
         if (fill) gr.FillSolidRect(x, y, s, s, C.fg); else gr.FillSolidRect(x, y, s, s, C.bg);
         box(gr, x, y, s, s, fill ? C.fg : main ? C.fg : C["line-faint"]);
-        icon(gr, n, x + s / 2, y + s / 2, 12, fill ? C.bg : C.fg);
+        icon(gr, n, x + s / 2, y + s / 2, 12, fill ? C.bg : C.fg, fill ? C.fg : C.bg);   // (the ground: for a pack's glyph with an eye)
         hits.add("btn", x, y, s, s, i);
     });
 }
@@ -216,8 +243,10 @@ function drawRuler(gr, left, right) {
     const mc = playing ? C.accent : C["line-dim"];
     gr.FillSolidRect(x0, y - dp(14), HAIR, dp(12), mc);
     label(gr, tr("START"), st(ST.marker, mc), x0 + dp(4), y - dp(15));
-    // the playhead: a plain orange line
-    if (playing) fillSpan(gr, cur - dp(.75), cur - dp(.75) + Math.max(HAIR, dp(1.5)), y - dp(10), dp(20), C.accent);
+    // the playhead: a plain orange line; under a character pack's marks (lib/draw.js), its dog running along the line after
+    // a waffle at the line's end
+    if (packMarks()) drawChase(gr, x0, x1, y, cur, playing);
+    else if (playing) fillSpan(gr, cur - dp(.75), cur - dp(.75) + Math.max(HAIR, dp(1.5)), y - dp(10), dp(20), C.accent);
     // NOW PLAYING  title · artist, under the line
     if (fb.IsPlaying && NOW.title) {
         const ny = y + dp(9), kw = label(gr, tr("NOW PLAYING"), st(ST.marker, C.accent), x0, ny + dp(2));
@@ -225,6 +254,15 @@ function drawRuler(gr, left, right) {
         text(gr, t, 9.5, 500, C["fg-soft"], x0 + kw + dp(10), ny - dp(1), x1 - x0 - kw - dp(10), dp(16));
     }
     hits.add("ruler", x0 - dp(4), y - dp(25), x1 - x0 + dp(8), dp(50), { x0, x1, y });
+}
+// the chase: the waffle waits at the end of the line, the dog's head runs on it at the playhead (its nose at the time
+// played), bobbing a little in its stride while the music plays
+function drawChase(gr, x0, x1, y, cur, playing) {
+    const ws = dp(10), ds = dp(15);
+    mark(gr, "waffle", x1 - ws / 2 + dp(1), y - dp(1), ws, playing ? C["fg-soft"] : C["line-dim"]);
+    if (!playing) return;
+    const run = !fb.IsPaused && !REDUCE_MOTION && !(drag && drag.id === "seek"), bob = run ? Math.abs(Math.sin(performance.now() / 1000 * Math.PI * 2.4)) * dp(1.6) : 0;
+    mark(gr, "dog", cur - ds * .42, y - dp(1) - bob, ds, C.accent, C.bg);
 }
 
 // the DSP value: OFF, the one active DSP, or the first one and how many more (foobar2000 tells of preset changes only,
@@ -286,7 +324,7 @@ function drawRight(gr) {
     const shov = hover && hover.id === "shuffle", sw = labelWidth(tr("SHUFFLE ALL"), st(ST.key, 0)) + dp(20) + dp(9);
     x -= sw;
     box(gr, x, ty, sw, th, shov ? C.accent : C["line-faint"]);
-    gr.FillSolidRect(x + dp(9), cy - dp(2), dp(5), dp(5), shov ? C.accent : C.fg);
+    bullet(gr, x + dp(9), cy - dp(2), dp(5), shov ? C.accent : C.fg);
     label(gr, tr("SHUFFLE ALL"), st(ST.key, shov ? C.fg : C["fg-soft"]), x + dp(20), ky);
     hits.add("shuffle", x, ty, sw, th);
     x -= dp(18);
@@ -298,7 +336,7 @@ function drawRight(gr) {
     const lw = dp(74), lx = x - dp(8) - lw;
     gr.FillSolidRect(lx, cy, lw, HAIR, C["line-dim"]);
     gr.FillSolidRect(lx, cy - HAIR, Math.round(lw * p), HEAVY, C.fg);
-    gr.FillSolidRect(Math.round(lx + lw * p - dp(3)), cy - dp(3), dp(6), dp(6), C.accent);
+    if (!mark(gr, "waffle", lx + lw * p, cy, dp(10), C.accent)) gr.FillSolidRect(Math.round(lx + lw * p - dp(3)), cy - dp(3), dp(6), dp(6), C.accent);
     hits.add("vol", lx - dp(4), ty, lw + dp(8), th, { x0: lx, w: lw });
     const vkw = labelWidth(tr("VOL"), st(ST.key, 0));
     label(gr, tr("VOL"), st(ST.key, C["text-muted"]), lx - dp(8) - vkw, ky);
@@ -308,10 +346,12 @@ function drawRight(gr) {
 function drawStatus(gr) {
     const y = TP(), h = H - y, cy = y + Math.round(h / 2);
     hline(gr, dp(24), y, W - dp(48));
-    gr.FillSolidRect(dp(24), cy - dp(2.5), dp(18), dp(5), C.fg);
+    if (packMarks()) waffleStrip(gr, dp(24), cy - dp(2.5), dp(18), dp(5), C.fg); else gr.FillSolidRect(dp(24), cy - dp(2.5), dp(18), dp(5), C.fg);
     if (!section.text) updateSection(false);
     const shown = section.sc ? scrambleText(section.sc) : section.text;
     label(gr, shown, st(ST.sec, C.fg), dp(24 + 18 + 12), cy - Math.round(labelHeight(ST.sec) / 2));
+    // where the section label ends (measured from the whole text, so it does not move while the label scrambles)
+    const leftEnd = dp(24 + 18 + 12) + labelWidth(section.text, st(ST.sec, 0));
     // signature: counts · AUDIO ARCHIVE ▬
     const by = cy - Math.round(labelHeight(ST.sig) / 2);
     let x = W - dp(24) - dp(16);
@@ -328,7 +368,22 @@ function drawStatus(gr) {
         gr.FillSolidRect(ux + dp(9), cy - dp(2.5), dp(5), dp(5), C.bg);
         label(gr, t, st(ST.sec, C.bg, uhov ? C.fg : C.accent), ux + dp(20), cy - Math.round(labelHeight(ST.sec) / 2));
         hits.add("update", ux, uy, uw, uh);
+        x = ux;
     }
+    drawCounter(gr, leftEnd + dp(28), x - dp(28), cy);
+}
+// the pack's counter (above) after the section label: a small mark, the label in the keys' style and the count; left
+// out when it does not fit between the section label and the signature
+function drawCounter(gr, x, maxX, cy) {
+    const c = counterPart();
+    if (!c) return;
+    const name = tr(String(c.label || "PLAYS").toUpperCase()), n = "×" + fmtCount(counterNow());
+    const kw = labelWidth(name, st(ST.key, 0)), nw = labelWidth(n, st(ST.val, 0)), w = dp(8) + dp(8) + kw + dp(6) + nw;
+    if (!(x + w <= maxX)) return;
+    if (!mark(gr, "waffle", x + dp(4), cy, dp(10), C.accent)) glyph("report")(gr, x, cy, C.accent);   // the set's mark (lib/draw.js)
+    const ky = cy - Math.round(labelHeight(ST.key) / 2);
+    label(gr, name, st(ST.key, C["text-muted"]), x + dp(16), ky);
+    label(gr, n, st(ST.val, C.fg), x + dp(16) + kw + dp(6), ky);
 }
 
 // ------------------------------------------------------------------------------------------------------- mouse

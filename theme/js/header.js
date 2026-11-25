@@ -174,8 +174,12 @@ function drawNav(gr, L) {
             const [n, name] = NAV[v], [nx] = navRects[v], isHover = !inverse && hover && hover.id === "nav" && hover.data === v;
             const back = inverse ? C.fg : C.bg;
             const noCol = inverse ? mix(C.bg, C.fg, .3) : C["text-muted"], nameCol = inverse ? C.bg : isHover ? C.fg : C["fg-soft"];
-            if (L.mode === "numbers") { label(gr, n, st(ST.nav, nameCol, back), nx + dp(14), ty); continue; }   // (the number at the name's size)
-            const nwid = L.mode === "names" ? -dp(9) : label(gr, n, st(ST.navNo, noCol, back), nx + dp(14), ty + dp(1));
+            // a character pack's icon set may give each view its icon (lib/draw.js viewGlyph): it takes the number's place,
+            // centred where the number stood (the tabs keep their widths)
+            const iconAt = (sNo, col) => { const nw = labelWidth(n, st(sNo, 0)), s = Math.min(dp(12), Math.round(nw * 1.05)); return viewGlyph(gr, v, nx + dp(14) + nw / 2, y + h / 2, s, col) ? nw : -1; };
+            if (L.mode === "numbers") { if (iconAt(ST.nav, nameCol) < 0) label(gr, n, st(ST.nav, nameCol, back), nx + dp(14), ty); continue; }   // (the number at the name's size)
+            let nwid = L.mode === "names" ? -dp(9) : iconAt(ST.navNo, inverse ? C.bg : isHover ? C.fg : C["fg-soft"]);
+            if (nwid < 0 && L.mode !== "names") nwid = label(gr, n, st(ST.navNo, noCol, back), nx + dp(14), ty + dp(1));
             label(gr, name, st(ST.nav, nameCol, back), nx + dp(14) + nwid + dp(9), ty);
         }
     };
@@ -184,7 +188,8 @@ function drawNav(gr, L) {
     gr.PushClip(px, y, pw, h);
     drawLabels(true);
     gr.PopClip();
-    gr.FillSolidRect(px + pw - dp(3), y - dp(3), dp(6), dp(6), C.accent);
+    // the plate's corner: the accent square, or the pack's dog peeking over it
+    if (!mark(gr, "dog", px + pw - dp(2), y - dp(1.5), dp(13), C.accent)) gr.FillSolidRect(px + pw - dp(3), y - dp(3), dp(6), dp(6), C.accent);
     return x;
 }
 
@@ -193,8 +198,8 @@ function drawRight(gr, navEnd, L) {
     const mw = dp(14) + dp(8) + labelWidth(tr("MENU"), st(ST.menu, 0)), mx = W - dp(24) - mw, my = dp(22), mh = dp(28);
     const mHover = hover && hover.id === "menu";
     if (mHover) gr.FillSolidRect(mx - dp(8), my, mw + dp(16), mh, C.fg);
-    const mc = mHover ? C.bg : C.fg, iy = my + Math.round(mh / 2) - dp(4.5);
-    for (const k of [0, 4, 8]) gr.FillSolidRect(mx, iy + dp(k), dp(14), HAIR, mc);
+    const mc = mHover ? C.bg : C.fg;
+    glyph("menu")(gr, mx, my + Math.round(mh / 2), mc);   // the glyphs come from the icon set in use (lib/draw.js ICON_SETS)
     label(gr, tr("MENU"), st(ST.menu, mc, mHover ? C.fg : C.bg), mx + dp(22), my + Math.round((mh - labelHeight(ST.menu)) / 2));
     hits.add("menu", mx - dp(8), my, mw + dp(16), mh);
 
@@ -209,12 +214,8 @@ function drawRight(gr, navEnd, L) {
     const pw = withLabel ? fullW : dp(14), px = mx - dp(30) - pw;
     const pHover = hover && hover.id === "prefs";
     if (pHover) gr.FillSolidRect(px - dp(8), my, pw + dp(16), mh, C.fg);
-    const pc = pHover ? C.bg : C.fg, qx = px + dp(7), qy = my + mh / 2, qr = dp(3.5);
-    gr.DrawEllipse(qx - qr, qy - qr, 2 * qr, 2 * qr, HAIR, pc);
-    for (let k = 0; k < 8; k++) {
-        const t = k * Math.PI / 4, c = Math.cos(t), sn = Math.sin(t);
-        gr.DrawLine(qx + c * dp(4.5), qy + sn * dp(4.5), qx + c * dp(6.5), qy + sn * dp(6.5), Math.max(HAIR, dp(1.5)), pc);
-    }
+    const pc = pHover ? C.bg : C.fg;
+    glyph("gear")(gr, px + dp(7), my + mh / 2, pc);
     if (withLabel) label(gr, tr("PREFERENCES"), st(ST.menu, pc, pHover ? C.fg : C.bg), px + dp(22), my + Math.round((mh - labelHeight(ST.menu)) / 2));
     hits.add("prefs", px - dp(8), my, pw + dp(16), mh);
 
@@ -225,7 +226,7 @@ function drawRight(gr, navEnd, L) {
         const ew = errChipW() - dp(14), ex = px - dp(8) - dp(14) - ew, eHover = hover && hover.id === "report";
         const fill = eHover ? REPORT_GREEN_DARK : REPORT_GREEN, ink = REPORT_INK;
         gr.FillSolidRect(ex, my, ew, mh, fill);
-        gr.FillSolidRect(ex + dp(10), my + Math.round(mh / 2) - dp(4), dp(8), dp(8), ink);
+        glyph("report")(gr, ex + dp(10), my + Math.round(mh / 2), ink);
         label(gr, tr("ERROR · REPORT"), st(ST.menu, ink, fill), ex + dp(26), my + Math.round((mh - labelHeight(ST.menu)) / 2));
         hits.add("report", ex, my, ew, mh);
         rx = ex + dp(8);
@@ -253,16 +254,12 @@ function drawRight(gr, navEnd, L) {
     if (focus || SF.text) fieldDraw(gr, SF, sx, sy, avail, sh, fontFor(SF.text || "x", 11, 400), C.fg, focus, search.caret);
     hits.add("search", sx, sy - dp(4), avail + dp(4), sh + dp(8));
     // at the right end a magnifier, or with a query a cross that clears it
-    const gx = sx + sw - dp(10), gy = sy + sh / 2 - dp(1), r = dp(3.5), xh = hover && hover.id === "search-x";
+    const gx = sx + sw - dp(10), gy = sy + sh / 2 - dp(1), xh = hover && hover.id === "search-x";
     if (SF.text) {
-        const ic = xh ? C.accent : C.fg, q = dp(3.5), cy = sy + sh / 2;
-        gr.DrawLine(gx - q, cy - q, gx + q, cy + q, Math.max(HAIR, dp(1.2)), ic);
-        gr.DrawLine(gx - q, cy + q, gx + q, cy - q, Math.max(HAIR, dp(1.2)), ic);
+        glyph("clear")(gr, gx, sy + sh / 2, xh ? C.accent : C.fg);
         hits.add("search-x", sx + avail + dp(4), sy - dp(4), sw - avail - dp(4), sh + dp(8));
     } else {
-        const ic = focus ? C.fg : C["text-muted"];
-        gr.DrawEllipse(gx - r, gy - r, 2 * r, 2 * r, HAIR, ic);
-        gr.DrawLine(gx + r * .7, gy + r * .7, gx + r * 1.8, gy + r * 1.8, HAIR, ic);
+        glyph("search")(gr, gx, gy, focus ? C.fg : C["text-muted"]);
         hits.add("search", sx + avail + dp(4), sy - dp(4), sw - avail - dp(4), sh + dp(8));
     }
 }

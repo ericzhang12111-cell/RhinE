@@ -13,7 +13,7 @@ let SKIN_LIST = null;
 function listSkins(fresh = false) {
     if (SKIN_LIST && !fresh) return SKIN_LIST;
     const out = [];
-    for (const root of SKIN_ROOTS) {
+    for (const root of SKIN_ROOTS.concat(packSkinRoots())) {   // (and the packs' own: lib/pack.js)
         if (!utils.IsDirectory(root)) continue;
         for (const f of utils.Glob(root + "*\\case.json")) {
             const dir = f.slice(0, -"case.json".length), id = dir.slice(root.length, -1);

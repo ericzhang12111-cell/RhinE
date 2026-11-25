@@ -108,7 +108,7 @@ Running it again keeps the foobar2000 folder and installs the theme again.
 | Archive: frosted glass on the cases not selected (their covers blurred) or clear glass on every case | right-click › `Frosted glass on the cases`, or `GLASS` under `DISPLAY` › `ARCHIVE` in `06 STYLE` (frosted by default) | — |
 | Archive: inspect the album | click the selected case (it is outlined under the mouse too); while the playing album is inspected, the next album that plays slides in (showing `TRACKS`: the next track) | `Enter`; `Esc` or click to return |
 | Archive: play / open the album | double-click a case (array and room; the album already playing goes on, a paused one resumes), or `PLAY ALBUM` / `OPEN ALBUM` (they work while inspecting too) | `Space` plays (or pauses it if it is playing); `Enter` while inspecting opens |
-| Archive: group by genre, decade, artist, artist initial, folder, favourites, rating or none | the `GROUP` menu in the Archive's top bar, or right-click (`SORT` is a menu beside it). `ARTIST`: one group per album artist (the `ALBUM ARTIST` tag, as MusicBrainz Picard writes it; without one, the artist of most of the album's tracks, guest credits such as "feat." left out), however its albums spell it, in sort-name order (`ALBUMARTISTSORT` / `ARTISTSORT`, else a leading "The" set aside). `A–Z`: the first letter of that sort name. `FOLDER` puts each case on the shelf of the folder it lies in, named by that folder (the list of shelves shows the path from the media library folder). `FAV` puts the favourites first. `RATING`: 5 to 1, then the albums not rated (an album's rating is the mean of its rated tracks) | — |
+| Archive: group by genre, decade, artist, artist initial, folder, favourites, rating or none | the `GROUP` menu in the Archive's top bar, or right-click (`SORT` is a menu beside it). `ARTIST`: one group per album artist (the `ALBUM ARTIST` tag, as MusicBrainz Picard writes it; without one, the artist of most of the album's tracks, guest credits such as "feat." left out), however its albums spell it, in sort-name order (`ALBUMARTISTSORT` / `ARTISTSORT`, else a leading "The" set aside). `A–Z`: the first letter of that sort name. `FOLDER` puts each case on the shelf of the folder it lies in, named by that folder (the list of shelves shows the path from the media library folder). `FAV` puts the favourites first. `RATING`: 5 to 1, then the albums not rated (an album's rating is the mean of its rated tracks, to one decimal: `RATING 4.0 – 4.9` holds the albums from 4.0 to 4.9, `RATING 5.0` only those at 5) | — |
 | Archive: one artist, folder or playlist per shelf | right-click or the `GROUP` menu › `One shelf per artist, folder or playlist` (on by default): grouped by `ARTIST`, `FOLDER` or `ONLINE`, every group starts a shelf of its own; off, small groups share a shelf as the other groupings do | — |
 | Archive: your NetEase playlists as shelves (liked songs and the playlists you made, by default) | `GROUP` › `ONLINE` (needs the bridge and a NetEase login in `05 ONLINE`): one shelf per playlist, its songs as album cases (`SHOW` › `TRACKS`: one per song, `FOLDERS`: one per playlist). Right-click (or the `GROUP` menu while `ONLINE` is chosen) › `Online playlists in the Archive` ticks the playlists shown (collected ones too) or goes back to the default; `Refresh online playlists` asks NetEase again now. A double-click or `PLAY ALBUM` plays the songs in *NetEase · Archive*; songs your account cannot play are tagged `LOCKED` / `VIP · TRIAL` in the album file and skipped. No ratings, hearts or folders for these cases | — |
 | 05 ONLINE: edit your NetEase playlists | right-click a song (a playlist's, a search result, the day's) › `Add to playlist` › your liked songs, a playlist you made, or `New NetEase playlist…`; in a playlist you made (or your liked songs), `Remove from “…”`. Right-click a playlist (its tile, or the playlist open) › `Rename playlist…` / `Delete playlist` for your own, `Collect into my playlists` / `Remove from my playlists` for someone else's. The changes are made on NetEase at once (the Archive's shelves follow); a bridge still running from before an update needs foobar2000 restarted first. Long lists have a slide bar on the right | — |
@@ -294,6 +294,16 @@ the corner it snaps to. A double-click, `⤢` or `M` returns to the full window.
 **Presets.** `06 STYLE` › `PRESETS` applies a whole look at once and `SAVE THIS LOOK` keeps your own (up to twelve;
 the `×` on a saved one deletes it).
 
+**Character packs.** The first section of `PRESETS`, `CHARACTER PACKS`, offers fan-made looks built around one
+character; the first is SWEETPIE (小刻 from *Arknights: Endfield*). Packs are not part of the theme's download: a card
+reads `DOWNLOAD · size`, and a click downloads that one pack from this repository's releases, checks it against its
+SHA-256, puts it in `<profile>\audio-archive-packs\` (outside the theme folder, so updates keep it) and applies it. A
+pack changes more than a preset: its own colour scheme, case (in the ROOM too), title tag and intro film, the button
+icons and emblem, the Signal ring (a turning waffle; in 2D and CLASSIC a dog chasing a waffle), the Lyrics spectrum (a
+dog dancing to the beat) and a picture for each view and side column. Applying any other preset turns the pack off.
+The material of a pack belongs to its owners: the section names its source with links, and a pack is taken down when
+they ask.
+
 **Search** updates an autoplaylist called *Search* 300 ms after you stop typing: every word must appear in the title,
 artist, album artist, album, genre or date. It searches foobar2000's **media library** (*Preferences › Media
 Library*), so folders must be added there first. `Esc` clears the field and returns to the playlist you were on.
@@ -401,3 +411,9 @@ The portable bundle carries foobar2000's unmodified installer, Columns UI
 (LGPL-3.0, its licence alongside) and [7-Zip](https://www.7-zip.org) (LGPL, its licence alongside). The 3D art was
 rendered in [Blender](https://www.blender.org), partly with materials from third-party material libraries used under
 their licences.
+
+The character pack SWEETPIE is downloaded separately and is not part of the theme. It uses material from
+[*Arknights: Endfield*](https://endfield.gryphline.com/) (明日方舟：终末地, [中文官网](https://endfield.hypergryph.com/)) by
+[Hypergryph](https://www.hypergryph.com/) (鹰角网络): the character 小刻, her art, her honey waffles and her three-headed
+dog. It is a free, non-commercial fan work; the material belongs to Hypergryph, and the pack will be taken down at
+their request.

@@ -48,16 +48,46 @@ const isHex = v => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
 const tagCustom = () => { const c = STATE.tagCustom; return Array.isArray(c) && c.length === 3 && c.every(isHex) ? c : TAG_CUSTOM_START; };
 
 const TAG_FACTORY = (() => { try { return JSON.parse(utils.ReadTextFile(TAG_DIR + "factory.json", 65001)).tags || []; } catch (e) { return []; } })();
-const pickTagFactory = v => TAG_FACTORY.some(t => t.id === v) ? v : null;
+// A character pack (lib/pack.js) may bring factory tags of its own: <pack>\tags\factory.json (laid out as the theme's)
+// and, per shape, <pack>\tags\<shape>\factory\<id>.jpg, -a.png and -ink.jpg. They are offered (in TAG_FACTORY, after the
+// theme's) only while their pack is on; each keeps the folder its shapes are in (dir) and its pack (pack).
+const TAG_PACK_TAGS = new Map();   // pack id -> its tags, read once
+function tagPackTags(p) {
+    if (!p) return [];
+    if (!TAG_PACK_TAGS.has(p.id)) {
+        const dir = p.dir + "tags\\";
+        let tags = [];
+        try { if (utils.IsFile(dir + "factory.json")) tags = JSON.parse(utils.ReadTextFile(dir + "factory.json", 65001)).tags || []; } catch (e) { tags = []; }
+        TAG_PACK_TAGS.set(p.id, (Array.isArray(tags) ? tags : []).filter(t => t && typeof t.id === "string" && !TAG_FACTORY.some(f => !f.pack && f.id === t.id))
+            .map(t => Object.assign({}, t, { pack: p.id, dir })));
+    }
+    return TAG_PACK_TAGS.get(p.id);
+}
+// TAG_FACTORY with the tags of the pack in use (changed in place, so whoever holds the list sees them; with no pack on,
+// and none before, nothing changes)
+let TAG_FACTORY_PACK = null;
+function tagFactoryList() {
+    const p = typeof packOn === "function" ? packOn() : null, id = p ? p.id : null;
+    if (id !== TAG_FACTORY_PACK) {
+        for (let i = TAG_FACTORY.length - 1; i >= 0; i--) if (TAG_FACTORY[i].pack) TAG_FACTORY.splice(i, 1);
+        if (p) TAG_FACTORY.push(...tagPackTags(p));
+        TAG_FACTORY_PACK = id;
+    }
+    return TAG_FACTORY;
+}
+// a factory tag id worth keeping: the theme's or any pack's (the setting is read before the pack is put on)
+const pickTagFactory = v => typeof v === "string" && (tagFactoryList().some(t => t.id === v) || (typeof listPacks === "function" && listPacks().some(p => tagPackTags(p).some(t => t.id === v)))) ? v : null;
 // suggested for the colour scheme or the case skin in use
 const tagFactorySuggested = t => (t.schemes || []).includes(SCHEME) || (t.skins || []).includes(stageSkin());
 // the factory tag in use: the one picked, else the first suggested for the scheme, else for the skin, else the first
+// (a pack's tag picked while its pack is off counts as none picked)
 function tagFactoryId() {
-    if (pickTagFactory(STATE.tagFactory)) return STATE.tagFactory;
-    const t = TAG_FACTORY.find(f => (f.schemes || []).includes(SCHEME)) || TAG_FACTORY.find(f => (f.skins || []).includes(stageSkin())) || TAG_FACTORY[0];
+    const list = tagFactoryList();
+    if (list.some(t => t.id === STATE.tagFactory)) return STATE.tagFactory;
+    const t = list.find(f => (f.schemes || []).includes(SCHEME)) || list.find(f => (f.skins || []).includes(stageSkin())) || list[0];
     return t ? t.id : null;
 }
-const tagFactoryOf = id => TAG_FACTORY.find(t => t.id === id) || null;
+const tagFactoryOf = id => tagFactoryList().find(t => t.id === id) || null;
 // a finish id as drawTag takes it: "factory" is the one in use, "factory:<id>" a given one (the Style view's picker)
 const tagFactoryFin = fin => fin === "factory" ? tagFactoryId() : String(fin).startsWith("factory:") ? fin.slice(8) : null;
 
@@ -71,7 +101,7 @@ function tagSpec(shape = STATE.tagShape) {
 function tagFinish(fin = STATE.tag) {
     const fid = tagFactoryFin(fin), S = tagSpec();
     if (fid) {
-        const t = tagFactoryOf(fid), base = TAG_DIR + STATE.tagShape + "\\factory\\" + fid;
+        const t = tagFactoryOf(fid), base = t ? (t.dir || TAG_DIR) + STATE.tagShape + "\\factory\\" + fid : "";
         return t && S && utils.IsFile(base + ".jpg") ? { S, F: { factory: t, base }, fin } : null;
     }
     const F = fin !== "off" && S && S.finishes && S.finishes[fin];
@@ -130,7 +160,7 @@ function tagDots(g, iw, ih, ox, oy, tw, th, colour, dy = 0, fade = true) {
 // A factory tag's plate: its render with its alpha laid on, and the inked render at the same size as a bitmap brush
 // for the title and the small print. Each image is read for the plate and let go (only the plates are kept).
 function tagFactoryPlate(S, F, w) {
-    const t = F.factory, key = `${STATE.tagShape}|factory:${t.id}|${w}`;
+    const t = F.factory, key = `${STATE.tagShape}|factory:${t.pack ? t.pack + "/" : ""}${t.id}|${w}`;
     let P = TAG.plates.get(key);
     if (P) return P;
     const k = w / S.canvas.tag[2], iw = Math.max(1, Math.round(S.canvas.w * k)), ih = Math.max(1, Math.round(S.canvas.h * k));

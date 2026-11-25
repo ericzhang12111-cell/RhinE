@@ -54,6 +54,7 @@ STATE.miniCorner = ["tl", "tr", "bl", "br"].includes(getSetting("miniCorner", "b
 STATE.miniShow = getSetting("miniShow", "lrc") === "trk" ? "trk" : "lrc";
 STATE.miniSkin = ["dark", "white", "auto"].includes(getSetting("miniSkin", "dark")) ? getSetting("miniSkin", "dark") : "dark";
 STATE.miniShape = MINI_SIZES[getSetting("miniShape", "wide")] ? getSetting("miniShape", "wide") : "wide";
+STATE.pack = pickPack(getSetting("pack", null));   // the character pack in use (lib/pack.js)
 REDUCE_MOTION = STATE.reduce;
 RELOAD_ON_LANG = false;   // see lib/bus.js
 const P = {};          // child name -> PanelObject
@@ -65,7 +66,7 @@ const broadcast = () => send("state", { view: STATE.view, preset: STATE.preset, 
                                    halftone: STATE.halftone, halftoneLevel: STATE.halftoneLevel, emblem: STATE.emblem, tag: STATE.tag,
                                    tagShape: STATE.tagShape, tagColours: STATE.tagColours, tagCustom: STATE.tagCustom, tagOpacity: STATE.tagOpacity, tagBody: STATE.tagBody, tagFactory: STATE.tagFactory, font: STATE.font,
                                    sides: STATE.sides, modeSystem: STATE.modeSystem, borderless: STATE.borderless, roomMat: STATE.roomMat, roomLight: STATE.roomLight,
-                                   mini: STATE.mini, miniCorner: STATE.miniCorner, miniShow: STATE.miniShow, miniSkin: STATE.miniSkin, miniShape: STATE.miniShape });
+                                   mini: STATE.mini, miniCorner: STATE.miniCorner, miniShow: STATE.miniShow, miniSkin: STATE.miniSkin, miniShape: STATE.miniShape, pack: STATE.pack });
 
 // One-off: settings written before this change kept three switches for the lyrics (lyricsOnline, lyricsNetease,
 // lyricsTranslate). They map onto lyricsSource and lyricsTrans, and lyricsNeteaseAuto keeps the permission the old
@@ -414,6 +415,7 @@ onMessage("array-scale", v => { STATE.arrayScale = pickScale(+v, ARRAY_SCALES); 
 onMessage("floor", v => { STATE.floor = pickFloor(v); setSetting("floor", STATE.floor); broadcast(); });
 onMessage("halftone", v => { STATE.halftone = pickHalftone(v); setSetting("halftone", STATE.halftone); broadcast(); });
 onMessage("halftone-level", v => { STATE.halftoneLevel = pickHalftoneLevel(v); setSetting("halftoneLevel", STATE.halftoneLevel); broadcast(); });
+onMessage("pack", v => { const p = pickPack(v); if (p !== STATE.pack) { STATE.pack = p; setSetting("pack", p); broadcast(); } });
 onMessage("emblem", v => { STATE.emblem = pickEmblem(v); setSetting("emblem", STATE.emblem); broadcast(); });
 onMessage("room-mat", v => { STATE.roomMat = pickRoomMat(v); setSetting("roomMat", STATE.roomMat); broadcast(); });
 // the light of the room's material now (an opaque one's: ROOM_LIGHTS)

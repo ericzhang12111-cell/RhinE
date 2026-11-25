@@ -365,7 +365,7 @@ I18N["ko"] = {
     // playlists: play on double-click, the theme's own playlists tagged
     "Play playlist": "이 재생목록 재생", "THEME": "테마",
     // archive: group by artist or rating, sort by rating, one shelf per artist or folder
-    "INITIAL": "첫 글자", "Group by artist": "아티스트별 그룹", "Group by rating": "평점별 그룹", "RATING {0}": "평점 {0}",
+    "INITIAL": "첫 글자", "Group by artist": "아티스트별 그룹", "Group by rating": "평점별 그룹", "RATING {0}": "평점 {0}", "RATING {0} – {1}": "평점 {0} – {1}",
     "Rating (highest first)": "평점 (높은 순)", "One shelf per artist, folder or playlist": "아티스트·폴더·재생목록마다 선반 하나",
     // signal: what shows under the ring and along the bottom (PANELS)
     "PANELS": "패널", "Under the ring": "뫼비우스 링 아래", "Along the bottom": "하단", "Spectrum": "스펙트럼", "Lyrics": "가사", "Level meters": "레벨 미터", "Stereo scope": "스테레오 스코프",
@@ -389,4 +389,8 @@ I18N["ko"] = {
     "PLAY PLAYLIST": "재생목록 재생", "Open in playlist": "재생목록에서 열기",
     "Online playlists in the Archive": "아카이브에 표시할 온라인 재생목록", "Use my created playlists and liked songs": "내가 만든 재생목록과 좋아요 한 곡 사용", "Refresh online playlists": "온라인 재생목록 새로 고침",
     "Liked songs": "좋아요 한 곡", "New NetEase playlist…": "새 NetEase 재생목록…", "Add to playlist": "재생목록에 추가", "Remove from “{0}”": "“{0}”에서 삭제", "Rename playlist…": "재생목록 이름 바꾸기…", "Delete playlist": "재생목록 삭제", "Delete “{0}” from NetEase (cannot be undone)": "NetEase에서 “{0}” 삭제(되돌릴 수 없음)", "Remove from my playlists": "내 재생목록에서 빼기", "Collect into my playlists": "내 재생목록에 담기", "Working…": "처리 중…", "Restart foobar2000 to edit NetEase playlists (the bridge running is from before this update).": "NetEase 재생목록을 편집하려면 foobar2000을 다시 시작하세요(실행 중인 브리지는 업데이트 전 버전입니다).", "NetEase did not do it: {0}": "NetEase에서 완료하지 못했습니다: {0}", "the bridge did not answer": "브리지가 응답하지 않았습니다", "Already in “{0}”": "이미 “{0}”에 있습니다", "Added to “{0}”": "“{0}”에 추가했습니다", "Removed from “{0}”": "“{0}”에서 삭제했습니다", "NetEase playlist name": "NetEase 재생목록 이름", "New NetEase playlist": "새 NetEase 재생목록", "Created “{0}”": "“{0}” 만들었습니다", "Rename NetEase playlist": "NetEase 재생목록 이름 바꾸기", "Renamed to “{0}”": "“{0}”(으)로 이름을 바꿨습니다", "Deleted “{0}”": "“{0}” 삭제했습니다", "Collected “{0}”": "“{0}” 담았습니다", "Removed “{0}” from your playlists": "“{0}”을(를) 내 재생목록에서 뺐습니다",
+    // character packs (lib/pack.js) and the SWEETPIE pack
+    "Fan-made looks built around one character: colours, case, icons, ring, wallpapers and more. Downloaded on request, kept apart from the theme.": "한 캐릭터를 주제로 만든 팬메이드 외관: 색상, 케이스, 아이콘, 링, 배경 화면 등. 필요할 때 내려받으며 테마 본체와 따로 보관됩니다.", "DOWNLOAD · {0}": "다운로드 · {0}", "FAILED · TRY AGAIN": "실패 · 다시 시도", "INSTALLED": "설치됨", "INSTALLING…": "설치 중…", "DOWNLOADING {0} %": "다운로드 중 {0}%", "DOWNLOADING…": "다운로드 중…",
+    "HONEY ENAMEL": "허니 법랑", "Honey-yellow enamel on steel, screen-printed in black and cream, a cookie-dog head.": "강판 위 허니 옐로 법랑, 검은색과 크림색 실크 인쇄, 쿠키 강아지 얼굴.",
+    "CHARACTER PACKS": "캐릭터 팩", "CHARACTER PACK": "캐릭터 팩", "WAFFLE": "와플", "Warm black and PVC white with honey yellow": "따뜻한 검정과 PVC 흰색, 꿀빛 노랑", "WAFFLES": "와플", "OPERATOR CHECK-IN": "오퍼레이터 체크인", "BIOMETRIC LINK": "생체 인증", "GEAR  ·  CLEAR SHELL": "장비 · 투명 재킷", "SUPPLY": "보급", "RECEIVED": "수령 완료", "SUGAR RESERVE": "당분 비축", "SUPPLY DROP": "보급 투하", "INBOUND": "투하 중", "ON DUTY": "근무 중", "CHECK-IN": "체크인", "FIELD OPERATOR": "현장 오퍼레이터", "ARRIVAL": "도착", "INTAKE": "섭취", "CALIBRATE": "보정",
 };
