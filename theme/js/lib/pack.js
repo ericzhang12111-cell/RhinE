@@ -72,7 +72,7 @@ const packSkinRoots = () => listPacks().map(p => p.dir + "case\\").filter(d => u
 // read here twice a second while it runs. Preview pictures are kept in <profile>\audio-archive-cache\packs\.
 const PACK_REPO = "ericzhang12111-cell/RhinE";
 const PACK_CACHE = fb.ProfilePath + "audio-archive-cache\\packs\\";
-const PACK_CAT = { list: null, asked: 0, dl: null, previews: new Set() };
+const PACK_CAT = { list: null, asked: 0, dl: null, previews: new Map() };
 try { const c = JSON.parse(getSetting("packCatalog", "null")); if (c && Array.isArray(c.packs)) PACK_CAT.list = c.packs; } catch (e) { PACK_CAT.list = null; }
 function packEnv(name, def) {
     try { const v = new ActiveXObject("WScript.Shell").ExpandEnvironmentStrings(`%${name}%`); return v && v !== `%${name}%` ? v : def; } catch (e) { return def; }
@@ -126,15 +126,22 @@ const runPackPs = args => {
     if (!utils.IsFile(ps1)) return false;
     try { new ActiveXObject("WScript.Shell").Run(`cmd /c set "PSModulePath=" && powershell -NoProfile -ExecutionPolicy Bypass -File "${ps1}" ${args}`, 0, false); return true; } catch (e) { return false; }
 };
-// a list entry's preview picture, downloaded once (null until it is there)
-function packPreviewFile(k) {
+// a list entry's preview picture, downloaded once ("" until it is there; calls onReady when it arrives)
+function packPreviewFile(k, onReady) {
     if (!k || !/^https?:\/\/|^file:\/\//.test(String(k.preview || ""))) return "";
     const f = `${PACK_CACHE}${k.id}-${String(k.version || "0").replace(/[^0-9a-z.]/gi, "")}.jpg`;
     if (utils.IsFile(f)) return f;
-    if (!PACK_CAT.previews.has(f)) {
-        PACK_CAT.previews.add(f);
+    if ((PACK_CAT.previews.get(f) || 0) <= Date.now()) {
         try { if (!utils.IsDirectory(PACK_CACHE)) utils.CreateFolder(PACK_CACHE); } catch (e) { /* made by the script */ }
-        runPackPs(`-Preview -Url "${k.preview}" -Out "${f}"`);
+        if (!runPackPs(`-Preview -Url "${k.preview}" -Out "${f}"`)) return "";
+        PACK_CAT.previews.set(f, Infinity);
+        const t0 = Date.now();
+        const poll = () => {
+            if (utils.IsFile(f)) { PACK_CAT.previews.delete(f); if (onReady) onReady(f); return; }
+            if (Date.now() - t0 > 30000) { PACK_CAT.previews.set(f, Date.now() + 5 * 60 * 1000); return; }
+            window.SetTimeout(poll, 400);
+        };
+        window.SetTimeout(poll, 400);
     }
     return "";
 }
@@ -143,8 +150,13 @@ function packDownload(k, onChange) {
     if (!packValid(k) || (PACK_CAT.dl && PACK_CAT.dl.state !== "done" && PACK_CAT.dl.state !== "error")) return false;
     const status = `${fb.ProfilePath}audio-archive-cache\\pack-${k.id}.json`, dest = (fb.ProfilePath + "audio-archive-packs").replace(/\\+$/, "");
     try { utils.WriteTextFile(status, JSON.stringify({ state: "start", done: 0, total: +k.size || 0 }), false); } catch (e) { /* the script writes it */ }
-    if (!runPackPs(`-Id "${k.id}" -Url "${k.url}" -Sha256 "${k.sha256}" -Dest "${dest}" -Status "${status}"`)) return false;
     const D = PACK_CAT.dl = { id: k.id, state: "start", done: 0, total: +k.size || 0, error: "", t0: Date.now() };
+    if (!runPackPs(`-Id "${k.id}" -Url "${k.url}" -Sha256 "${k.sha256}" -Dest "${dest}" -Status "${status}"`)) {
+        D.state = "error";
+        D.error = "could not start the download helper";
+        if (onChange) onChange(D);
+        return false;
+    }
     const poll = () => {
         if (PACK_CAT.dl !== D) return;
         let j = null;

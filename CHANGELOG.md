@@ -3,6 +3,15 @@
 Newest version first. Download any version from [Releases](https://github.com/ericzhang12111-cell/RhinE/releases).
 最新版本在最上面；各版本可在 Releases 页面下载。
 
+## 2.4.1 — 2026-11-25
+
+**Fixed · 修复**
+- Character pack downloads and preview images now work after installing or updating the theme: the installer had left
+  out `tools/pack.ps1`, so clicking a pack card did nothing and previews stayed blank. 角色包的下载和预览图在安装或更新主题后现在可以正常工作：安装脚本之前漏复制了 `tools/pack.ps1`，导致点击角色包卡片没有反应、预览图也无法加载。
+- Character pack preview images now appear as soon as they finish downloading, failed downloads report an error on the
+  card instead of failing silently, and hovering an uninstalled pack card shows its preview and material source on the
+  right. 角色包预览图下载完成后现在会自动刷新显示，下载启动失败时卡片会显示失败提示而不再静默无反应，鼠标悬停在未安装的角色包卡片上时右侧会显示预览图与素材来源。
+
 ## 2.4.0 — 2026-11-25
 
 **Added · 新增**

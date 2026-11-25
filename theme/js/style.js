@@ -457,12 +457,17 @@ function drawPackSection(gr, g, y, h, at) {
     get.forEach((o, i) => { const [x, dy] = at(K.length + i); drawPackGetCard(gr, o.k, x, y + dy, g.cw, h); });
     return y + Math.ceil(n / g.cols) * (h + g.gap) + dp(10);
 }
+function packGetStatus(k, D) {
+    const mb = v => `${Math.max(1, Math.round((+v || 0) / 1048576))} MB`;
+    return !D ? tr("DOWNLOAD · {0}", mb(k.size)) : D.state === "error" ? tr("FAILED · TRY AGAIN") : D.state === "done" ? tr("INSTALLED")
+        : D.state === "check" || D.state === "unpack" ? tr("INSTALLING…") : D.total > 0 ? tr("DOWNLOADING {0} %", Math.floor(100 * D.done / D.total)) : tr("DOWNLOADING…");
+}
 // a pack not installed: its preview picture (once downloaded), its name, and DOWNLOAD · size, or the download's progress
 function drawPackGetCard(gr, k, x, y, w, h) {
     const mh = h - dp(40), D = PACK_CAT.dl && PACK_CAT.dl.id === k.id ? PACK_CAT.dl : null, busy = D && D.state !== "done" && D.state !== "error";
     const hov = STY.hover && STY.hover.kind === "packget" && STY.hover.id === k.id;
     gr.FillSolidRect(x, y, w, mh, C.panel);
-    const f = packPreviewFile(k), pic = f ? picThumb(f) : null;
+    const f = packPreviewFile(k, () => window.Repaint()), pic = f ? picThumb(f) : null;
     if (pic) {
         const s2 = Math.max(w / pic.Width, mh / pic.Height), dw = pic.Width * s2, dh = pic.Height * s2;
         gr.PushClip(x, y, w, mh);
@@ -477,14 +482,49 @@ function drawPackGetCard(gr, k, x, y, w, h) {
     }
     gr.FillSolidRect(x, y + mh, w, h - mh, C.panel);
     gr.FillSolidRect(x, y + mh, w, HAIR, C["line-faint"]);
-    const mb = v => `${Math.max(1, Math.round((+v || 0) / 1048576))} MB`;
-    const what = !D ? tr("DOWNLOAD · {0}", mb(k.size)) : D.state === "error" ? tr("FAILED · TRY AGAIN") : D.state === "done" ? tr("INSTALLED")
-        : D.state === "check" || D.state === "unpack" ? tr("INSTALLING…") : D.total > 0 ? tr("DOWNLOADING {0} %", Math.floor(100 * D.done / D.total)) : tr("DOWNLOADING…");
+    const what = packGetStatus(k, D);
     const ns = STY_ST.nameS, nm = String(k.name || k.id), tw = labelWidth(what, st(STY_ST.tiny, 0));
     label(gr, fitLabel(nm, st(ns, C.fg, C.panel), w - tw - dp(30)), st(ns, C.fg, C.panel), x + dp(10), y + mh + Math.round((dp(40) - labelHeight(ns)) / 2));
     label(gr, what, st(STY_ST.tiny, D && D.state === "error" ? C["text-muted"] : C.accent, C.panel), x + w - dp(10) - tw, y + mh + Math.round((dp(40) - labelHeight(STY_ST.tiny)) / 2));
     cardFrame(gr, x, y, w, h, false, hov);
     if (!busy) hits.add("sty-pack-get", x, y, w, h, k.id);
+}
+// an uninstalled character pack under the mouse: its preview picture, name, summary, status and material source
+function drawPackGetPreview(gr, id, x0, y, w, y1) {
+    const o = packOffers().find(v => v.k.id === id);
+    if (!o) return;
+    const k = o.k, D = PACK_CAT.dl && PACK_CAT.dl.id === k.id ? PACK_CAT.dl : null;
+    const about = packText(k.about), src = k.credits ? packText(k.credits) : "";
+    const rows = [["CHARACTER PACK", packGetStatus(k, D)]];
+    if (src) rows.push(["SOURCE", src]);
+    if (D && D.state === "error" && D.error) rows.push(["", D.error]);
+    const aboutH = about ? Math.round(dp(22) * TEXT_SCALE) + dp(6) : 0;
+    const th = dp(14) + labelHeight(STY_ST.big) + dp(8) + aboutH + dp(6) + rows.length * dp(20);
+    const ph = Math.max(dp(80), Math.min(Math.round(w * .7), y1 - y - th - dp(16)));
+    gr.FillSolidRect(x0, y, w, ph, C.panel);
+    const f = packPreviewFile(k, () => window.Repaint()), pic = f ? picThumb(f) : null;
+    if (pic) {
+        const s2 = Math.max(w / pic.Width, ph / pic.Height), dw = pic.Width * s2, dh = pic.Height * s2;
+        gr.PushClip(x0, y, w, ph);
+        gr.DrawImage(pic, x0 + (w - dw) / 2, y + (ph - dh) / 2, dw, dh, 0, 0, pic.Width, pic.Height);
+        gr.PopClip();
+    }
+    gr.FillSolidRect(x0, y + ph - dp(4), Math.round(w * .18), dp(4), C.accent);
+    box(gr, x0, y, w, ph, C["line-faint"]);
+    let ty = y + ph + dp(14);
+    label(gr, fitLabel(String(k.name || k.id), st(STY_ST.big, C.fg), w), st(STY_ST.big, C.fg), x0, ty);
+    ty += labelHeight(STY_ST.big) + dp(8);
+    if (about) {
+        text(gr, about, 10, 500, C["fg-soft"], x0, ty, w, Math.round(dp(18) * TEXT_SCALE));
+        ty += Math.round(dp(22) * TEXT_SCALE) + dp(6);
+    } else ty += dp(6);
+    const kw = Math.max(...rows.map(r => labelWidth(r[0] ? tr(r[0]) : "", st(STY_ST.tiny, 0)))) + dp(18);
+    for (const [rk, rv] of rows) {
+        if (ty + dp(16) > y1) break;
+        if (rk) label(gr, tr(rk), st(STY_ST.tiny, C["text-muted"]), x0, ty);
+        label(gr, fitLabel(rv, st(STY_ST.tiny, C.fg), w - kw), st(STY_ST.tiny, C.fg), x0 + kw, ty);
+        ty += dp(20);
+    }
 }
 function packGet(id) {
     const o = packOffers().find(v => v.k.id === id);
@@ -1126,10 +1166,11 @@ function drawStylePreview(gr, g, skins) {
     const x0 = g.lx1 + dp(40), x1 = W - g.m, y0 = g.top + dp(24), y1 = H - dp(40), w = x1 - x0;
     if (w < dp(200)) return;
     gr.FillSolidRect(x0 - dp(20), g.top + dp(12), HAIR, y1 - g.top - dp(12), C["line-faint"]);
-    const hv = STY.hover && STY.hover.kind !== "intro" && STY.hover.kind !== "save" ? STY.hover : null;
+    const hv = STY.hover && STY.hover.kind !== "intro" && STY.hover.kind !== "save" && STY.hover.kind !== "packlink" ? STY.hover : null;
     label(gr, tr(hv ? "PREVIEW" : "IN USE"), st(STY_ST.sec, hv ? C.accent : C["text-muted"]), x0, y0);
     if (hv && hv.kind === "scheme") { drawSchemePreview(gr, hv.id, x0, y0, w, y1); return; }
     if (hv && hv.kind === "preset") { drawPresetPreview(gr, presetOf(hv.id), x0, y0 + dp(30), w, y1); return; }
+    if (hv && hv.kind === "packget") { drawPackGetPreview(gr, hv.id, x0, y0 + dp(30), w, y1); return; }
     if (hv && hv.kind === "tag") { drawTagPreview(gr, hv.id, x0, y0 + dp(30), w, y1); return; }
     if (hv && hv.kind === "room") { drawRoomPreview(gr, hv.id, x0, y0 + dp(30), w, y1); return; }
     // (with nothing under the mouse, a page's own: the room in use (before an editor left open on another page), the
